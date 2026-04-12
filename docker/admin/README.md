@@ -8,41 +8,42 @@ Despliegue de prueba para el agente administrador en Ubuntu LTS.
 - `.env.example`
 - `install.sh`
 - `update.sh`
+- `backup.sh`
+- `restore.sh`
 
-## Persistencia
-
-Este stack guarda el estado en:
-
-- `~/.openclaw-admin/`
-- `~/.openclaw-admin/workspace/`
-
-Ahí quedarán configuración, sesiones, memoria y archivos del workspace mientras el volumen del host se mantenga.
-
-## Instalación rápida
-
-Desde el repositorio clonado:
+## Instalación
 
 ```bash
-chmod +x docker/admin/install.sh docker/admin/update.sh
+chmod +x docker/admin/*.sh
 docker/admin/install.sh
 ```
 
-Luego abre:
+## URL
 
 - `http://127.0.0.1:18789/`
 
-El token queda guardado en:
+## Archivos importantes
 
-- `docker/admin/.env`
+- token y variables: `docker/admin/.env`
+- estado persistente: `~/.openclaw-admin/`
 
-## Actualización
+## Mantenimiento
 
+### Actualizar
 ```bash
 docker/admin/update.sh
 ```
 
-## Notas
+### Backup
+```bash
+docker/admin/backup.sh
+```
 
-- Esta versión es de **testeo**.
-- El stack usa una imagen pública de OpenClaw por defecto.
-- Si quieres una versión más cerrada o más estable, en la siguiente fase podemos fijar versión, endurecer seguridad y agregar backup.
+### Restore
+```bash
+docker/admin/restore.sh docker/admin/backups/ARCHIVO.tgz
+```
+
+## Observación
+
+Esta es una base de test con imagen fijada a `2026.4.9`.

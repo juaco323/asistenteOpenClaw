@@ -8,41 +8,42 @@ Despliegue de prueba para el agente empleado en Ubuntu LTS.
 - `.env.example`
 - `install.sh`
 - `update.sh`
+- `backup.sh`
+- `restore.sh`
 
-## Persistencia
-
-Este stack guarda el estado en:
-
-- `~/.openclaw-empleado/`
-- `~/.openclaw-empleado/workspace/`
-
-Ahí quedarán configuración, sesiones, memoria y archivos del workspace mientras el volumen del host se mantenga.
-
-## Instalación rápida
-
-Desde el repositorio clonado:
+## Instalación
 
 ```bash
-chmod +x docker/empleado/install.sh docker/empleado/update.sh
+chmod +x docker/empleado/*.sh
 docker/empleado/install.sh
 ```
 
-Luego abre:
+## URL
 
 - `http://127.0.0.1:18790/`
 
-El token queda guardado en:
+## Archivos importantes
 
-- `docker/empleado/.env`
+- token y variables: `docker/empleado/.env`
+- estado persistente: `~/.openclaw-empleado/`
 
-## Actualización
+## Mantenimiento
 
+### Actualizar
 ```bash
 docker/empleado/update.sh
 ```
 
-## Notas
+### Backup
+```bash
+docker/empleado/backup.sh
+```
 
-- Esta versión es de **testeo**.
-- El stack usa una imagen pública de OpenClaw por defecto.
-- Si quieres una versión más cerrada o más estable, en la siguiente fase podemos fijar versión, endurecer seguridad y agregar backup.
+### Restore
+```bash
+docker/empleado/restore.sh docker/empleado/backups/ARCHIVO.tgz
+```
+
+## Observación
+
+Esta es una base de test con imagen fijada a `2026.4.9`.

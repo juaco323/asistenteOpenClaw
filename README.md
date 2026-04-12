@@ -1,104 +1,72 @@
-# OpenClaw Agents Config Repo
+# asistenteOpenClaw
 
-Repositorio de configuración para dos agentes separados:
+Repositorio de configuración para dos agentes OpenClaw separados:
 
-- `workspace-admin/`
-- `workspace-empleado/`
+- `admin`
+- `empleado`
 
-La idea de este repositorio es versionar **configuración y prompts**, no el estado vivo del sistema.
+Cada agente está pensado para ejecutarse por separado, idealmente en una máquina Ubuntu LTS distinta, manteniendo su propio estado, sesiones, memoria y preferencias.
 
-## Qué sí se versiona
+## Ejecución paso a paso
 
-- `AGENTS.md`
-- `SOUL.md`
-- `IDENTITY.md`
-- `USER.md`
-- `TOOLS.md`
-- `MEMORY.md`
-- archivos de despliegue Docker
-- documentación de instalación
-
-## Qué no se versiona
-
-- credenciales
-- tokens
-- sesiones activas
-- auth profiles
-- logs
-- archivos temporales de ejecución
-
-## Estructura del repositorio
-
-```text
-workspace-admin/
-workspace-empleado/
-docker/
-  admin/
-  empleado/
-README.md
-.gitignore
+### 1. Clonar el repositorio
+```bash
+git clone https://github.com/juaco323/asistenteOpenClaw.git
+cd asistenteOpenClaw
 ```
 
-## Estrategia recomendada
+### 2. Elegir qué agente instalar
 
-- Un solo repositorio GitHub privado
-- Dos despliegues Docker separados
-- Dos volúmenes persistentes separados
-- Mismo image base de OpenClaw
-- Configuración distinta por agente
-- Una máquina por agente
-
-## Persistencia y preferencias
-
-Para esta fase de testeo, **no hace falta una base de datos separada**.
-
-La estrategia recomendada es persistir por agente:
-
-- estado
-- configuración
-- sesiones
-- workspace
-- memoria
-- preferencias en archivos (`MEMORY.md`, `USER.md`, `TOOLS.md`, etc.)
-
-Si más adelante necesitas analítica estructurada, búsqueda avanzada entre agentes o preferencias centralizadas multiusuario, recién ahí conviene evaluar base de datos.
-
-## Instalación rápida por agente
-
-### Admin
-
+## Instalar admin
 ```bash
-chmod +x docker/admin/install.sh docker/admin/update.sh
+chmod +x docker/admin/*.sh
 docker/admin/install.sh
 ```
 
-Control UI:
+Luego abre:
 - `http://127.0.0.1:18789/`
 
-### Empleado
-
+## Instalar empleado
 ```bash
-chmod +x docker/empleado/install.sh docker/empleado/update.sh
+chmod +x docker/empleado/*.sh
 docker/empleado/install.sh
 ```
 
-Control UI:
+Luego abre:
 - `http://127.0.0.1:18790/`
 
-## Actualización
+### 3. Actualizar
 
-### Admin
-
+## Admin
 ```bash
 docker/admin/update.sh
 ```
 
-### Empleado
-
+## Empleado
 ```bash
 docker/empleado/update.sh
 ```
 
-## Nota
+### 4. Backup
 
-Esta versión es de **testeo**. La versión final puede incorporar endurecimiento, automatización adicional, backups, fijación de versiones e integración más avanzada.
+## Admin
+```bash
+docker/admin/backup.sh
+```
+
+## Empleado
+```bash
+docker/empleado/backup.sh
+```
+
+### 5. Restore
+
+## Admin
+```bash
+docker/admin/restore.sh docker/admin/backups/ARCHIVO.tgz
+```
+
+## Empleado
+```bash
+docker/empleado/restore.sh docker/empleado/backups/ARCHIVO.tgz
+```

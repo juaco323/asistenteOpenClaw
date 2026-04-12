@@ -35,7 +35,7 @@ cp -a "$SOURCE_WORKSPACE/." "$TARGET_WORKSPACE_DIR/"
 
 if [ ! -f "$ENV_FILE" ]; then
   cat > "$ENV_FILE" <<EOF
-OPENCLAW_IMAGE=ghcr.io/openclaw/openclaw:latest
+OPENCLAW_IMAGE=ghcr.io/openclaw/openclaw:2026.4.9
 OPENCLAW_CONTAINER_NAME=openclaw-admin
 OPENCLAW_HOST_PORT=18789
 OPENCLAW_INTERNAL_PORT=18789
@@ -45,7 +45,10 @@ OPENCLAW_WORKSPACE_DIR=$TARGET_WORKSPACE_DIR
 EOF
 fi
 
-echo "Levantando stack Docker de admin..."
+docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" config >/dev/null
+
+echo "Descargando imagen y levantando stack Docker de admin..."
+docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" pull
 docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" up -d
 
 echo
