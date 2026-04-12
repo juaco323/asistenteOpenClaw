@@ -36,6 +36,28 @@ Cada agente guarda su estado por separado:
 
 Esto permite mover cada agente a otra máquina conservando configuración, memoria y sesiones, siempre que copies esa carpeta.
 
+## Actualización
+
+Primero trae los cambios del repositorio:
+
+```bash
+git pull
+```
+
+Luego ejecuta:
+
+### Admin
+```bash
+docker/admin/update.sh
+```
+
+### Empleado
+```bash
+docker/empleado/update.sh
+```
+
+El script de actualización vuelve a copiar la configuración del workspace desde el repo local al workspace persistente del agente y después relanza el stack.
+
 ## Backup
 
 ### Admin

@@ -37,6 +37,14 @@ Luego abre:
 
 ### 3. Actualizar
 
+Primero trae los cambios del repositorio:
+
+```bash
+git pull
+```
+
+Luego actualiza el agente correspondiente.
+
 ## Admin
 ```bash
 docker/admin/update.sh
