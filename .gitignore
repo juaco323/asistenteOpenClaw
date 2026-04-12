@@ -1,0 +1,18 @@
+# Secrets and local runtime
+.env
+.env.*
+*.local
+
+# OpenClaw runtime/state that should not be versioned
+.openclaw/
+credentials/
+media/
+cron/runs/
+*.jsonl
+**/auth-profiles.json
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
