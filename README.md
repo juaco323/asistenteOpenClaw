@@ -27,7 +27,7 @@ La idea de este repositorio es versionar **configuración y prompts**, no el est
 - logs
 - archivos temporales de ejecución
 
-## Estructura recomendada
+## Estructura del repositorio
 
 ```text
 workspace-admin/
@@ -46,7 +46,59 @@ README.md
 - Dos volúmenes persistentes separados
 - Mismo image base de OpenClaw
 - Configuración distinta por agente
+- Una máquina por agente
+
+## Persistencia y preferencias
+
+Para esta fase de testeo, **no hace falta una base de datos separada**.
+
+La estrategia recomendada es persistir por agente:
+
+- estado
+- configuración
+- sesiones
+- workspace
+- memoria
+- preferencias en archivos (`MEMORY.md`, `USER.md`, `TOOLS.md`, etc.)
+
+Si más adelante necesitas analítica estructurada, búsqueda avanzada entre agentes o preferencias centralizadas multiusuario, recién ahí conviene evaluar base de datos.
+
+## Instalación rápida por agente
+
+### Admin
+
+```bash
+chmod +x docker/admin/install.sh docker/admin/update.sh
+docker/admin/install.sh
+```
+
+Control UI:
+- `http://127.0.0.1:18789/`
+
+### Empleado
+
+```bash
+chmod +x docker/empleado/install.sh docker/empleado/update.sh
+docker/empleado/install.sh
+```
+
+Control UI:
+- `http://127.0.0.1:18790/`
+
+## Actualización
+
+### Admin
+
+```bash
+docker/admin/update.sh
+```
+
+### Empleado
+
+```bash
+docker/empleado/update.sh
+```
 
 ## Nota
 
-Esta versión es de **testeo**. La versión final puede incorporar endurecimiento, automatización adicional, backups y estrategia de actualización.
+Esta versión es de **testeo**. La versión final puede incorporar endurecimiento, automatización adicional, backups, fijación de versiones e integración más avanzada.

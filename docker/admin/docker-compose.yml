@@ -1,0 +1,23 @@
+services:
+  openclaw-admin:
+    image: ${OPENCLAW_IMAGE}
+    container_name: ${OPENCLAW_CONTAINER_NAME}
+    restart: unless-stopped
+    ports:
+      - "${OPENCLAW_HOST_PORT}:${OPENCLAW_INTERNAL_PORT}"
+    environment:
+      NODE_ENV: production
+      OPENCLAW_STATE_DIR: /home/node/.openclaw
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
+    volumes:
+      - ${OPENCLAW_STATE_DIR}:/home/node/.openclaw
+      - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
+    command:
+      - node
+      - dist/index.js
+      - gateway
+      - --allow-unconfigured
+      - --port
+      - "${OPENCLAW_INTERNAL_PORT}"
+      - --bind
+      - lan

@@ -1,22 +1,48 @@
 # Docker Admin (test)
 
-Despliegue de prueba para el agente administrador.
+Despliegue de prueba para el agente administrador en Ubuntu LTS.
 
-## Objetivo
-
-Ejecutar el agente `admin` en una máquina Ubuntu LTS con persistencia separada.
-
-## Persistencia sugerida
-
-- estado: `~/.openclaw-admin/`
-- workspace: `~/.openclaw-admin/workspace/`
-
-## Siguiente fase
-
-En la siguiente iteración se puede agregar:
+## Qué incluye
 
 - `docker-compose.yml`
 - `.env.example`
-- script `install.sh`
-- script `update.sh`
-- guía de migración entre máquinas
+- `install.sh`
+- `update.sh`
+
+## Persistencia
+
+Este stack guarda el estado en:
+
+- `~/.openclaw-admin/`
+- `~/.openclaw-admin/workspace/`
+
+Ahí quedarán configuración, sesiones, memoria y archivos del workspace mientras el volumen del host se mantenga.
+
+## Instalación rápida
+
+Desde el repositorio clonado:
+
+```bash
+chmod +x docker/admin/install.sh docker/admin/update.sh
+docker/admin/install.sh
+```
+
+Luego abre:
+
+- `http://127.0.0.1:18789/`
+
+El token queda guardado en:
+
+- `docker/admin/.env`
+
+## Actualización
+
+```bash
+docker/admin/update.sh
+```
+
+## Notas
+
+- Esta versión es de **testeo**.
+- El stack usa una imagen pública de OpenClaw por defecto.
+- Si quieres una versión más cerrada o más estable, en la siguiente fase podemos fijar versión, endurecer seguridad y agregar backup.
