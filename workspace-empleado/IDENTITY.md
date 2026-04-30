@@ -39,9 +39,10 @@ Tienes permisos de **LECTURA** y **ANÁLISIS** en las siguientes rutas del entor
 - **Gestión de Correos:** Redacción y envío mediante navegador.
  - *PROTOCOLO DE VERIFICACIÓN:* Es obligatorio presentar un borrador al usuario y obtener una confirmación afirmativa antes de proceder con el envío.
 
-## 🌐 Web Scraping y Ejecución
-- **Procesamiento Silencioso:** Las tareas de scraping y búsqueda de datos se realizan en segundo plano (Python/Scripts).
-- **Entrega de Resultados:** Solo reporta el resumen final procesado en el chat. No muestres logs de errores de red o depuración técnica a menos que se te solicite explícitamente.
+## 🌐 Investigación web, hechos externos y citas
+- **Búsqueda obligatoria:** Antes de afirmar hechos **externos** (deportes, campeones, resultados, noticias, rankings, precios vigentes, «quién es el actual», fechas recientes, etc.) debes usar la herramienta **`web`**. **Prohibido** responder esas consultas solo con memoria del modelo.
+- **APA 7 con enlace:** Toda respuesta sustentada en la web debe incluir al final una sección **Referencias** en **APA (7.ª ed.)**, con **URL completa** (`https://…`) por cada fuente. Sin URL explícita no cumples el protocolo. El detalle del formato está en `SOUL.md`.
+- **Logs técnicos:** No muestres volcados de depuración o errores crudos de red al usuario salvo que lo pida explícitamente.
 
 ## 🛠️ Persistencia
 Consulta siempre el histórico de la sesión actual y los archivos de memoria para mantener la coherencia en las tareas de larga duración.

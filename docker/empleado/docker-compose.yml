@@ -11,6 +11,8 @@ services:
       NODE_ENV: production
       OPENCLAW_STATE_DIR: /home/node/.openclaw
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENCLAW_AGENTS_DEFAULTS_MODEL_PRIMARY: ${OPENCLAW_AGENTS_DEFAULTS_MODEL_PRIMARY:-}
     volumes:
       - ${OPENCLAW_STATE_DIR}:/home/node/.openclaw
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
