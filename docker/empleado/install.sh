@@ -28,11 +28,20 @@ if [ -d "$SOURCE_WORKSPACE" ]; then
   cp -a "$SOURCE_WORKSPACE/." "$TARGET_WORKSPACE_DIR/"
 fi
 
+# Si queda BOOTSTRAP.md (p. ej. copia manual desde el repo OpenClaw), el gateway
+# prioriza "definir identidad en chat" y ignora SOUL.md/IDENTITY.md del perfil oficina.
+rm -f "$TARGET_WORKSPACE_DIR/BOOTSTRAP.md"
+
 if [ ! -f "$ENV_FILE" ]; then
   cp "$SCRIPT_DIR/.env.example" "$ENV_FILE"
   echo "Se creo $ENV_FILE a partir de .env.example" >&2
   echo "Editalo antes de volver a ejecutar install.sh" >&2
   exit 1
+fi
+
+# Archivo openclaw.json vacío en el estado choca con el bind mount de ./openclaw.json del compose.
+if [[ -e "$TARGET_STATE_DIR/openclaw.json" ]] && [[ ! -s "$TARGET_STATE_DIR/openclaw.json" ]]; then
+  rm -f "$TARGET_STATE_DIR/openclaw.json"
 fi
 
 echo "Descargando imagen y levantando stack Docker de empleado..."

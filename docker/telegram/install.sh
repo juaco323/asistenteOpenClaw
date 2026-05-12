@@ -28,3 +28,4 @@ fi
 echo "Construyendo y levantando bot de Telegram..."
 docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" up -d --build
 echo "Bot de Telegram desplegado."
+echo "Asegurate de que openclaw-admin (18789) y openclaw-empleado (18790) esten arriba; el bot usa host.docker.internal para hablar con ellos."

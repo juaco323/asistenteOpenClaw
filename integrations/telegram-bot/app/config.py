@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR / ".env", override=False)
 
 
 def _parse_bool(value: str, *, default: bool) -> bool:
@@ -93,10 +93,15 @@ def load_settings() -> Settings:
     if not telegram_bot_token:
         raise RuntimeError("Missing TELEGRAM_BOT_TOKEN.")
 
-    allowed_user_ids = {
-        int(raw_id)
-        for raw_id in _parse_csv(os.getenv("TELEGRAM_ALLOWED_USER_IDS", ""))
-    }
+    raw_ids = _parse_csv(os.getenv("TELEGRAM_ALLOWED_USER_IDS", ""))
+    allowed_user_ids: set[int] = set()
+    for raw_id in raw_ids:
+        try:
+            allowed_user_ids.add(int(raw_id))
+        except ValueError as exc:
+            raise RuntimeError(
+                f"Invalid TELEGRAM_ALLOWED_USER_IDS entry (must be integers): {raw_id!r}"
+            ) from exc
     allowed_usernames = {
         username.lower()
         for username in _parse_csv(os.getenv("TELEGRAM_ALLOWED_USERNAMES", ""))

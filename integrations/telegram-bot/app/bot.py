@@ -42,7 +42,8 @@ def build_application(settings: Settings) -> Application:
 
     application.bot_data[OPENCLAW_CLIENT_KEY] = client
     application.bot_data[SETTINGS_KEY] = settings
-    application.add_handler(_build_main_conversation())
+    # Comandos generales primero: si el ConversationHandler va delante, /start puede no
+    # llegar al handler cuando el usuario no está en conversación (PTB 21).
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", start_command))
     application.add_handler(CommandHandler("workspace", workspace_command))
@@ -54,6 +55,7 @@ def build_application(settings: Settings) -> Application:
             pattern=r"^workspace:select:(admin|empleado)$",
         )
     )
+    application.add_handler(_build_main_conversation())
     application.add_handler(
         MessageHandler(filters.TEXT & ~filters.COMMAND, default_text_message)
     )
@@ -143,6 +145,11 @@ async def _ensure_authorized(
     if user.id in settings.allowed_user_ids or username in settings.allowed_usernames:
         return True
 
+    LOGGER.warning(
+        "Telegram acceso denegado: user_id=%s username=%r (configurar TELEGRAM_ALLOWED_USER_IDS)",
+        user.id,
+        user.username,
+    )
     if update.message is not None:
         await update.message.reply_text("No tienes permiso para usar este bot.")
     elif update.callback_query is not None:

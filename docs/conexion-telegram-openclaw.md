@@ -24,7 +24,7 @@ Al finalizar:
 - [ ] Verificar que `docker/admin/openclaw.json` y `docker/empleado/openclaw.json` queden montados en sus contenedores
 - [ ] Crear `docker/telegram/.env` a partir de `docker/telegram/.env.pc-oficina.example`
 - [ ] Pegar el token nuevo de Telegram
-- [ ] Pegar tu `TELEGRAM_ALLOWED_USER_IDS`
+- [ ] Pegar `TELEGRAM_ALLOWED_USER_IDS` (un ID o varios separados por coma, sin espacios)
 - [ ] Pegar los tokens de gateway de `admin` y `empleado`
 - [ ] Levantar `docker/telegram`
 - [ ] Probar `/estado`
@@ -115,7 +115,7 @@ Ambos habilitan:
 
 Si modificaste compose o configuracion, verifica que el archivo quede montado como:
 
-- `/home/node/.openclaw/openclaw.json`
+- `/etc/openclaw/openclaw.json` (solo lectura; fuera del volumen `~/.openclaw` del contenedor para que la persistencia del gateway no rompa el bind)
 
 ## Paso 6. Preparar el bot de Telegram
 
@@ -197,13 +197,28 @@ docker/telegram/update.sh
 
 ## Problemas comunes
 
+### El bot no responde a /start ni a mensajes
+
+- Confirma que el contenedor esta arriba: `docker ps | grep telegram-openclaw-bot`
+- Si no existe, ejecuta `docker/telegram/install.sh` (requiere `docker/telegram/.env` configurado).
+- Levanta **admin** y **empleado**; el bot usa `host.docker.internal:18789` y `:18790`. Sin empleado, `/estado` falla en esa linea aunque el bot deba responder a `/start` (orden de handlers corregido en el codigo del bot).
+
+### `openclaw-empleado` no arranca por montaje de `openclaw.json`
+
+Si en `~/.openclaw-empleado/` existe un `openclaw.json` vacio (0 bytes), puede chocar con el bind mount del repo. Borralo y vuelve a ejecutar `docker/empleado/install.sh` (el script ahora elimina ese archivo vacio antes del `up`).
+
 ### `/estado` falla con 401 o 403
 
 El `OPENCLAW_*_GATEWAY_TOKEN` del bot no coincide con el token del gateway.
 
 ### `/chat` falla con 404
 
-No esta habilitado `chatCompletions` en OpenClaw o no quedo montado `openclaw.json`.
+- Confirma `gateway.http.endpoints.chatCompletions.enabled` en `docker/admin/openclaw.json` y `docker/empleado/openclaw.json`.
+- Si el JSON del repo esta bien pero sigue 404: el gateway pudo **sustituir** `openclaw.json` bajo el volumen de estado y **romper** el bind de un archivo sobre un directorio (se pierde `gateway.port` u otras claves). Con el compose actual la plantilla va en `/etc/openclaw/openclaw.json`; recrea el contenedor (`docker compose up -d --force-recreate` en `docker/admin` y `docker/empleado`).
+
+### El perfil Empleado (o Admin) habla de estar "en blanco" y pide definir nombre, vibe, emoji
+
+Eso ocurre si en el workspace del gateway (`~/.openclaw-empleado/workspace/` o `~/.openclaw-admin/workspace/`) existe **`BOOTSTRAP.md`**: OpenClaw lo usa como arranque y pide co-crear identidad en lugar de seguir `SOUL.md` / `IDENTITY.md`. Borra `BOOTSTRAP.md` en ese directorio (o vuelve a ejecutar `docker/empleado/install.sh` / `docker/admin/install.sh`: el script ya lo elimina despues de copiar `workspace-*`).
 
 ### El bot responde pero cualquiera puede usarlo
 
