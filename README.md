@@ -1,41 +1,61 @@
 # asistenteOpenClaw
 
-Repositorio de configuración para dos agentes OpenClaw separados:
+Repositorio de configuracion para dos agentes OpenClaw separados:
 
 - `admin`
 - `empleado`
 
-Cada agente está pensado para ejecutarse por separado, idealmente en una máquina Ubuntu LTS distinta, manteniendo su propio estado, sesiones, memoria y preferencias.
+Cada agente esta pensado para ejecutarse por separado, manteniendo su propio estado, sesiones, memoria y preferencias.
 
-## Ejecución paso a paso
+## Componentes
+
+- `docker/admin`: stack Docker para el perfil administrador
+- `docker/empleado`: stack Docker para el perfil empleado
+- `docker/telegram`: despliegue del bot de Telegram que conversa con ambas instancias
+- `workspace-admin`: workspace del agente administrador
+- `workspace-empleado`: workspace del agente empleado
+
+## Ejecucion paso a paso
 
 ### 1. Clonar el repositorio
+
 ```bash
 git clone https://github.com/juaco323/asistenteOpenClaw.git
 cd asistenteOpenClaw
 ```
 
-### 2. Elegir qué agente instalar
+### 2. Elegir que agente instalar
 
 ## Instalar admin
+
 ```bash
 chmod +x docker/admin/*.sh
 docker/admin/install.sh
 ```
 
 Luego abre:
+
 - `http://127.0.0.1:18789/`
 
 ## Instalar empleado
+
 ```bash
 chmod +x docker/empleado/*.sh
 docker/empleado/install.sh
 ```
 
 Luego abre:
+
 - `http://127.0.0.1:18790/`
 
-### 3. Actualizar
+### 3. Instalar el bot de Telegram
+
+```bash
+chmod +x docker/telegram/*.sh
+docker/telegram/install.sh
+```
+
+### 4. Actualizar
 
 Primero trae los cambios del repositorio:
 
@@ -43,38 +63,42 @@ Primero trae los cambios del repositorio:
 git pull
 ```
 
-Luego actualiza el agente correspondiente.
+Luego actualiza el componente correspondiente.
 
 ## Admin
+
 ```bash
 docker/admin/update.sh
 ```
 
 ## Empleado
+
 ```bash
 docker/empleado/update.sh
 ```
 
-### 4. Backup
+## Telegram
+
+```bash
+docker/telegram/update.sh
+```
+
+### 5. Documentacion de conexion Telegram
+
+Consulta:
+
+- `docs/conexion-telegram-openclaw.md`
+
+### 6. Backup y restore
 
 ## Admin
+
 ```bash
 docker/admin/backup.sh
 ```
 
 ## Empleado
+
 ```bash
 docker/empleado/backup.sh
-```
-
-### 5. Restore
-
-## Admin
-```bash
-docker/admin/restore.sh docker/admin/backups/ARCHIVO.tgz
-```
-
-## Empleado
-```bash
-docker/empleado/restore.sh docker/empleado/backups/ARCHIVO.tgz
 ```

@@ -13,6 +13,12 @@ cron/runs/
 *.jsonl
 **/auth-profiles.json
 
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
 # OS/editor
 .DS_Store
 Thumbs.db

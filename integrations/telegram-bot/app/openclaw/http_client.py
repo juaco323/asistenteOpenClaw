@@ -1,0 +1,181 @@
+from __future__ import annotations
+
+from typing import Any
+
+import httpx
+
+from app.config import WorkspaceSettings
+
+
+class GatewayOpenClawClient:
+    def __init__(
+        self,
+        *,
+        workspaces: dict[str, WorkspaceSettings],
+        timeout_seconds: float,
+    ) -> None:
+        self._workspaces = workspaces
+        self._client = httpx.AsyncClient(
+            timeout=timeout_seconds,
+            headers={"Content-Type": "application/json"},
+        )
+
+    async def chat(
+        self,
+        *,
+        workspace: str,
+        user_id: int,
+        username: str | None,
+        message: str,
+    ) -> str:
+        return await self._send_chat_completion(
+            workspace=workspace,
+            user_id=user_id,
+            messages=[{"role": "user", "content": message}],
+        )
+
+    async def list_reminders(
+        self,
+        *,
+        workspace: str,
+        user_id: int,
+        username: str | None,
+    ) -> str:
+        return await self._send_chat_completion(
+            workspace=workspace,
+            user_id=user_id,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Responde siempre en espanol, de forma concreta y profesional. "
+                        "Si el entorno soporta recordatorios o tareas programadas, revisalos "
+                        "y resume solo los activos del usuario. Si no existen o no se pueden "
+                        "consultar desde este entorno, dilo claramente y no inventes datos."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        "Lista mis recordatorios activos en este workspace. "
+                        f"Mi identificador externo es telegram:{user_id}. "
+                        f"Mi usuario es {username or 'sin_username'}."
+                    ),
+                },
+            ],
+        )
+
+    async def create_reminder(
+        self,
+        *,
+        workspace: str,
+        user_id: int,
+        username: str | None,
+        content: str,
+    ) -> str:
+        return await self._send_chat_completion(
+            workspace=workspace,
+            user_id=user_id,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Responde siempre en espanol, de forma concreta y profesional. "
+                        "Si el entorno soporta crear recordatorios o tareas programadas, hazlo. "
+                        "Si no puedes persistir el recordatorio desde este entorno, di exactamente "
+                        "que falta y no confirmes una creacion inexistente."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        "Quiero crear este recordatorio o tarea en este workspace:\n\n"
+                        f"{content}\n\n"
+                        f"Mi identificador externo es telegram:{user_id}. "
+                        f"Mi usuario es {username or 'sin_username'}."
+                    ),
+                },
+            ],
+        )
+
+    async def healthcheck(self, *, workspace: str) -> str:
+        workspace_settings = self._get_workspace(workspace)
+        response = await self._client.get(f"{workspace_settings.base_url}/healthz")
+        response.raise_for_status()
+        body = response.text.strip() or "ok"
+        return f"{workspace_settings.label}: OK ({body})"
+
+    async def _send_chat_completion(
+        self,
+        *,
+        workspace: str,
+        user_id: int,
+        messages: list[dict[str, str]],
+    ) -> str:
+        workspace_settings = self._get_workspace(workspace)
+        response = await self._client.post(
+            f"{workspace_settings.base_url}/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {workspace_settings.gateway_token}",
+                "x-openclaw-agent-id": workspace_settings.agent_id,
+            },
+            json={
+                "model": "openclaw",
+                "user": f"telegram:{workspace}:{user_id}",
+                "messages": messages,
+            },
+        )
+
+        if response.status_code in {401, 403}:
+            raise RuntimeError(
+                f"{workspace_settings.label}: token invalido o sin permisos. "
+                "Revisa OPENCLAW_*_GATEWAY_TOKEN."
+            )
+        if response.status_code == 404:
+            raise RuntimeError(
+                f"{workspace_settings.label}: falta habilitar /v1/chat/completions "
+                "en la configuracion del gateway."
+            )
+        response.raise_for_status()
+        return self._extract_response_text(response.json())
+
+    def _get_workspace(self, workspace: str) -> WorkspaceSettings:
+        try:
+            return self._workspaces[workspace]
+        except KeyError as exc:
+            available = ", ".join(self._workspaces.keys()) or "none"
+            raise RuntimeError(
+                f"Workspace {workspace!r} no configurado. Disponibles: {available}."
+            ) from exc
+
+    @staticmethod
+    def _extract_response_text(payload: Any) -> str:
+        if not isinstance(payload, dict):
+            raise RuntimeError("OpenClaw devolvio una respuesta no valida.")
+
+        choices = payload.get("choices", [])
+        if not isinstance(choices, list) or not choices:
+            raise RuntimeError("OpenClaw no devolvio choices en la respuesta.")
+
+        first_choice = choices[0]
+        if not isinstance(first_choice, dict):
+            raise RuntimeError("OpenClaw devolvio un choice invalido.")
+
+        message = first_choice.get("message", {})
+        if not isinstance(message, dict):
+            raise RuntimeError("OpenClaw devolvio un mensaje invalido.")
+
+        content = message.get("content")
+        if isinstance(content, str) and content.strip():
+            return content.strip()
+        if isinstance(content, list):
+            text_parts: list[str] = []
+            for item in content:
+                if isinstance(item, dict) and item.get("type") == "text":
+                    text = item.get("text")
+                    if isinstance(text, str) and text.strip():
+                        text_parts.append(text.strip())
+            if text_parts:
+                return "\n".join(text_parts)
+
+        raise RuntimeError("OpenClaw no devolvio texto util en la respuesta.")

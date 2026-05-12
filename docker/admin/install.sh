@@ -15,47 +15,28 @@ require_cmd() {
   }
 }
 
-random_token() {
-  if command -v openssl >/dev/null 2>&1; then
-    openssl rand -hex 24
-  else
-    date +%s | sha256sum | cut -d' ' -f1 | head -c 48
-  fi
-}
-
 require_cmd docker
 
 docker compose version >/dev/null 2>&1 || {
-  echo "Docker Compose v2 no está disponible." >&2
+  echo "Docker Compose v2 no esta disponible." >&2
   exit 1
 }
 
 mkdir -p "$TARGET_STATE_DIR" "$TARGET_WORKSPACE_DIR"
-cp -a "$SOURCE_WORKSPACE/." "$TARGET_WORKSPACE_DIR/"
 
-if [ ! -f "$ENV_FILE" ]; then
-  cat > "$ENV_FILE" <<EOF
-OPENCLAW_IMAGE=ghcr.io/openclaw/openclaw:2026.4.9
-OPENCLAW_CONTAINER_NAME=openclaw-admin
-OPENCLAW_HOST_PORT=18789
-OPENCLAW_INTERNAL_PORT=18789
-OPENCLAW_GATEWAY_TOKEN=$(random_token)
-OPENCLAW_STATE_DIR=$TARGET_STATE_DIR
-OPENCLAW_WORKSPACE_DIR=$TARGET_WORKSPACE_DIR
-OPENAI_API_KEY=
-OPENCLAW_AGENTS_DEFAULTS_MODEL_PRIMARY=openai/gpt-4.1-nano
-EOF
+if [ -d "$SOURCE_WORKSPACE" ]; then
+  cp -a "$SOURCE_WORKSPACE/." "$TARGET_WORKSPACE_DIR/"
 fi
 
-docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" config >/dev/null
+if [ ! -f "$ENV_FILE" ]; then
+  cp "$SCRIPT_DIR/.env.example" "$ENV_FILE"
+  echo "Se creo $ENV_FILE a partir de .env.example" >&2
+  echo "Editalo antes de volver a ejecutar install.sh" >&2
+  exit 1
+fi
 
 echo "Descargando imagen y levantando stack Docker de admin..."
 docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" pull
 docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" up -d
 
-echo
-echo "Admin desplegado en modo test."
-echo "Control UI: http://127.0.0.1:18789/"
-echo "Token guardado en: $ENV_FILE"
-echo
-echo "Siguiente paso recomendado: abrir el Control UI, autenticar con el token y completar la configuración que falte."
+echo "Admin desplegado en: http://127.0.0.1:18789/"

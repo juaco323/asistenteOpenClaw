@@ -1,0 +1,13 @@
+services:
+  telegram-openclaw-bot:
+    build:
+      context: ../..
+      dockerfile: docker/telegram/Dockerfile
+    container_name: telegram-openclaw-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ../../integrations/telegram-bot/data:/app/data
