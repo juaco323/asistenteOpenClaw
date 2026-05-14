@@ -35,7 +35,6 @@ LOGGER = logging.getLogger(__name__)
 CHAT_ACTIVE: Final[int] = 1
 REMINDER_MENU: Final[int] = 2
 REMINDER_CREATE: Final[int] = 3
-WORKSPACE_PASSWORD: Final[int] = 10
 
 OPENCLAW_CLIENT_KEY = "openclaw_client"
 SETTINGS_KEY = "settings"
@@ -58,17 +57,23 @@ def build_application(settings: Settings) -> Application:
 
     application.bot_data[OPENCLAW_CLIENT_KEY] = client
     application.bot_data[SETTINGS_KEY] = settings
-    # Los ConversationHandler deben ir antes que /salir global: si no, /salir no cierra
-    # el estado CHAT_ACTIVE y /chat puede reanudar el perfil sin nueva contraseña.
-    application.add_handler(_build_workspace_conversation())
+    # ConversationHandler del chat antes que /salir global: si no, /salir no cierra
+    # CHAT_ACTIVE y /chat puede reanudar el perfil sin nueva contraseña.
     application.add_handler(_build_main_conversation())
+    application.add_handler(CommandHandler("workspace", workspace_command))
+    application.add_handler(
+        CallbackQueryHandler(
+            workspace_select_callback,
+            pattern=r"^workspace:select:(admin|empleado)$",
+        )
+    )
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", start_command))
     application.add_handler(CommandHandler("estado", status_command))
     application.add_handler(CommandHandler("get", get_command))
     application.add_handler(CommandHandler("salir", exit_command))
     application.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, default_text_message)
+        MessageHandler(filters.TEXT & ~filters.COMMAND, routed_text_message)
     )
     application.add_error_handler(error_handler)
     return application
@@ -91,28 +96,6 @@ def _build_post_init(settings: Settings):
         )
 
     return _post_init
-
-
-def _build_workspace_conversation() -> ConversationHandler:
-    return ConversationHandler(
-        entry_points=[
-            CommandHandler("workspace", workspace_command),
-            CallbackQueryHandler(
-                workspace_select_callback,
-                pattern=r"^workspace:select:(admin|empleado)$",
-            ),
-        ],
-        states={
-            WORKSPACE_PASSWORD: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, workspace_password_message),
-            ],
-        },
-        fallbacks=[
-            CommandHandler("salir", workspace_password_cancel),
-            CommandHandler("start", start_command),
-        ],
-        allow_reentry=True,
-    )
 
 
 def _build_main_conversation() -> ConversationHandler:
@@ -254,21 +237,23 @@ async def _begin_workspace_switch(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     workspace_name: str,
-) -> int:
+) -> None:
     settings = _get_settings(context)
     workspace = settings.get_workspace(workspace_name)
     context.user_data[PENDING_WORKSPACE_KEY] = workspace_name
     context.user_data[WORKSPACE_AUTH_ATTEMPTS_KEY] = 0
     prompt = (
-        f"Ingresa la contraseña del perfil {workspace.label}.\n"
-        "Tu mensaje se borrará automáticamente al enviarla.\n"
+        f"Perfil elegido: {workspace.label}.\n\n"
+        "El botón solo selecciona el perfil; no inicia sesión.\n"
+        "Ahora escribe la contraseña de ese perfil en un mensaje de texto normal "
+        "(no es un comando). El mensaje se borrará al enviarlo.\n"
+        "Cuando veas «Contraseña correcta», podrás usar /chat.\n"
         "Usa /salir para cancelar."
     )
     if update.message is not None:
         await update.message.reply_text(prompt)
     elif update.callback_query is not None and update.callback_query.message is not None:
         await update.callback_query.message.reply_text(prompt)
-    return WORKSPACE_PASSWORD
 
 
 async def _complete_workspace_switch(
@@ -331,7 +316,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         "Bot listo para OpenClaw.\n\n"
         f"Workspaces configurados: {workspace_summary}.\n"
         f"Workspace activo: {current_label}.\n\n"
-        "Usa /workspace para elegir perfil (se solicita contraseña) y cambiar entre admin y empleado.\n"
+        "Usa /workspace para elegir perfil: pulsa un botón o escribe /workspace admin|empleado, "
+        "luego escribe la contraseña del perfil, y después /chat.\n"
         "Usa /chat para hablar con el agente remoto.\n"
         "En modo chat puedes pedir archivos en lenguaje natural "
         "(entrégame el archivo informe.pptx, envíame el informe.docx, dame presentacion.pptx).\n"
@@ -348,6 +334,16 @@ async def enter_chat_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         return ConversationHandler.END
 
     settings = _get_settings(context)
+    pending = context.user_data.get(PENDING_WORKSPACE_KEY)
+    if isinstance(pending, str) and pending in settings.workspaces:
+        workspace = settings.get_workspace(pending)
+        await update.message.reply_text(
+            f"Aún falta la contraseña del perfil {workspace.label}.\n"
+            "Escríbela en un mensaje de texto (no uses /chat hasta ver «Contraseña correcta»).\n"
+            "Usa /salir para cancelar el cambio de perfil."
+        )
+        return ConversationHandler.END
+
     if not context.user_data.get(WORKSPACE_AUTH_KEY):
         await update.message.reply_text(
             "No hay un perfil autenticado.\n"
@@ -700,6 +696,8 @@ async def reminders_close_callback(update: Update, context: ContextTypes.DEFAULT
 async def exit_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if not await _ensure_authorized(update, context):
         return ConversationHandler.END
+    if context.user_data.get(PENDING_WORKSPACE_KEY):
+        return await workspace_password_cancel(update, context)
     had_workspace = bool(context.user_data.get(WORKSPACE_AUTH_KEY))
     _clear_workspace_session(context)
     if update.message is not None:
@@ -721,57 +719,65 @@ async def exit_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     return ConversationHandler.END
 
 
-async def workspace_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def workspace_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.message is None or not await _ensure_authorized(update, context):
-        return ConversationHandler.END
+        return
 
     settings = _get_settings(context)
     available = _available_workspace_names(settings)
     if not available:
         await update.message.reply_text("No hay workspaces configurados; el bot esta en modo mock.")
-        return ConversationHandler.END
+        return
 
     if context.args:
         workspace_name = _normalize_workspace_name(context.args[0])
         if workspace_name is None or workspace_name not in settings.workspaces:
             await update.message.reply_text("Workspace no valido. Usa /workspace admin o /workspace empleado.")
-            return ConversationHandler.END
-        return await _begin_workspace_switch(update, context, workspace_name)
+            return
+        await _begin_workspace_switch(update, context, workspace_name)
+        return
 
     current = _resolve_workspace_from_context(context)
-    current_label = settings.get_workspace(current).label if current else "sin seleccionar"
+    if context.user_data.get(WORKSPACE_AUTH_KEY) and current:
+        estado = f"Perfil autenticado: {settings.get_workspace(current).label}."
+    else:
+        estado = "Sin perfil autenticado (después de elegir con el botón debes escribir la contraseña)."
     await update.message.reply_text(
-        f"Workspace actual: {current_label}.\n"
-        "Selecciona un perfil. Se solicitara contraseña:",
+        f"{estado}\n\n"
+        "Pulsa Administrador o Empleado y luego escribe la contraseña en el chat. "
+        "El botón no basta para iniciar sesión.\n"
+        "Cuando veas «Contraseña correcta», usa /chat.",
         reply_markup=_workspace_keyboard(settings),
     )
-    return ConversationHandler.END
 
 
-async def workspace_select_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def workspace_select_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not await _ensure_authorized(update, context):
-        return ConversationHandler.END
+        return
     query = update.callback_query
     if query is None:
-        return ConversationHandler.END
+        return
 
-    await query.answer()
+    await query.answer(
+        "Siguiente paso: escribe la contraseña del perfil en el chat.",
+        show_alert=True,
+    )
     settings = _get_settings(context)
     workspace_name = query.data.split(":")[-1]
     if workspace_name not in settings.workspaces:
-        return ConversationHandler.END
-    return await _begin_workspace_switch(update, context, workspace_name)
+        return
+    await _begin_workspace_switch(update, context, workspace_name)
 
 
-async def workspace_password_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def workspace_password_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.message is None or not await _ensure_authorized(update, context):
-        return ConversationHandler.END
+        return
 
     settings = _get_settings(context)
     pending = context.user_data.get(PENDING_WORKSPACE_KEY)
     if not isinstance(pending, str) or pending not in settings.workspaces:
         await update.message.reply_text("No hay un cambio de perfil pendiente. Usa /workspace.")
-        return ConversationHandler.END
+        return
 
     attempts = int(context.user_data.get(WORKSPACE_AUTH_ATTEMPTS_KEY, 0))
     if attempts >= MAX_WORKSPACE_PASSWORD_ATTEMPTS:
@@ -780,7 +786,7 @@ async def workspace_password_message(update: Update, context: ContextTypes.DEFAU
         await update.message.reply_text(
             "Demasiados intentos fallidos. Usa /workspace para volver a intentar."
         )
-        return ConversationHandler.END
+        return
 
     provided = (update.message.text or "").strip()
     await _secure_delete_message(update)
@@ -802,12 +808,10 @@ async def workspace_password_message(update: Update, context: ContextTypes.DEFAU
                 f"Te quedan {remaining} intento(s). Vuelve a escribir la contraseña "
                 "o usa /salir para cancelar."
             )
-            return WORKSPACE_PASSWORD
-        return ConversationHandler.END
+        return
 
     context.user_data.pop(WORKSPACE_AUTH_ATTEMPTS_KEY, None)
     await _complete_workspace_switch(update, context, pending)
-    return ConversationHandler.END
 
 
 async def workspace_password_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -816,6 +820,13 @@ async def workspace_password_cancel(update: Update, context: ContextTypes.DEFAUL
     if update.message is not None:
         await update.message.reply_text("Cambio de perfil cancelado.")
     return ConversationHandler.END
+
+
+async def routed_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if context.user_data.get(PENDING_WORKSPACE_KEY):
+        await workspace_password_message(update, context)
+        return
+    await default_text_message(update, context)
 
 
 async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
