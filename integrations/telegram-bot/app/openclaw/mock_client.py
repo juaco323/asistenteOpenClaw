@@ -18,6 +18,7 @@ class MockOpenClawClient:
         user_id: int,
         username: str | None,
         message: str,
+        chat_id: int | None = None,
     ) -> str:
         identity = username or f"user-{user_id}"
         return (

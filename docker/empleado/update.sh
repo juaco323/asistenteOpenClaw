@@ -20,7 +20,6 @@ if [ -d "$SOURCE_WORKSPACE" ]; then
   cp -a "$SOURCE_WORKSPACE/." "$OPENCLAW_WORKSPACE_DIR/"
 fi
 
-docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" pull
-docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" up -d
+docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" up -d --build
 
 echo "Stack empleado actualizado y workspace sincronizado."

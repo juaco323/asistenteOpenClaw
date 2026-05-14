@@ -7,7 +7,10 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      TELEGRAM_HOST_HOME: ${TELEGRAM_HOST_HOME:-/home/joaquin}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - ../../integrations/telegram-bot/data:/app/data
+      - ${TELEGRAM_HOST_HOME:-/home/joaquin}:/home/joaquin:ro

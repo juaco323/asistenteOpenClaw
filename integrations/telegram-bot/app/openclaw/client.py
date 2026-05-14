@@ -16,6 +16,7 @@ class OpenClawClient(Protocol):
         user_id: int,
         username: str | None,
         message: str,
+        chat_id: int | None = None,
     ) -> str:
         ...
 
@@ -46,6 +47,7 @@ def build_openclaw_client(settings: Settings) -> OpenClawClient:
     if settings.openclaw_mode == "gateway":
         return GatewayOpenClawClient(
             workspaces=settings.workspaces,
+            workspace_policies=settings.workspace_policies,
             timeout_seconds=settings.openclaw_request_timeout_seconds,
         )
     return MockOpenClawClient(storage_path=settings.data_dir / "mock_reminders.json")

@@ -5,6 +5,8 @@ from typing import Any
 import httpx
 
 from app.config import WorkspaceSettings
+from app.workspace_policy import WorkspaceFilePolicy
+from app.telegram_context import build_telegram_system_message
 
 
 class GatewayOpenClawClient:
@@ -12,9 +14,11 @@ class GatewayOpenClawClient:
         self,
         *,
         workspaces: dict[str, WorkspaceSettings],
+        workspace_policies: dict[str, WorkspaceFilePolicy],
         timeout_seconds: float,
     ) -> None:
         self._workspaces = workspaces
+        self._workspace_policies = workspace_policies
         self._client = httpx.AsyncClient(
             timeout=timeout_seconds,
             headers={"Content-Type": "application/json"},
@@ -27,11 +31,26 @@ class GatewayOpenClawClient:
         user_id: int,
         username: str | None,
         message: str,
+        chat_id: int | None = None,
     ) -> str:
+        workspace_settings = self._get_workspace(workspace)
+        policy = self._get_policy(workspace)
+        telegram_chat_id = chat_id if chat_id is not None else user_id
+        system_message = build_telegram_system_message(
+            workspace=workspace,
+            workspace_label=workspace_settings.label,
+            chat_id=telegram_chat_id,
+            user_id=user_id,
+            username=username,
+            policy=policy,
+        )
         return await self._send_chat_completion(
             workspace=workspace,
             user_id=user_id,
-            messages=[{"role": "user", "content": message}],
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": message},
+            ],
         )
 
     async def list_reminders(
@@ -138,6 +157,12 @@ class GatewayOpenClawClient:
             )
         response.raise_for_status()
         return self._extract_response_text(response.json())
+
+    def _get_policy(self, workspace: str) -> WorkspaceFilePolicy:
+        try:
+            return self._workspace_policies[workspace]
+        except KeyError as exc:
+            raise RuntimeError(f"No file policy for workspace {workspace!r}.") from exc
 
     def _get_workspace(self, workspace: str) -> WorkspaceSettings:
         try:

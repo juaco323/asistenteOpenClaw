@@ -88,6 +88,15 @@ docker/telegram/update.sh
 Consulta:
 
 - `docs/conexion-telegram-openclaw.md`
+- `integrations/telegram-bot/README.md`
+- `docker/telegram/README.md`
+
+El bot incluye:
+
+- autenticacion por contraseña al cambiar entre perfiles (`/workspace`)
+- entrega de archivos por Telegram (`/get` o lenguaje natural)
+- politica de archivos por workspace (`integrations/telegram-bot/config/workspace-file-policy.yaml`)
+- cierre de sesion de perfil con `/salir` (requiere reautenticacion para `/chat`)
 
 ### 6. Backup y restore
 

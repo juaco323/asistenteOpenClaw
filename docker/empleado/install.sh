@@ -44,8 +44,8 @@ if [[ -e "$TARGET_STATE_DIR/openclaw.json" ]] && [[ ! -s "$TARGET_STATE_DIR/open
   rm -f "$TARGET_STATE_DIR/openclaw.json"
 fi
 
-echo "Descargando imagen y levantando stack Docker de empleado..."
-docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" pull
+echo "Construyendo imagen (OpenClaw + dependencias Python) y levantando stack Docker de empleado..."
+docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" build --pull
 docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" up -d
 
 echo "Empleado desplegado en: http://127.0.0.1:18790/"

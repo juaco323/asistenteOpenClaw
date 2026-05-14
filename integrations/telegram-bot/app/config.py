@@ -6,6 +6,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from app.workspace_policy import WorkspaceFilePolicy, load_workspace_policies
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env", override=False)
@@ -44,6 +46,9 @@ class Settings:
     openclaw_request_timeout_seconds: float
     sync_telegram_commands: bool
     data_dir: Path
+    host_home: Path
+    workspace_policies: dict[str, WorkspaceFilePolicy]
+    workspace_passwords: dict[str, str]
     default_workspace: str | None
     workspaces: dict[str, WorkspaceSettings]
 
@@ -59,10 +64,30 @@ class Settings:
                 f"Unknown workspace {name!r}. Configured workspaces: {available}."
             ) from exc
 
+    def get_policy(self, workspace: str) -> WorkspaceFilePolicy:
+        try:
+            return self.workspace_policies[workspace]
+        except KeyError as exc:
+            raise RuntimeError(f"No file policy configured for workspace {workspace!r}.") from exc
+
+    def read_roots_for(self, workspace: str) -> list[Path]:
+        return list(self.get_policy(workspace).read_roots)
+
+    def write_roots_for(self, workspace: str) -> list[Path]:
+        return list(self.get_policy(workspace).write_roots)
+
+    def deny_roots_for(self, workspace: str) -> list[Path]:
+        return list(self.get_policy(workspace).deny_roots)
+
 
 WORKSPACE_LABELS = {
     "admin": "Administrador",
     "empleado": "Empleado",
+}
+
+DEFAULT_WORKSPACE_PASSWORDS = {
+    "admin": "Admin1234*",
+    "empleado": "Empleado1234*",
 }
 
 
@@ -119,6 +144,7 @@ def load_settings() -> Settings:
 
     data_dir = BASE_DIR / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
+    host_home = Path(os.getenv("TELEGRAM_HOST_HOME", "/home/joaquin")).expanduser()
 
     workspaces = {
         workspace_name: workspace
@@ -142,6 +168,18 @@ def load_settings() -> Settings:
                 "OPENCLAW_DEFAULT_WORKSPACE must reference a configured workspace."
             )
 
+    workspace_policies = load_workspace_policies(host_home)
+    workspace_passwords = {
+        "admin": os.getenv(
+            "TELEGRAM_ADMIN_PASSWORD",
+            DEFAULT_WORKSPACE_PASSWORDS["admin"],
+        ),
+        "empleado": os.getenv(
+            "TELEGRAM_EMPLEADO_PASSWORD",
+            DEFAULT_WORKSPACE_PASSWORDS["empleado"],
+        ),
+    }
+
     return Settings(
         telegram_bot_token=telegram_bot_token,
         allowed_user_ids=allowed_user_ids,
@@ -150,6 +188,9 @@ def load_settings() -> Settings:
         openclaw_request_timeout_seconds=timeout,
         sync_telegram_commands=sync_telegram_commands,
         data_dir=data_dir,
+        host_home=host_home,
+        workspace_policies=workspace_policies,
+        workspace_passwords=workspace_passwords,
         default_workspace=default_workspace,
         workspaces=workspaces,
     )
