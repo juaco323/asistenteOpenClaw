@@ -46,4 +46,4 @@ docker/empleado/restore.sh docker/empleado/backups/ARCHIVO.tgz
 
 ## Observación
 
-Esta es una base de test con imagen fijada a `2026.4.9`.
+Esta es una base de test con imagen fijada a `2026.5.7` (requerida por plugins tipo IRC/Matrix/Mattermost ≥ 2026.4.10).

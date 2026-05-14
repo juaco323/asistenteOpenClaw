@@ -1,32 +1,27 @@
-# TOOLS.md - Local Notes
+# TOOLS.md - Notas locales (empleado)
 
-Skills define _how_ tools work. This file is for _your_ specifics — the stuff that's unique to your setup.
+## Rutas de archivos (Docker → host)
 
-## What Goes Here
+El gateway empleado corre en contenedor. Para crear documentos del usuario en Ubuntu:
 
-Things like:
+| Carpeta | Ruta en herramientas | En el PC del usuario |
+|---|---|---|
+| Documentos | `/home/joaquin/Documentos` | `~/Documentos` |
+| Escritorio | `/home/joaquin/Escritorio` | `~/Escritorio` |
+| Descargas | `/home/joaquin/Descargas` | `~/Descargas` |
+| Imágenes | `/home/joaquin/Imágenes` | `~/Imágenes` |
 
-- Camera names and locations
-- SSH hosts and aliases
-- Preferred voices for TTS
-- Speaker/room names
-- Device nicknames
-- Anything environment-specific
+Estado interno del agente (memoria, sesiones): `/home/node/.openclaw/` — no usar para documentos de oficina.
 
-## Examples
+Usuario Linux del empleado: `joaquin` (uid 1000).
 
-```markdown
-### Cameras
+## Python preinstalado en el contenedor empleado
 
-- living-room → Main area, 180° wide angle
-- front-door → Entrance, motion-triggered
+Para tareas ofimáticas (PPTX, imágenes, descargas HTTP) ya están disponibles:
 
-### SSH
+- `python3` / `pip3`
+- `python-pptx`
+- `requests`
+- `Pillow`
 
-- home-server → 192.168.1.100, user: admin
-
-### TTS
-
-- Preferred voice: "Nova" (warm, slightly British)
-- Default speaker: Kitchen HomePod
-```
+No hace falta pedir autorización para instalar estos paquetes base; si falta otra librería específica, aplicar el protocolo de `SOUL.md` § *Dependencias y librerías del entorno*.

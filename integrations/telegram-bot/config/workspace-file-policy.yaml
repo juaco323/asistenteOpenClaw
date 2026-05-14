@@ -1,0 +1,76 @@
+# Política de archivos por workspace (Telegram + OpenClaw).
+# Rutas relativas se resuelven contra TELEGRAM_HOST_HOME (p. ej. /home/joaquin).
+#
+# Regla global: ningún perfil puede eliminar archivos (delete_allowed: false).
+# delete_forbidden_roots refuerza zonas críticas (OpenClaw, proyecto, sistema).
+
+admin:
+  delete_allowed: false
+  read_roots:
+    - Documentos/openClaw/workspace-admin
+    - Documentos/openClaw
+    - .openclaw-admin/workspace
+    - .openclaw/workspace
+    - .openclaw
+    - Documentos
+    - Descargas
+    - Escritorio
+    - Imágenes
+  write_roots:
+    - Documentos/openClaw/workspace-admin
+    - Documentos
+    - Descargas
+    - Escritorio
+    - Imágenes
+  deny_roots:
+    - Documentos/openClaw/docker
+  delete_forbidden_roots:
+    - Documentos/openClaw
+    - .openclaw
+    - .openclaw-admin
+    - /etc
+    - /var
+    - /bin
+    - /sbin
+    - /usr
+    - /lib
+    - /root
+  default_create_dir: Documentos/openClaw/workspace-admin
+
+empleado:
+  delete_allowed: false
+  read_roots:
+    - Documentos
+    - Descargas
+    - Escritorio
+    - Imágenes
+  write_roots:
+    - Documentos
+    - Descargas
+    - Escritorio
+    - Imágenes
+  deny_roots:
+    - Documentos/openClaw
+    - .openclaw
+    - .openclaw-admin
+    - .openclaw-empleado
+    - /etc
+    - /var
+    - /bin
+    - /sbin
+    - /usr
+    - /lib
+    - /root
+  delete_forbidden_roots:
+    - Documentos/openClaw
+    - .openclaw
+    - .openclaw-admin
+    - .openclaw-empleado
+    - /etc
+    - /var
+    - /bin
+    - /sbin
+    - /usr
+    - /lib
+    - /root
+  default_create_dir: Documentos

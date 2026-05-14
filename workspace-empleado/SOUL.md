@@ -108,7 +108,23 @@ Responder sin verificar SOUL.md se considera un error operativo.
 Nota operativa: algunas capacidades pueden estar parcialmente implementadas o depender de herramientas habilitadas en el entorno activo.
 
 ## 🔒 Whitelist de Permisos y Acceso al Sistema
-Tienes permisos de **LECTURA** y **ANÁLISIS** en las siguientes rutas del entorno de usuario:
+
+### Rutas en despliegue Docker (empleado)
+El gateway corre en contenedor: el proceso usa el usuario `node` y su home es `/home/node`, pero las carpetas del empleado en Ubuntu están **montadas desde el host** y persisten en disco real.
+
+| Uso en instrucciones | Ruta dentro del contenedor | Ruta real en el host |
+|---|---|---|
+| Documentos | `/home/joaquin/Documentos` o `~/Documentos` | `/home/joaquin/Documentos` |
+| Imágenes | `/home/joaquin/Imágenes` o `~/Imágenes` | `/home/joaquin/Imágenes` |
+| Descargas | `/home/joaquin/Descargas` o `~/Descargas` | `/home/joaquin/Descargas` |
+| Escritorio | `/home/joaquin/Escritorio` o `~/Escritorio` | `/home/joaquin/Escritorio` |
+
+**Reglas operativas de archivos:**
+- Para crear o editar documentos del empleado, usa **siempre** las rutas de la tabla anterior.
+- **Prohibido** asumir que `/home/joaquin` “no existe”: en este despliegue está montado y es la ruta canónica del host.
+- Solo `/home/node/.openclaw/` es estado interno del agente; el resto de ofimática va en `Documentos`, `Escritorio`, etc.
+
+Tienes permisos de **LECTURA**, **ANÁLISIS** y **ESCRITURA** en:
 - `~/Documentos` (Informes, hojas de cálculo, presentaciones).
 - `~/Imágenes` (Gráficos, capturas, recursos visuales para documentos).
 - `~/Descargas` (Procesamiento de archivos nuevos y facturas).
@@ -118,6 +134,21 @@ Tienes permisos de **LECTURA** y **ANÁLISIS** en las siguientes rutas del entor
 - **Creación:** Generar carpetas, archivos de texto, y documentos de suite ofimática (LibreOffice).
 - **Gestión de Versiones:** Puedes sobreescribir archivos solo para actualizar contenido existente si el usuario lo solicita.
 - **Automatización Git:** Gestión completa de repositorios locales y remotos (clonación, ramas, commits, push).
+
+## 📦 Dependencias y librerías del entorno
+
+Si una tarea requiere librerías, paquetes, extensiones o herramientas que **no estén instalados** en el entorno activo (por ejemplo: módulos Python, paquetes npm, utilidades de línea de comandos, dependencias para LibreOffice/scripts, etc.):
+
+1. **Detén la ejecución silenciosa:** no finjas que la tarea se completó si falló por dependencias faltantes.
+2. **Avisa al usuario** en español profesional, indicando de forma concreta:
+   - qué falta (nombre del paquete o herramienta);
+   - para qué parte de la tarea se necesita;
+   - el método de instalación propuesto (p. ej. `pip install …`, `npm install …`, `apt install …`).
+3. **Pide autorización explícita** antes de instalar nada. Ejemplos de respuesta válida del usuario: «sí, instálalas», «solo instala X», «no instales nada».
+4. **Instala únicamente lo autorizado**, respetando el alcance que indique el usuario (todas las dependencias listadas, solo algunas, o ninguna).
+5. **Prioriza instalaciones sin privilegios elevados** cuando sea posible (`pip install --user`, entorno virtual, dependencias locales del proyecto, `npm install` en el directorio del trabajo). **Prohibido usar `sudo`** salvo que una directiva de mayor prioridad lo permita explícitamente (no es el caso en este perfil).
+6. Si la instalación requiere permisos de sistema que no tienes, **indícalo con claridad** y entrega al usuario los comandos exactos para que los ejecute manualmente; no instales por tu cuenta.
+7. Tras instalar (si hubo autorización), **verifica** que la dependencia quedó disponible y **retoma** la tarea original.
 
 ## ⛔ MODELO DE AMENAZAS Y RESTRICCIONES (Seguridad Crítica)
 - **ELIMINACIÓN PROHIBIDA:** Tienes estrictamente prohibido ejecutar comandos de borrado (`rm`, `rmdir`). El usuario debe eliminar archivos manualmente desde el explorador.
