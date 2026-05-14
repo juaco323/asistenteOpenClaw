@@ -43,7 +43,7 @@ Checklist para pasar de **OpenClaw nativo** (`~/.openclaw/`) al **stack Docker d
    - **B – Llevar casi todo el estado nativo**  
      - Crea el directorio destino si no existe: `mkdir -p ~/.openclaw-admin`  
      - Copia el contenido de `~/.openclaw/` a `~/.openclaw-admin/` **antes** del primer `up` del contenedor, o con el contenedor parado.  
-     - **Revisa `~/.openclaw-admin/openclaw.json`:** las rutas absolutas tipo `.../.openclaw/workspace` deben apuntar al workspace **admin** del host, por ejemplo `.../.openclaw-admin/workspace` (o la ruta real de `OPENCLAW_WORKSPACE_DIR` en `docker/admin/.env`). Si no, el contenedor puede ver rutas incorrectas respecto al volumen montado.
+     - **Revisa `~/.openclaw-admin/openclaw.json`:** las rutas absolutas tipo `.../.openclaw/workspace` deben ser coherentes con el volumen montado. En el stack actual el workspace se monta desde el repo (`workspace-admin/` → `/home/node/.openclaw/workspace` en el contenedor). Si no, el contenedor puede ver rutas incorrectas.
 
 6. **Variables y token Docker**  
    - Claves (`OPENAI_API_KEY`, etc.) en `docker/admin/.env`.  

@@ -12,10 +12,21 @@ Cada agente esta pensado para ejecutarse por separado, manteniendo su propio est
 - `docker/admin`: stack Docker para el perfil administrador
 - `docker/empleado`: stack Docker para el perfil empleado
 - `docker/telegram`: despliegue del bot de Telegram que conversa con ambas instancias
-- `workspace-admin`: workspace del agente administrador
-- `workspace-empleado`: workspace del agente empleado
+- `workspace-admin`: workspace del agente administrador (montado en el contenedor admin)
+- `workspace-empleado`: workspace del agente empleado (montado en el contenedor empleado)
 
-## Ejecucion paso a paso
+## Levantar todo el stack (Docker)
+
+Tras configurar `docker/admin/.env`, `docker/empleado/.env` y `docker/telegram/.env` (cada uno desde su `.env.example`):
+
+```bash
+chmod +x docker/stack-up.sh docker/stack-down.sh
+./docker/stack-up.sh
+```
+
+Detener: `./docker/stack-down.sh`. Detalle en `docker/README.md`.
+
+## Ejecucion paso a paso (por componente)
 
 ### 1. Clonar el repositorio
 
@@ -33,9 +44,7 @@ chmod +x docker/admin/*.sh
 docker/admin/install.sh
 ```
 
-Luego abre:
-
-- `http://127.0.0.1:18789/`
+Luego abre el panel (puerto según `OPENCLAW_HOST_PORT` en `docker/admin/.env`, por ejemplo `http://127.0.0.1:18789/`).
 
 ## Instalar empleado
 
@@ -44,9 +53,7 @@ chmod +x docker/empleado/*.sh
 docker/empleado/install.sh
 ```
 
-Luego abre:
-
-- `http://127.0.0.1:18790/`
+Luego abre el panel (puerto según `OPENCLAW_HOST_PORT` en `docker/empleado/.env`, por ejemplo `http://127.0.0.1:18790/`).
 
 ### 3. Instalar el bot de Telegram
 

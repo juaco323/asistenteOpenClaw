@@ -15,18 +15,19 @@ services:
     environment:
       NODE_ENV: production
       OPENCLAW_STATE_DIR: /home/node/.openclaw
-      # Misma razon que admin: la plantilla en /etc evita que persistencia rompa el bind.
+      # Misma razon que admin: config en /etc; sin :ro el Control UI puede guardar cambios.
       OPENCLAW_CONFIG_PATH: /etc/openclaw/openclaw.json
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENCLAW_AGENTS_DEFAULTS_MODEL_PRIMARY: ${OPENCLAW_AGENTS_DEFAULTS_MODEL_PRIMARY:-}
     volumes:
       - ${OPENCLAW_STATE_DIR}:/home/node/.openclaw
-      - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
-      - ./openclaw.json:/etc/openclaw/openclaw.json:ro
-      # Home del usuario en el host (misma ruta dentro del contenedor; uid 1000).
+      # Workspace versionado en el repo (no copia a ~/.openclaw-empleado/workspace).
+      - ../../workspace-empleado:/home/node/.openclaw/workspace:rw
+      - ./openclaw.json:/etc/openclaw/openclaw.json
+      # Mismo criterio que admin: home del host + carpetas de usuario (Documentos, Descargas, …).
       - ${OPENCLAW_HOST_HOME}:${OPENCLAW_HOST_HOME}:rw
-      # Alias bajo ~ del usuario node para las rutas de SOUL.md/IDENTITY.md.
+      # Alias bajo ~ del usuario node (SOUL.md / rutas cortas).
       - ${OPENCLAW_HOST_HOME}/Documentos:/home/node/Documentos:rw
       - ${OPENCLAW_HOST_HOME}/Imágenes:/home/node/Imágenes:rw
       - ${OPENCLAW_HOST_HOME}/Descargas:/home/node/Descargas:rw

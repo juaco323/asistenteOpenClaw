@@ -5,7 +5,6 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 SOURCE_WORKSPACE="$REPO_ROOT/workspace-admin"
 TARGET_STATE_DIR="${HOME}/.openclaw-admin"
-TARGET_WORKSPACE_DIR="$TARGET_STATE_DIR/workspace"
 ENV_FILE="$SCRIPT_DIR/.env"
 
 require_cmd() {
@@ -22,14 +21,10 @@ docker compose version >/dev/null 2>&1 || {
   exit 1
 }
 
-mkdir -p "$TARGET_STATE_DIR" "$TARGET_WORKSPACE_DIR"
+mkdir -p "$TARGET_STATE_DIR"
 
-if [ -d "$SOURCE_WORKSPACE" ]; then
-  cp -a "$SOURCE_WORKSPACE/." "$TARGET_WORKSPACE_DIR/"
-fi
-
-# Misma razon que empleado: perfil oficina viene de SOUL.md/IDENTITY.md.
-rm -f "$TARGET_WORKSPACE_DIR/BOOTSTRAP.md"
+# El contenedor monta workspace-admin desde el repo (ver docker-compose.yml).
+rm -f "$SOURCE_WORKSPACE/BOOTSTRAP.md"
 
 if [ ! -f "$ENV_FILE" ]; then
   cp "$SCRIPT_DIR/.env.example" "$ENV_FILE"
@@ -46,4 +41,5 @@ echo "Descargando imagen y levantando stack Docker de admin..."
 docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" pull
 docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" up -d
 
-echo "Admin desplegado en: http://127.0.0.1:18789/"
+echo "Admin desplegado. Workspace: ${SOURCE_WORKSPACE} (montado en el contenedor)."
+echo "Panel: http://127.0.0.1:<OPENCLAW_HOST_PORT>/ (valor en docker/admin/.env)."

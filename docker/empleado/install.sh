@@ -5,7 +5,6 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 SOURCE_WORKSPACE="$REPO_ROOT/workspace-empleado"
 TARGET_STATE_DIR="${HOME}/.openclaw-empleado"
-TARGET_WORKSPACE_DIR="$TARGET_STATE_DIR/workspace"
 ENV_FILE="$SCRIPT_DIR/.env"
 
 require_cmd() {
@@ -22,15 +21,10 @@ docker compose version >/dev/null 2>&1 || {
   exit 1
 }
 
-mkdir -p "$TARGET_STATE_DIR" "$TARGET_WORKSPACE_DIR"
+mkdir -p "$TARGET_STATE_DIR"
 
-if [ -d "$SOURCE_WORKSPACE" ]; then
-  cp -a "$SOURCE_WORKSPACE/." "$TARGET_WORKSPACE_DIR/"
-fi
-
-# Si queda BOOTSTRAP.md (p. ej. copia manual desde el repo OpenClaw), el gateway
-# prioriza "definir identidad en chat" y ignora SOUL.md/IDENTITY.md del perfil oficina.
-rm -f "$TARGET_WORKSPACE_DIR/BOOTSTRAP.md"
+# El contenedor monta workspace-empleado desde el repo (ver docker-compose.yml).
+rm -f "$SOURCE_WORKSPACE/BOOTSTRAP.md"
 
 if [ ! -f "$ENV_FILE" ]; then
   cp "$SCRIPT_DIR/.env.example" "$ENV_FILE"
@@ -48,4 +42,5 @@ echo "Construyendo imagen (OpenClaw + dependencias Python) y levantando stack Do
 docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" build --pull
 docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" up -d
 
-echo "Empleado desplegado en: http://127.0.0.1:18790/"
+echo "Empleado desplegado. Workspace: ${SOURCE_WORKSPACE} (montado en el contenedor)."
+echo "Panel: http://127.0.0.1:<OPENCLAW_HOST_PORT>/ (valor en docker/empleado/.env)."
