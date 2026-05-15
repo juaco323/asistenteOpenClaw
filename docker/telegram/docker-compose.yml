@@ -13,4 +13,5 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ../../integrations/telegram-bot/data:/app/data
+      - ../../workspace-admin/.llm-test-runs.jsonl:/data/llm-test-runs.jsonl:rw
       - ${TELEGRAM_HOST_HOME:-/home/joaquin}:/home/joaquin:ro

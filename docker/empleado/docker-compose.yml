@@ -51,3 +51,19 @@ services:
       - "${OPENCLAW_INTERNAL_PORT}"
       - --bind
       - lan
+
+  openclaw-empleado-llm-panel:
+    build:
+      context: ../admin/llm-test-panel
+      dockerfile: Dockerfile
+    image: openclaw-empleado-llm-panel:local
+    container_name: openclaw-empleado-llm-panel
+    restart: unless-stopped
+    ports:
+      - "${LLM_TEST_PANEL_HOST_PORT:-18795}:8080"
+    environment:
+      LLM_TEST_LOG_PATH: /workspace/.llm-test-runs.jsonl
+      LLM_TEST_PANEL_PORT: "8080"
+      LLM_TEST_PANEL_TITLE: "Histórico de pruebas LLM (workspace empleado)"
+    volumes:
+      - ../../workspace-empleado:/workspace:ro

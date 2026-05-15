@@ -27,6 +27,7 @@ docker/telegram/install.sh
 | `TELEGRAM_ALLOWED_USER_IDS` | IDs autorizados (coma) |
 | `OPENCLAW_ADMIN_*` / `OPENCLAW_EMPLEADO_*` | URL y token de cada gateway |
 | `TELEGRAM_HOST_HOME` | Home del host montado para leer archivos (p. ej. `/home/joaquin`) |
+| `TELEGRAM_ADMIN_LLM_TEST_LOG_PATH` | Ruta **dentro del contenedor** del JSONL de pruebas LLM (p. ej. `/data/llm-test-runs.jsonl`; requiere volumen en `docker-compose.yml`) |
 | `TELEGRAM_ADMIN_PASSWORD` | Contraseña perfil Admin (default `Admin1234*`) |
 | `TELEGRAM_EMPLEADO_PASSWORD` | Contraseña perfil Empleado (default `Empleado1234*`) |
 | `OPENCLAW_REQUEST_TIMEOUT_SECONDS` | Timeout HTTP al gateway (recomendado `600`) |
@@ -40,6 +41,7 @@ Opcional: `TELEGRAM_*_READ_ROOTS`, `TELEGRAM_*_WRITE_ROOTS`, `TELEGRAM_*_DENY_RO
 - `/get` o lenguaje natural — recibir archivos como adjunto
 - `/salir` — cierra chat y sesión de perfil
 - `/estado`, `/recordatorios`, `/start`, `/help`
+- `/prueba_llm <texto>` — solo con perfil **Administrador** autenticado: llama al gateway admin y añade una línea al JSONL de pruebas (mismo archivo que el panel del stack admin). Requiere `TELEGRAM_ADMIN_LLM_TEST_LOG_PATH` y el volumen del compose; `install.sh` hace `touch` de `workspace-admin/.llm-test-runs.jsonl`.
 
 ## Actualización
 
@@ -50,4 +52,5 @@ docker/telegram/update.sh
 ## Volúmenes
 
 - `integrations/telegram-bot/data` — datos locales y auditoría
+- `workspace-admin/.llm-test-runs.jsonl` → `/data/llm-test-runs.jsonl` (rw) — registro compartido con `openclaw-admin-llm-panel` (compose admin)
 - `${TELEGRAM_HOST_HOME}` montado en solo lectura para entrega de archivos del host

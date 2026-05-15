@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import secrets
+import time
 from pathlib import Path
 from typing import Final
 
@@ -20,6 +21,7 @@ from telegram.ext import (
 
 from app.config import Settings
 from app.errors import format_gateway_error
+from app.llm_test_log import append_llm_test_run
 from app.file_delivery import (
     deliver_marked_files,
     extract_file_markers,
@@ -72,6 +74,7 @@ def build_application(settings: Settings) -> Application:
     application.add_handler(CommandHandler("estado", status_command))
     application.add_handler(CommandHandler("get", get_command))
     application.add_handler(CommandHandler("salir", exit_command))
+    application.add_handler(CommandHandler("prueba_llm", prueba_llm_command))
     application.add_handler(
         MessageHandler(filters.TEXT & ~filters.COMMAND, routed_text_message)
     )
@@ -91,6 +94,7 @@ def _build_post_init(settings: Settings):
                 BotCommand("recordatorios", "Lista o crea recordatorios"),
                 BotCommand("workspace", "Cambia entre admin y empleado"),
                 BotCommand("estado", "Revisa el estado de OpenClaw"),
+                BotCommand("prueba_llm", "Prueba LLM admin + registro (solo perfil admin)"),
                 BotCommand("salir", "Sale del chat y cierra sesión de perfil"),
             ]
         )
@@ -324,9 +328,112 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         "Usa /get nombre_archivo para recibir un adjunto directo.\n"
         "Usa /recordatorios para revisar o crear tareas.\n"
         "Usa /estado para revisar conectividad.\n"
+        "Usa /prueba_llm <texto> para una prueba registrada solo en perfil Administrador (ver README).\n"
         "Usa /salir para salir del modo chat y cerrar la sesión del perfil activo."
     )
     return ConversationHandler.END
+
+
+async def prueba_llm_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.message is None or not await _ensure_authorized(update, context):
+        return
+
+    settings = _get_settings(context)
+    if settings.openclaw_mode != "gateway":
+        await update.message.reply_text(
+            "/prueba_llm solo tiene sentido con OPENCLAW_MODE=gateway y gateway admin accesible."
+        )
+        return
+
+    if "admin" not in settings.workspaces:
+        await update.message.reply_text("No hay gateway admin configurado (OPENCLAW_ADMIN_*).")
+        return
+
+    if not context.user_data.get(WORKSPACE_AUTH_KEY):
+        await update.message.reply_text(
+            "Autentica el perfil Administrador con /workspace admin y la contraseña, luego reintenta."
+        )
+        return
+
+    if _resolve_workspace_from_context(context) != "admin":
+        await update.message.reply_text(
+            "Este comando solo se ejecuta con el perfil Administrador activo. "
+            "Usa /workspace admin, introduce la contraseña y vuelve a enviar /prueba_llm."
+        )
+        return
+
+    pending = context.user_data.get(PENDING_WORKSPACE_KEY)
+    if isinstance(pending, str) and pending in settings.workspaces:
+        await update.message.reply_text(
+            "Hay un cambio de perfil pendiente de contraseña. Completa /workspace o usa /salir."
+        )
+        return
+
+    log_path = settings.admin_llm_test_log_path
+    if log_path is None:
+        await update.message.reply_text(
+            "Falta TELEGRAM_ADMIN_LLM_TEST_LOG_PATH en docker/telegram/.env "
+            "y el volumen del JSONL (ver docker/telegram/README.md)."
+        )
+        return
+
+    prompt = " ".join(context.args).strip()
+    if not prompt:
+        await update.message.reply_text("Uso: /prueba_llm <prompt de prueba en una sola línea>")
+        return
+
+    client = _get_client(context)
+    user = update.effective_user
+    if user is None:
+        return
+    chat_id = update.effective_chat.id if update.effective_chat else user.id
+    t0 = time.perf_counter()
+    try:
+        reply = await client.chat(
+            workspace="admin",
+            user_id=user.id,
+            username=user.username,
+            message=prompt,
+            chat_id=chat_id,
+        )
+    except Exception as exc:  # pragma: no cover
+        LOGGER.exception("prueba_llm chat failed")
+        latency = time.perf_counter() - t0
+        await asyncio.to_thread(
+            append_llm_test_run,
+            log_path,
+            input_text=prompt,
+            output_text=f"<error: {exc!r}>",
+            latency_seconds=latency,
+            source="telegram",
+            extra={"ok": False},
+        )
+        await update.message.reply_text(
+            format_gateway_error(
+                settings,
+                "admin",
+                exc,
+                action="ejecutar la prueba LLM",
+            )
+        )
+        return
+
+    latency = time.perf_counter() - t0
+    await asyncio.to_thread(
+        append_llm_test_run,
+        log_path,
+        input_text=prompt,
+        output_text=reply,
+        latency_seconds=latency,
+        source="telegram",
+        extra={"ok": True},
+    )
+    await update.message.reply_text(
+        "[Administrador] Prueba completada.\n"
+        "Registro completado. Revisa el panel de OpenClaw.\n\n"
+        f"(latencia ~{latency:.2f}s)\n\n{reply[:3500]}"
+        + ("…" if len(reply) > 3500 else "")
+    )
 
 
 async def enter_chat_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
