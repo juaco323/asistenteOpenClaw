@@ -25,6 +25,9 @@ if [ ! -f "$ENV_FILE" ]; then
   exit 1
 fi
 
+REPO_ROOT="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
+touch "$REPO_ROOT/workspace-admin/.llm-test-runs.jsonl"
+
 echo "Construyendo y levantando bot de Telegram..."
 docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" up -d --build
 echo "Bot de Telegram desplegado."

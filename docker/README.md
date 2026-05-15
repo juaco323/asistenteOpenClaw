@@ -21,10 +21,7 @@ Eso ejecuta `docker compose up` para `docker/admin`, `docker/empleado` y `docker
 
 ## Workspaces en el repo
 
-Los contenedores **admin** y **empleado** montan directamente:
-
-- `workspace-admin/` → `/home/node/.openclaw/workspace` (admin)
-- `workspace-empleado/` → `/home/node/.openclaw/workspace` (empleado)
+Los contenedores **admin** y **empleado** montan `workspace-admin/` y `workspace-empleado/`. Cada stack incluye el **panel de histórico de pruebas LLM** (puertos `LLM_TEST_PANEL_HOST_PORT` en cada `.env`; por defecto en compose suelen ser **18794** admin y **18795** empleado para no chocar con los gateways).
 
 No hace falta copiar el workspace a `~/.openclaw-*/workspace`; el estado (sesiones, etc.) sigue en `OPENCLAW_STATE_DIR` definido en cada `.env`.
 

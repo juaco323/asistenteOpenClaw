@@ -47,6 +47,7 @@ class Settings:
     sync_telegram_commands: bool
     data_dir: Path
     host_home: Path
+    admin_llm_test_log_path: Path | None
     workspace_policies: dict[str, WorkspaceFilePolicy]
     workspace_passwords: dict[str, str]
     default_workspace: str | None
@@ -146,6 +147,9 @@ def load_settings() -> Settings:
     data_dir.mkdir(parents=True, exist_ok=True)
     host_home = Path(os.getenv("TELEGRAM_HOST_HOME", "/home/joaquin")).expanduser()
 
+    _llm_log_raw = os.getenv("TELEGRAM_ADMIN_LLM_TEST_LOG_PATH", "").strip()
+    admin_llm_test_log_path = Path(_llm_log_raw) if _llm_log_raw else None
+
     workspaces = {
         workspace_name: workspace
         for workspace_name in ("admin", "empleado")
@@ -189,6 +193,7 @@ def load_settings() -> Settings:
         sync_telegram_commands=sync_telegram_commands,
         data_dir=data_dir,
         host_home=host_home,
+        admin_llm_test_log_path=admin_llm_test_log_path,
         workspace_policies=workspace_policies,
         workspace_passwords=workspace_passwords,
         default_workspace=default_workspace,

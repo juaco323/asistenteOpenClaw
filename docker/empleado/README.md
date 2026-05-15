@@ -20,7 +20,8 @@ docker/empleado/install.sh
 
 ## URL
 
-- `http://127.0.0.1:18790/`
+- Control UI OpenClaw (gateway): `http://127.0.0.1:<OPENCLAW_HOST_PORT>/` (valor en `docker/empleado/.env`; el ejemplo usa `18790`).
+- **Histórico de pruebas LLM (empleado):** `http://127.0.0.1:<LLM_TEST_PANEL_HOST_PORT>/` (por defecto en compose `18795`; configurable en `.env`).
 
 ## Archivos importantes
 
