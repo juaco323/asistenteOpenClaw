@@ -90,6 +90,7 @@ def _build_post_init(settings: Settings):
             [
                 BotCommand("start", "Muestra ayuda del bot"),
                 BotCommand("chat", "Habla con OpenClaw"),
+                BotCommand("correo", "Redactar o enviar Gmail (mismo gateway)"),
                 BotCommand("get", "Recibe un archivo por nombre"),
                 BotCommand("recordatorios", "Lista o crea recordatorios"),
                 BotCommand("workspace", "Cambia entre admin y empleado"),
@@ -106,6 +107,7 @@ def _build_main_conversation() -> ConversationHandler:
     return ConversationHandler(
         entry_points=[
             CommandHandler("chat", enter_chat_mode),
+            CommandHandler("correo", enter_correo_mode),
             CommandHandler("recordatorios", reminders_menu_command),
         ],
         states={
@@ -323,6 +325,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         "Usa /workspace para elegir perfil: pulsa un botón o escribe /workspace admin|empleado, "
         "luego escribe la contraseña del perfil, y después /chat.\n"
         "Usa /chat para hablar con el agente remoto.\n"
+        "Usa /correo para redactar o enviar correo Gmail (borrador y confirmación en este chat; "
+        "mismas credenciales que el asistente en el gateway).\n"
         "En modo chat puedes pedir archivos en lenguaje natural "
         "(entrégame el archivo informe.pptx, envíame el informe.docx, dame presentacion.pptx).\n"
         "Usa /get nombre_archivo para recibir un adjunto directo.\n"
@@ -446,7 +450,7 @@ async def enter_chat_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         workspace = settings.get_workspace(pending)
         await update.message.reply_text(
             f"Aún falta la contraseña del perfil {workspace.label}.\n"
-            "Escríbela en un mensaje de texto (no uses /chat hasta ver «Contraseña correcta»).\n"
+            "Escríbela en un mensaje de texto (no uses /chat ni /correo hasta ver «Contraseña correcta»).\n"
             "Usa /salir para cancelar el cambio de perfil."
         )
         return ConversationHandler.END
@@ -476,8 +480,59 @@ async def enter_chat_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     await update.message.reply_text(
         f"Entraste en modo chat con {workspace.label}.\n"
         "Escribe cualquier mensaje y lo enviaremos a OpenClaw por Telegram.\n"
+        "Puedes pedir correo Gmail (borrador y envío tras confirmación); también /correo resume el protocolo.\n"
         "Para recibir archivos usa lenguaje natural: entrégame el archivo X, envíame X, dame X, etc.\n"
         "Usa /salir para terminar el chat y cerrar la sesión del perfil."
+    )
+    context.user_data["chat_active"] = True
+    return CHAT_ACTIVE
+
+
+async def enter_correo_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Activa el mismo flujo que /chat, con recordatorio del protocolo Gmail del gateway."""
+    if update.message is None or not await _ensure_authorized(update, context):
+        return ConversationHandler.END
+
+    settings = _get_settings(context)
+    pending = context.user_data.get(PENDING_WORKSPACE_KEY)
+    if isinstance(pending, str) and pending in settings.workspaces:
+        await update.message.reply_text(
+            f"Aún falta la contraseña del perfil {settings.get_workspace(pending).label}.\n"
+            "Escríbela en un mensaje de texto (no uses /chat ni /correo hasta ver «Contraseña correcta»).\n"
+            "Usa /salir para cancelar el cambio de perfil."
+        )
+        return ConversationHandler.END
+
+    if not context.user_data.get(WORKSPACE_AUTH_KEY):
+        await update.message.reply_text(
+            "No hay un perfil autenticado.\n"
+            f"Usa /workspace para elegir entre {_workspace_prompt(settings)} e ingresar la contraseña.",
+            reply_markup=_workspace_keyboard(settings)
+            if _available_workspace_names(settings)
+            else None,
+        )
+        return ConversationHandler.END
+
+    workspace_name = _resolve_workspace_from_context(context)
+    if workspace_name is None:
+        await update.message.reply_text(
+            "No hay un workspace activo.\n"
+            f"Usa /workspace para elegir entre {_workspace_prompt(settings)}.",
+            reply_markup=_workspace_keyboard(settings)
+            if _available_workspace_names(settings)
+            else None,
+        )
+        return ConversationHandler.END
+
+    workspace = settings.get_workspace(workspace_name)
+    await update.message.reply_text(
+        f"Modo correo con {workspace.label} (mismo gateway y credenciales GOG que el asistente).\n\n"
+        "Indica destinatario, asunto y texto del mensaje en tus siguientes mensajes.\n"
+        "El agente creará primero un borrador en Gmail y te mostrará su ID.\n"
+        "Para enviar, una sola aclaración al estilo borrador siguiente basta si ya mostraste el ID: "
+        "«envíalo», «mándalo», «hazlo», «dale», «sí», «vale», «ok», «confirmo», «procede», "
+        "«proceder con el envío» o «Enviar borrador ID: …» con el número que devolvió gog.\n\n"
+        "Usa /salir para terminar el modo chat y cerrar la sesión del perfil."
     )
     context.user_data["chat_active"] = True
     return CHAT_ACTIVE
@@ -853,7 +908,7 @@ async def workspace_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         f"{estado}\n\n"
         "Pulsa Administrador o Empleado y luego escribe la contraseña en el chat. "
         "El botón no basta para iniciar sesión.\n"
-        "Cuando veas «Contraseña correcta», usa /chat.",
+        "Cuando veas «Contraseña correcta», usa /chat o /correo.",
         reply_markup=_workspace_keyboard(settings),
     )
 
@@ -981,7 +1036,8 @@ async def default_text_message(update: Update, context: ContextTypes.DEFAULT_TYP
             "Usa /salir para cerrar sesión del perfil."
         )
     await update.message.reply_text(
-        "Usa /chat para hablar con OpenClaw o /recordatorios para gestionar tareas. "
+        "Usa /chat para hablar con OpenClaw, /correo para Gmail (borrador → confirmación) "
+        "o /recordatorios para gestionar tareas. "
         + suffix
     )
 

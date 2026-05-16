@@ -48,3 +48,21 @@ No hace falta copiar el workspace a `~/.openclaw-*/workspace`; el estado (sesion
 | `docker/telegram` | Bot que habla con ambos gateways |
 
 Instalación inicial por pieza: `docker/*/install.sh`. Actualizar: `docker/*/update.sh`.
+
+## Gmail / GOG — qué hay que tener en el **host**
+
+Para que **`gog gmail …`** funcione dentro de **admin/empleado**, el volumen **`${OPENCLAW_HOST_HOME}/.config/gogcli`** debe existir en tu usuario y **contener OAuth + sesión Gmail** obtenidas en esa misma máquina y con **la misma** `GOG_KEYRING_PASSWORD` que en `docker/*/ .env`.
+
+1. **`GOG_KEYRING_PASSWORD` y `GOG_ACCOUNT`** en `docker/admin/.env` y `docker/empleado/.env` (ya documentado en cada README).
+2. **JSON del cliente OAuth 2.0** de Google Cloud (descarga manual desde la consola), guardado p. ej. como **`~/Descargas/prueba_openclaw.fj.json`**.
+3. En una terminal **del host**, con **`gog`** instalado:
+   ```bash
+   chmod +x scripts/register-gmail-gog-on-host.sh
+   scripts/register-gmail-gog-on-host.sh
+   ```
+   El script ejecuta **`gog auth credentials set`** con ese JSON y te indica el segundo paso:
+   **`gog auth add … --services gmail`** (interactivo, abre navegador o muestra URL).
+4. **`gog auth list`** debe mostrar autorización válida antes de pedir borradores al agente desde Cursor o Telegram.
+5. Pauta detallada de comandos: `skills/email-gmail/SKILL.md` y `docker/empleado/README.md` (sección Gmail / GOG).
+
+Si **`~/.config/gogcli`** está vacío pero la API key y Telegram ya funcionan, lo único que falta para **correo** suele ser el paso OAuth anterior.

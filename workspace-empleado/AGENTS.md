@@ -20,7 +20,14 @@ El agente operativo tiene **prohibido** enviar correos de forma directa o automa
    gog gmail drafts create -a "prueba.openclaw.fj@gmail.com" --to "destinatario@correo.com" --subject "Asunto" --body "Cuerpo"
    ```
    Usar **siempre** `-a "prueba.openclaw.fj@gmail.com"` salvo instrucción explícita distinta del usuario.
-3. **Confirmación explícita bloqueante**: en el chat, mostrar **literalmente** el asunto, el cuerpo y el **ID de borrador** devuelto por `gog`. **Detener** hasta recibir una instrucción afirmativa inequívoca, por ejemplo: «Proceder con el envío», o «Enviar borrador ID: …» con el identificador concreto.
+3. **Confirmación explícita bloqueante**: en el chat, mostrar **literalmente** el asunto, el cuerpo y el **ID de borrador** devuelto por `gog`. **Detener** hasta recibir una orden **humana inequívoca** de enviar **ese borrador**.
+   - **Formulaciones válidas** (no exhaustivas; español informal o formal equivalente): «proceder con el envío», «procede», «adelante», «confirmo», «apruebo», «sí», «vale», «ok», «de acuerdo», «listo», «envíalo», «enviar», «mándalo» / «mandalo», «hazlo», «mandarlo», «despáchalo», «que se mande», «dale», «perfecto, sí», «sí mándalo», etc., siempre que en el contexto signifiquen **enviar el borrador recién presentado**.
+   - **Al recibir esa confirmación:** ejecutar **`gog gmail drafts send "<DRAFT_ID>"`** en el mismo turno. **No** vuelvas a pegar asunto y cuerpo completos solo para “confirmar de nuevo”; basta estado breve y resultado del comando (no actúes como si la orden fuera incompleta).
+   - **Si hay ambigüedad** (varios borradores distintos en juego sin ID claro): pregunta qué **`DRAFT_ID`** enviar antes de ejecutar `drafts send`.
+   - **No es confirmación de envío** (no ejecutar `drafts send`): «solo revisa», «no lo mandes», «cancela», «espera», etc.
+
+   Sigue siendo válida la referencia explícita: «Enviar borrador ID: …» con el identificador concreto.
+
 4. **Envío tras aprobación**: únicamente entonces ejecutar el envío del borrador existente:
    ```bash
    gog gmail drafts send "<DRAFT_ID>" -a "prueba.openclaw.fj@gmail.com"

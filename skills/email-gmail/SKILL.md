@@ -59,6 +59,16 @@ gog gmail drafts create -a "prueba.openclaw.fj@gmail.com" --to "destinatario@dom
 gog gmail drafts list -a "prueba.openclaw.fj@gmail.com"
 ```
 
+## Confirmación de envío — lenguaje natural (es obligatorio aplicarla)
+
+Si ya mostraste al usuario **asunto**, **cuerpo** e **ID de borrador**, una respuesta posterior que **aprueba enviar ese borrador** en español coloquial es confirmación suficiente. Ejemplos no exhaustivos: «envíalo», «enviar», «mándalo», «mandalo», «hazlo», «procede», «adelante», «sí», «vale», «ok», «de acuerdo», «confirmo», «dale», «que lo mandes», «sí mándalo», etc.
+
+**Conducta:**
+
+- Ejecutar en el mismo turno `gog gmail drafts send "DRAFT_ID"`; **no** repitas borrador íntegro como si ignoraras la orden, salvo que el usuario pida revisión textual.
+- Si varios borradores están «activos» y el mensaje es ambiguo, pregunta qué **`DRAFT_ID`** enviar antes de lanzar `drafts send`.
+- Cancelación u objeción («no mandes», «cancela», «espera») **no** dispara envío.
+
 **Enviar un borrador existente** (solo tras confirmación inequívoca en el chat):
 
 ```bash

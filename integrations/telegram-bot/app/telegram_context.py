@@ -24,6 +24,26 @@ def _delete_policy_text(policy: WorkspaceFilePolicy) -> str:
     )
 
 
+def _gmail_protocol_telegram() -> str:
+    return (
+        "Correo Gmail (gog, misma infraestructura que el asistente en OpenClaw): "
+        "si el usuario redacta, pide borrador o envío de correo, aplica **exactamente** el protocolo "
+        "de `AGENTS.md` / skill `email-gmail` del workspace activo. "
+        "Usa la CLI `gog` disponible en el gateway; remitente **obligatorio** en cada comando Gmail: "
+        '-a "prueba.openclaw.fj@gmail.com". '
+        "Flujo obligatorio para mensajes nuevos: reunir destinatario, asunto y cuerpo; "
+        "**solo** `gog gmail drafts create` primero; mostrar en la respuesta asunto, cuerpo e **ID de borrador**; "
+        "**detener** hasta confirmación inequívoca en **este hilo de Telegram** de enviar **ese borrador** "
+        "(vale lenguaje natural: «envíalo», «mándalo», «hazlo», «dale», «sí», «vale», «ok», «confirmo», «procede», «proceder con el envío», «enviar borrador ID …», etc.; no obligues una sola formula). "
+        "**En el mismo turno** en que detectes esa aprobación, ejecuta `gog gmail drafts send \"<DRAFT_ID>\"` con el mismo `-a`; no repitas texto completo del borrador salvo que pida revisión el usuario. Si hay varios borradores ambiguos, pregunta el ID antes de enviar. "
+        "No uses `gog gmail send` como primer paso para correos nuevos. "
+        "No pidas otro medio de confirmación: Telegram es el canal válido. "
+        "Tras crear borradores relevantes o enviar, actualiza trazas del workspace: `LOGS_EMAIL.md` y `HISTORY.md` "
+        "(en admin vía `/app/logs_shared/` si aplica). "
+        "No solicites contraseñas de Google ni tokens en el chat."
+    )
+
+
 def build_telegram_system_message(
     *,
     workspace: str,
@@ -41,6 +61,7 @@ def build_telegram_system_message(
         "No pidas chat_id, @username ni confirmación del canal: ya están disponibles. "
         f"Perfil/workspace activo: {workspace_label} ({workspace}). "
         f"chat_id de Telegram: {chat_id}. user_id: {user_id}. username: {handle}. "
+        f"{_gmail_protocol_telegram()} "
         "Política de archivos del perfil activo: "
         f"lectura/entrega (get) permitida en: {_format_paths(policy.read_roots)}. "
         f"escritura/creación permitida en: {_format_paths(policy.write_roots)}. "

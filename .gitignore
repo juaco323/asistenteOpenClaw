@@ -1,6 +1,9 @@
 # Secrets and local runtime
 .env
 .env.local
+
+# Credenciales consolidadas (solo copia local; nunca versionar)
+CREDENCIALES-USO-PRIVADO.md
 *.local
 !.env.example
 !**/.env.example

@@ -20,7 +20,7 @@ El administrador puede **operar Gmail** con la misma disciplina que el empleado:
    gog gmail drafts create -a "prueba.openclaw.fj@gmail.com" --to "destinatario@correo.com" --subject "Asunto" --body "Cuerpo"
    ```
    Usar **siempre** `-a "prueba.openclaw.fj@gmail.com"` salvo instrucción explícita distinta del usuario.
-3. **Confirmación bloqueante**: mostrar en el chat, textualmente, **asunto**, **cuerpo** e **ID de borrador**. **Detener** hasta una orden inequívoca (p. ej. «Proceder con el envío», «Enviar borrador ID: …»).
+3. **Confirmación bloqueante**: mostrar en el chat, textualmente, **asunto**, **cuerpo** e **ID de borrador**. **Detener** hasta una orden inequívoca de enviar **ese borrador** (vale lenguaje natural en español: «envíalo», «mándalo», «enviar», «hazlo», «procede», «adelante», «sí», «vale», «ok», «confirmo», «dale», etc., si interpretas que aprueban el envío del borrador ya mostrado). Al detectar esa aprobación, ejecuta **`gog gmail drafts send`** **en ese turno**, sin repetir texto completo del borrador salvo aclaración. Si hay varios borradores y no está claro el ID, pregunta antes. Referencia literal también válida: «Enviar borrador ID: …» con el ID concreto.
 4. **Envío solo tras aprobación**:
    ```bash
    gog gmail drafts send "<DRAFT_ID>" -a "prueba.openclaw.fj@gmail.com"

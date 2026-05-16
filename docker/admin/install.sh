@@ -40,9 +40,10 @@ if [[ -e "$TARGET_STATE_DIR/openclaw.json" ]] && [[ ! -s "$TARGET_STATE_DIR/open
   rm -f "$TARGET_STATE_DIR/openclaw.json"
 fi
 
-echo "Descargando imagen del gateway y levantando stack Docker de admin..."
-docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" pull openclaw-admin
-docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" up -d --build
+echo "Construyendo imagen del gateway (incluye base OPENCLAW_IMAGE) y levantando stack Docker de admin..."
+# No usar compose pull sobre openclaw-admin: la etiqueta OPENCLAW_CONTAINER_NAME:local es local-only.
+docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" build --pull
+docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" up -d
 
 echo "Admin desplegado. Workspace: ${SOURCE_WORKSPACE} (montado en el contenedor)."
 echo "Control UI OpenClaw: http://127.0.0.1:<OPENCLAW_HOST_PORT>/ (ver OPENCLAW_HOST_PORT en docker/admin/.env)."

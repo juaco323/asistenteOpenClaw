@@ -9,7 +9,7 @@ if [ ! -f "$ENV_FILE" ]; then
   exit 1
 fi
 
-docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" pull openclaw-admin
-docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" up -d --build
+docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" build --pull
+docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" up -d
 
 echo "Stack admin actualizado (workspace sigue siendo el del repo, montado en el contenedor)."
