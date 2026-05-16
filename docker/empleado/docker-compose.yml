@@ -20,6 +20,10 @@ services:
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENCLAW_AGENTS_DEFAULTS_MODEL_PRIMARY: ${OPENCLAW_AGENTS_DEFAULTS_MODEL_PRIMARY:-}
+      # GOG (OAuth Gmail): llavero en archivo en contenedor; contraseña solo vía .env del host
+      GOG_KEYRING_BACKEND: file
+      GOG_KEYRING_PASSWORD: ${GOG_KEYRING_PASSWORD:-}
+      GOG_ACCOUNT: ${GOG_ACCOUNT:-}
     volumes:
       - ${OPENCLAW_STATE_DIR}:/home/node/.openclaw
       # Workspace versionado en el repo (no copia a ~/.openclaw-empleado/workspace).
@@ -32,6 +36,8 @@ services:
       - ${OPENCLAW_HOST_HOME}/Imágenes:/home/node/Imágenes:rw
       - ${OPENCLAW_HOST_HOME}/Descargas:/home/node/Descargas:rw
       - ${OPENCLAW_HOST_HOME}/Escritorio:/home/node/Escritorio:rw
+      # gog/gogcli guarda credenciales y llavero en ~/.config/gogcli (no en .config/gog)
+      - ${OPENCLAW_HOST_HOME}/.config/gogcli:/home/node/.config/gogcli:rw
     security_opt:
       - no-new-privileges:true
     healthcheck:

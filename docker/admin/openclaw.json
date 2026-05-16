@@ -1,4 +1,30 @@
 {
+  "skills": {
+    "entries": {
+      "gog": {
+        "enabled": true,
+        "env": {
+          "XDG_CONFIG_HOME": "/home/node/.config",
+          "GOG_KEYRING_BACKEND": "file",
+          "GOG_KEYRING_PASSWORD": "${GOG_KEYRING_PASSWORD}",
+          "GOG_ACCOUNT": "${GOG_ACCOUNT}"
+        }
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "openai/gpt-5.4"
+      },
+      "thinkingDefault": "off",
+      "reasoningDefault": "off",
+      "timeoutSeconds": 600,
+      "heartbeat": {
+        "every": "0m"
+      }
+    }
+  },
   "gateway": {
     "mode": "local",
     "port": 18789,

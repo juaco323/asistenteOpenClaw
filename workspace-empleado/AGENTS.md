@@ -4,6 +4,32 @@
 - **Role:** Asistente de Oficina Local, perfil empleado
 - **Skills:**
   - `web`
+  - `email-gmail`
+
+### Protocolo de Gestión de Email (Gmail / GOG)
+
+**Docker:** el gateway inyecta `GOG_KEYRING_BACKEND=file`, `GOG_KEYRING_PASSWORD` y `GOG_ACCOUNT` desde `docker/*/ .env`. El volumen correcto es **`~/.config/gogcli`** → `/home/node/.config/gogcli` (no `.config/gog`). Las imágenes usan un **wrapper de `gog`** que lee la clave desde `/tmp/openclaw-gog-keyring.pw` (generado al arrancar el contenedor) para que el llavero funcione aunque OpenClaw no pase `*_PASSWORD` al `exec`. Si falla el llavero o aparece otra cuenta, revisar ese montaje y que `GOG_KEYRING_PASSWORD` coincida con la usada al crear el llavero en Ubuntu.
+
+**Cuenta de envío:** usar **exclusivamente** `prueba.openclaw.fj@gmail.com` en todos los `gog gmail …` (flag `-a "prueba.openclaw.fj@gmail.com"`). **Prohibido** tomar como remitente la cuenta `default` que muestre `gog auth list` si es otra dirección (p. ej. personal), salvo que el usuario ordene explícitamente otra cuenta por escrito. JSON de cliente OAuth: `~/Descargas/prueba_openclaw.fj.json`.
+
+El agente operativo tiene **prohibido** enviar correos de forma directa o automatizada sin supervisión humana. Toda salida por Gmail usando la CLI `gog` debe seguir este flujo:
+
+1. **Datos mínimos**: validar o solicitar explícitamente destinatario (`--to`), asunto (`--subject`) y contenido o puntos clave del cuerpo.
+2. **Solo borrador primero**: crear únicamente el borrador (nunca `gog gmail send` como primer paso para comunicaciones nuevas):
+   ```bash
+   gog gmail drafts create -a "prueba.openclaw.fj@gmail.com" --to "destinatario@correo.com" --subject "Asunto" --body "Cuerpo"
+   ```
+   Usar **siempre** `-a "prueba.openclaw.fj@gmail.com"` salvo instrucción explícita distinta del usuario.
+3. **Confirmación explícita bloqueante**: en el chat, mostrar **literalmente** el asunto, el cuerpo y el **ID de borrador** devuelto por `gog`. **Detener** hasta recibir una instrucción afirmativa inequívoca, por ejemplo: «Proceder con el envío», o «Enviar borrador ID: …» con el identificador concreto.
+4. **Envío tras aprobación**: únicamente entonces ejecutar el envío del borrador existente:
+   ```bash
+   gog gmail drafts send "<DRAFT_ID>" -a "prueba.openclaw.fj@gmail.com"
+   ```
+5. **Trazabilidad inmediata**: después de un envío aprobado (y también al crear borradores relevantes), registrar:
+   - Una fila en `LOGS_EMAIL.md` (log centralizado operativo; también lo puede actualizar el perfil **administrador** en Docker vía `/app/logs_shared/LOGS_EMAIL.md`).
+   - Una entrada narrativa en `HISTORY.md` (resumen de contexto, IDs, destinatario y resultado; equivalente `/app/logs_shared/HISTORY.md` desde admin).
+
+**Prohibido**: pedir contraseñas de Google, tokens estáticos o secretos en el chat; encadenar comandos que envíen sin paso de borrador y confirmación; usar `--force` u omitir la confirmación humana para envíos.
 
 ### Alcance y capacidades (obligatorio)
 

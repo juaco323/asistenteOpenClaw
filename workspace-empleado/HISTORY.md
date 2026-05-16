@@ -1,0 +1,19 @@
+# Historial narrativo (correo y acciones críticas)
+
+Este archivo complementa `LOGS_EMAIL.md` con contexto legible: resumen de la petición en chat, texto del asunto/cuerpo acordado, identificadores de borrador o mensaje, y resultado (sin incluir secretos ni tokens). Puede escribirlo el perfil **empleado** o **administrador** (en contenedor admin: `/app/logs_shared/HISTORY.md`).
+
+## Formato sugerido de cada entrada
+
+```text
+### YYYY-MM-DD HH:MM — <Acción breve>
+- Solicitud (chat): …
+- Cuenta: …
+- Destinatario(s): …
+- Asunto / cuerpo (resumen o literal según política): …
+- IDs: …
+- Resultado: …
+```
+
+_No commitear contenido privado del usuario sin su acuerdo; omitir datos personales innecesarios._
+- 2026-05-16 01:46 UTC — Administrador: borrador de correo creado para joaquin.fuenzalida51@gmail.com. Asunto: "Notificación de término de relación laboral - 16 de mayo de 2026". Draft ID: r-44852255659138362.
+- 2026-05-16 01:48 UTC — Administrador: correo enviado a joaquin.fuenzalida51@gmail.com desde borrador ID r-44852255659138362. Asunto: "Notificación de término de relación laboral - 16 de mayo de 2026".
