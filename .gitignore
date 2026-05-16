@@ -1,12 +1,25 @@
-# Secrets and local runtime
+# Secrets and local runtime (nunca commitear valores reales)
 .env
+.env.*
+**/.env
+**/.env.*
 .env.local
+!.env.example
+!**/.env.example
+!**/.env.pc-oficina.example
 
 # Credenciales consolidadas (solo copia local; nunca versionar)
 CREDENCIALES-USO-PRIVADO.md
 *.local
-!.env.example
-!**/.env.example
+
+# OAuth / Gmail (gog) y llaveros — solo en el host (~/.config/gogcli)
+**/gogcli/
+**/client_secret*.json
+**/client_secret.json
+**/token.json
+**/credentials.json
+openclaw-gog-keyring.pw
+**/auth-profiles.json
 
 # OpenClaw runtime/state that should not be versioned
 .openclaw/
@@ -14,7 +27,10 @@ credentials/
 media/
 cron/runs/
 *.jsonl
-**/auth-profiles.json
+
+# Bot Telegram: auditoría y estado local (puede contener rutas/IDs de usuario)
+integrations/telegram-bot/data/*
+!integrations/telegram-bot/data/.gitkeep
 
 # Python
 __pycache__/
