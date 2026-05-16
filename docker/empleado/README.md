@@ -5,6 +5,7 @@ Despliegue de prueba para el agente empleado en Ubuntu LTS.
 ## Qué incluye
 
 - `docker-compose.yml`
+- `Dockerfile` (extiende OpenClaw; Python ofimática + CLI `gog`)
 - `.env.example`
 - `install.sh`
 - `update.sh`
@@ -44,6 +45,15 @@ docker/empleado/backup.sh
 ```bash
 docker/empleado/restore.sh docker/empleado/backups/ARCHIVO.tgz
 ```
+
+## Gmail / GOG (OAuth)
+
+- Variables en `docker/empleado/.env`: **`GOG_KEYRING_PASSWORD`** (obligatoria para llavero `file`), **`GOG_ACCOUNT=prueba.openclaw.fj@gmail.com`** (remitente del proyecto). El compose monta **`${OPENCLAW_HOST_HOME}/.config/gogcli`** en el contenedor (ruta real de `gog` en Ubuntu).
+- El compose monta **`${OPENCLAW_HOST_HOME}/.config/gogcli`** → `/home/node/.config/gogcli` para reutilizar el mismo almacén que en Ubuntu (`gog` usa la ruta `~/.config/gogcli`, no `.config/gog`).
+- **Misma clave de llavero en host y contenedor:** antes de `gog auth add` en el host, usa `export GOG_KEYRING_BACKEND=file` y `export GOG_KEYRING_PASSWORD='…'` con el mismo valor que en `docker/empleado/.env`; si no, el contenedor no verá la sesión recién creada.
+- En la imagen del empleado se instala la CLI `gog` (openclaw/gogcli). Registrar credenciales y autorizar cuenta en **terminal del host** antes de operar desde el agente:
+  - `gog auth credentials set ~/Descargas/prueba_openclaw.fj.json`
+  - `gog auth add prueba.openclaw.fj@gmail.com --services gmail`
 
 ## Observación
 

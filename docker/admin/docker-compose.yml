@@ -1,6 +1,11 @@
 services:
   openclaw-admin:
-    image: ${OPENCLAW_IMAGE}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        OPENCLAW_BASE_IMAGE: ${OPENCLAW_IMAGE}
+    image: ${OPENCLAW_CONTAINER_NAME}:local
     container_name: ${OPENCLAW_CONTAINER_NAME}
     init: true
     restart: unless-stopped
@@ -16,6 +21,9 @@ services:
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENCLAW_AGENTS_DEFAULTS_MODEL_PRIMARY: ${OPENCLAW_AGENTS_DEFAULTS_MODEL_PRIMARY:-}
+      GOG_KEYRING_BACKEND: file
+      GOG_KEYRING_PASSWORD: ${GOG_KEYRING_PASSWORD:-}
+      GOG_ACCOUNT: ${GOG_ACCOUNT:-}
     volumes:
       - ${OPENCLAW_STATE_DIR}:/home/node/.openclaw
       # Workspace versionado en el repo (no copia a ~/.openclaw-admin/workspace).
@@ -27,6 +35,9 @@ services:
       - ${OPENCLAW_HOST_HOME}/Imágenes:/home/node/Imágenes:rw
       - ${OPENCLAW_HOST_HOME}/Descargas:/home/node/Descargas:rw
       - ${OPENCLAW_HOST_HOME}/Escritorio:/home/node/Escritorio:rw
+      # Mismo árbol que en el host: credenciales + llavero en ~/.config/gogcli
+      - ${OPENCLAW_HOST_HOME}/.config/gogcli:/home/node/.config/gogcli:rw
+      - ../../workspace-empleado:/app/logs_shared:rw
     security_opt:
       - no-new-privileges:true
     healthcheck:

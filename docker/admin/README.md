@@ -5,6 +5,7 @@ Despliegue de prueba para el agente administrador en Ubuntu LTS.
 ## Qué incluye
 
 - `docker-compose.yml`
+- `Dockerfile` (extiende la imagen OpenClaw base e instala la CLI `gog`)
 - `.env.example`
 - `install.sh`
 - `update.sh`
@@ -30,6 +31,8 @@ Si prefieres usar solo rutas relativas, entonces **sí** debes situarte antes en
 - Control UI OpenClaw (gateway): `http://127.0.0.1:<OPENCLAW_HOST_PORT>/` (valor en `docker/admin/.env`, típico `18789`).
 - **Histórico de pruebas LLM (admin):** `http://127.0.0.1:<LLM_TEST_PANEL_HOST_PORT>/` (por defecto en compose `18794`; define `LLM_TEST_PANEL_HOST_PORT` en `docker/admin/.env` para evitar choque con **empleado**, que a menudo usa `18793` en el host). Lee el JSONL `workspace-admin/.llm-test-runs.jsonl` generado por `docker/admin/llm-test-logger/logger.py` (`oc.Tracker`).
 - Si el Control UI pide token: ejecuta `./docker/admin/open-dashboard.sh` (abre el navegador con `?token=…` leyendo `docker/admin/.env`). Alternativa manual: copia `OPENCLAW_GATEWAY_TOKEN` del `.env` al campo **Token**, o abre `http://127.0.0.1:<puerto>/?token=TU_TOKEN` (solo localhost). Sin token, verás `401` en `/_openclaw/control-ui-config.json`.
+
+- **Gmail / trazas:** `openclaw-admin` monta `workspace-empleado/` en **`/app/logs_shared` (lectura/escritura)** para `LOGS_EMAIL.md` y `HISTORY.md`. Monta **`${OPENCLAW_HOST_HOME}/.config/gogcli`** en **`/home/node/.config/gogcli` (rw)** — ahí vive el llavero y las credenciales de `gog` (no uses `.config/gog`). En `.env`: `GOG_KEYRING_PASSWORD` y **`GOG_ACCOUNT=prueba.openclaw.fj@gmail.com`** (mismo criterio que empleado).
 
 ## Pruebas LLM con `oc.Tracker` (solo admin)
 

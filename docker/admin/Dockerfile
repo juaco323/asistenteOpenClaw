@@ -10,15 +10,9 @@ RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
-    python3-pip \
-    python3-venv \
   && curl -fsSL "https://github.com/openclaw/gogcli/releases/download/v${GOGCLI_VERSION}/gogcli_${GOGCLI_VERSION}_linux_${TARGETARCH}.tar.gz" \
     | tar -xzf - -C /usr/local/bin gog \
   && chmod +x /usr/local/bin/gog \
-  && pip3 install --break-system-packages --no-cache-dir \
-    python-pptx \
-    requests \
-    Pillow \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir -p /home/node/.config \

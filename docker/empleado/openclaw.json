@@ -1,4 +1,17 @@
 {
+  "skills": {
+    "entries": {
+      "gog": {
+        "enabled": true,
+        "env": {
+          "XDG_CONFIG_HOME": "/home/node/.config",
+          "GOG_KEYRING_BACKEND": "file",
+          "GOG_KEYRING_PASSWORD": "${GOG_KEYRING_PASSWORD}",
+          "GOG_ACCOUNT": "${GOG_ACCOUNT}"
+        }
+      }
+    }
+  },
   "agents": {
     "defaults": {
       "model": {

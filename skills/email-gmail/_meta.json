@@ -1,0 +1,6 @@
+{
+  "slug": "email-gmail",
+  "version": "1.0.0",
+  "title": "Gmail via GOG CLI",
+  "description": "OAuth Gmail con gog: borradores, confirmación humana y trazabilidad."
+}
