@@ -19,22 +19,24 @@ El agente operativo tiene **prohibido** enviar correos de forma directa o automa
    ```bash
    gog gmail drafts create -a "prueba.openclaw.fj@gmail.com" --to "destinatario@correo.com" --subject "Asunto" --body "Cuerpo"
    ```
+   **Adjuntos:** añade rutas absolutas con `--attach` (repetible). Incluye archivos recibidos por Telegram en `/chat`, que el bot guarda bajo `Documentos/telegram-openclaw-incoming/` (respecto al home del host, coherente con `TELEGRAM_HOST_HOME` / montaje del gateway).
    Usar **siempre** `-a "prueba.openclaw.fj@gmail.com"` salvo instrucción explícita distinta del usuario.
-3. **Confirmación explícita bloqueante**: en el chat, mostrar **literalmente** el asunto, el cuerpo y el **ID de borrador** devuelto por `gog`. **Detener** hasta recibir una orden **humana inequívoca** de enviar **ese borrador**.
-   - **Formulaciones válidas** (no exhaustivas; español informal o formal equivalente): «proceder con el envío», «procede», «adelante», «confirmo», «apruebo», «sí», «vale», «ok», «de acuerdo», «listo», «envíalo», «enviar», «mándalo» / «mandalo», «hazlo», «mandarlo», «despáchalo», «que se mande», «dale», «perfecto, sí», «sí mándalo», etc., siempre que en el contexto signifiquen **enviar el borrador recién presentado**.
-   - **Al recibir esa confirmación:** ejecutar **`gog gmail drafts send "<DRAFT_ID>"`** en el mismo turno. **No** vuelvas a pegar asunto y cuerpo completos solo para “confirmar de nuevo”; basta estado breve y resultado del comando (no actúes como si la orden fuera incompleta).
-   - **Si hay ambigüedad** (varios borradores distintos en juego sin ID claro): pregunta qué **`DRAFT_ID`** enviar antes de ejecutar `drafts send`.
-   - **No es confirmación de envío** (no ejecutar `drafts send`): «solo revisa», «no lo mandes», «cancela», «espera», etc.
+3. **Presentar el borrador (una sola vez)**: en la **primera** respuesta tras crear el borrador con `gog`, muestra **literalmente** asunto, cuerpo y **ID de borrador**. Ahí **detente** y espera orden humana de envío. Esa obligación de «mostrar literalmente» **no** vuelve a aplicarse en turnos posteriores: si el usuario ya vio el borrador y solo confirma, **no** lo repitas.
+4. **Confirmación de envío**: cuando el usuario envíe una orden inequívoca de enviar **el borrador ya mostrado** (lenguaje natural; ejemplos: «proceder con el envío», «procede», «adelante», «confirmo», «apruebo», «sí», «vale», «ok», «envíalo», «mándalo» / «mandalo», «hazlo», «dale», «sí mándalo», «Enviar borrador ID: …», etc.):
+   - **Prohibido** en esa misma respuesta: volver a pegar **asunto completo** o **cuerpo completo** del correo, ni rearmar el borrador como si no hubiera habido confirmación. El usuario ya los leyó.
+   - **Obligatorio** en ese turno: ejecutar **`gog gmail drafts send "<DRAFT_ID>" -a "prueba.openclaw.fj@gmail.com"`** y responder **breve** (p. ej. enviado correctamente / error del comando + ID; opcional una línea de trazas actualizadas). Máximo ~3–4 frases salvo error que requiera explicación.
+   - **Ambigüedad** (varios borradores sin ID claro): pregunta qué **`DRAFT_ID`** enviar; **no** ejecutes `drafts send` a ciegas.
+   - **No es confirmación** (no enviar): «solo revisa», «no lo mandes», «cancela», «espera», etc.
 
-   Sigue siendo válida la referencia explícita: «Enviar borrador ID: …» con el identificador concreto.
-
-4. **Envío tras aprobación**: únicamente entonces ejecutar el envío del borrador existente:
+5. **Comando de envío** (referencia):
    ```bash
    gog gmail drafts send "<DRAFT_ID>" -a "prueba.openclaw.fj@gmail.com"
    ```
-5. **Trazabilidad inmediata**: después de un envío aprobado (y también al crear borradores relevantes), registrar:
+6. **Trazabilidad inmediata**: después de un envío aprobado (y también al crear borradores relevantes), registrar:
    - Una fila en `LOGS_EMAIL.md` (log centralizado operativo; también lo puede actualizar el perfil **administrador** en Docker vía `/app/logs_shared/LOGS_EMAIL.md`).
    - Una entrada narrativa en `HISTORY.md` (resumen de contexto, IDs, destinatario y resultado; equivalente `/app/logs_shared/HISTORY.md` desde admin).
+
+**Resolución de rutas locales (obligatorio en Telegram y en chat directo del gateway):** el usuario no siempre recuerda la capitalización exacta ni la carpeta (`portafolio` vs `Portafolio`, acentos, espacios). **No afirmes que no existe** sin buscar con criterio **insensible a mayúsculas** y razonablemente tolerante a **acentos** (p. ej. `find ~/Documentos -iname '*nombre*'`, revisar subcarpetas, `ls` y comparar). Si hay varios archivos candidatos, lista rutas o pide precisión. Para adjuntos Gmail (`gog --attach`) y marcadores `[[TELEGRAM_FILE:…]]`, usa la **ruta absoluta canónica** que devuelve el disco tras localizar el fichero.
 
 **Prohibido**: pedir contraseñas de Google, tokens estáticos o secretos en el chat; encadenar comandos que envíen sin paso de borrador y confirmación; usar `--force` u omitir la confirmación humana para envíos.
 

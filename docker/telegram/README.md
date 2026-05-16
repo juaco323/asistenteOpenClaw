@@ -53,4 +53,4 @@ docker/telegram/update.sh
 
 - `integrations/telegram-bot/data` — datos locales y auditoría
 - `workspace-admin/.llm-test-runs.jsonl` → `/data/llm-test-runs.jsonl` (rw) — registro compartido con `openclaw-admin-llm-panel` (compose admin)
-- `${TELEGRAM_HOST_HOME}` montado en solo lectura para entrega de archivos del host
+- `${TELEGRAM_HOST_HOME}` montado en el contenedor del bot: **solo lectura** salvo la carpeta **`Documentos/telegram-openclaw-incoming`** (lectura-escritura), donde se guardan adjuntos enviados por Telegram para usarlos con `gog --attach` en el gateway

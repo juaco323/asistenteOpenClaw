@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
+import unicodedata
 from pathlib import Path
 
 from telegram import Update
@@ -82,6 +83,141 @@ def extract_file_markers(text: str) -> tuple[str, list[Path]]:
     return clean, paths
 
 
+def _fold_segment(name: str) -> str:
+    """Compara nombres sin distinguir mayúsculas y con acentos opcionales debilitados."""
+    if not name:
+        return ""
+    n = unicodedata.normalize("NFD", name)
+    n = "".join(c for c in n if unicodedata.category(c) != "Mn")
+    return n.casefold()
+
+
+def _segments_match(user_seg: str, actual_seg: str) -> bool:
+    if user_seg.casefold() == actual_seg.casefold():
+        return True
+    return _fold_segment(user_seg) == _fold_segment(actual_seg)
+
+
+def _posix_tail_parts(path: Path) -> tuple[str, ...]:
+    try:
+        p = path.expanduser()
+        parts = p.resolve(strict=False).parts
+    except OSError:
+        parts = path.expanduser().parts
+    if parts and parts[0] == "/":
+        return tuple(parts[1:])
+    return tuple(parts)
+
+
+def _find_ci_child(entries: list[Path], wanted: str) -> Path | None:
+    if not wanted or wanted in (".", ".."):
+        return None
+    cf = wanted.casefold()
+    fold_w = _fold_segment(wanted)
+    for e in entries:
+        if e.name.casefold() == cf:
+            return e
+    for e in entries:
+        if _fold_segment(e.name) == fold_w:
+            return e
+    return None
+
+
+def resolve_under_root_ci(root: Path, parts: tuple[str, ...]) -> Path | None:
+    """Recorre root siguiendo parts con coincidencia insensible a mayúsculas/acentos."""
+    if not parts:
+        return root if root.exists() else None
+    try:
+        current = root if root.is_dir() else None
+    except OSError:
+        return None
+    if current is None:
+        return None
+    for part in parts:
+        if not part or part in (".", ".."):
+            return None
+        try:
+            entries = list(current.iterdir())
+        except OSError:
+            return None
+        nxt = _find_ci_child(entries, part)
+        if nxt is None:
+            return None
+        current = nxt
+    return current
+
+
+def _strip_redundant_prefix(
+    candidate_parts: tuple[str, ...],
+    root: Path,
+) -> tuple[str, ...]:
+    """Si el usuario repite el nombre del directorio raíz (p. ej. Documentos/...), quítalo."""
+    if not candidate_parts:
+        return candidate_parts
+    try:
+        root_name = root.resolve(strict=False).name
+    except OSError:
+        root_name = root.name
+    if root_name and _segments_match(candidate_parts[0], root_name):
+        return tuple(candidate_parts[1:])
+    return candidate_parts
+
+
+def resolve_absolute_user_path_ci(user_path: Path, read_roots: list[Path]) -> Path | None:
+    """
+    Si user_path es absoluta pero con distinta capitalización/acentos, resuelve bajo read_roots.
+    """
+    up = user_path.expanduser()
+    user_parts = _posix_tail_parts(up)
+    if not user_parts:
+        return None
+    for root in read_roots:
+        try:
+            if not root.exists():
+                continue
+        except OSError:
+            continue
+        root_parts = _posix_tail_parts(root.resolve(strict=False))
+        if len(user_parts) < len(root_parts):
+            continue
+        if not all(
+            _segments_match(u, r)
+            for u, r in zip(user_parts[: len(root_parts)], root_parts, strict=True)
+        ):
+            continue
+        remainder = tuple(user_parts[len(root_parts) :])
+        found = resolve_under_root_ci(root, remainder)
+        if found is not None and found.is_file():
+            return found
+    return None
+
+
+def _first_file_matching_name_ci(
+    root: Path,
+    filename: str,
+    read_roots: list[Path],
+    deny: list[Path],
+) -> Path | None:
+    target_cf = filename.casefold()
+    target_fold = _fold_segment(filename)
+    try:
+        for p in root.rglob("*"):
+            if not p.is_file():
+                continue
+            try:
+                if len(p.relative_to(root).parts) > MAX_SEARCH_DEPTH:
+                    continue
+            except ValueError:
+                continue
+            if not is_delivery_allowed(p, read_roots, deny):
+                continue
+            if p.name.casefold() == target_cf or _fold_segment(p.name) == target_fold:
+                return p
+    except OSError:
+        LOGGER.warning("No se pudo rglob CI en %s", root)
+    return None
+
+
 def is_path_allowed(path: Path, roots: list[Path]) -> bool:
     try:
         resolved = path.resolve(strict=False)
@@ -122,8 +258,12 @@ def find_file_by_name(
     deny = deny_roots or []
     candidate = Path(name)
     if candidate.is_absolute():
-        if candidate.is_file() and is_delivery_allowed(candidate, read_roots, deny):
-            return candidate
+        p = candidate.expanduser()
+        if p.is_file() and is_delivery_allowed(p, read_roots, deny):
+            return p
+        alt = resolve_absolute_user_path_ci(p, read_roots)
+        if alt is not None and is_delivery_allowed(alt, read_roots, deny):
+            return alt
         return None
 
     basename = candidate.name
@@ -133,6 +273,7 @@ def find_file_by_name(
     for root in read_roots:
         if not root.exists():
             continue
+        rel_parts = _strip_redundant_prefix(tuple(candidate.parts), root)
         direct = root / basename
         if direct.is_file() and is_delivery_allowed(direct, read_roots, deny):
             return direct
@@ -140,6 +281,11 @@ def find_file_by_name(
             nested = root.joinpath(*candidate.parts)
             if nested.is_file() and is_delivery_allowed(nested, read_roots, deny):
                 return nested
+        ci_nested = resolve_under_root_ci(root, rel_parts)
+        if ci_nested is not None and ci_nested.is_file() and is_delivery_allowed(
+            ci_nested, read_roots, deny
+        ):
+            return ci_nested
 
     for root in read_roots:
         if not root.is_dir():
@@ -152,7 +298,14 @@ def find_file_by_name(
         except OSError:
             LOGGER.warning("No se pudo buscar en %s", root)
 
+    for root in read_roots:
+        hit = _first_file_matching_name_ci(root, basename, read_roots, deny)
+        if hit is not None:
+            return hit
+
     if "." not in basename:
+        target_fold = _fold_segment(basename)
+        target_cf = basename.casefold()
         for root in read_roots:
             if not root.is_dir():
                 continue
@@ -162,7 +315,13 @@ def find_file_by_name(
                         continue
                     if len(match.relative_to(root).parts) > MAX_SEARCH_DEPTH:
                         continue
-                    if match.stem.lower() == basename.lower() or basename.lower() in match.stem.lower():
+                    stem_cf = match.stem.casefold()
+                    if (
+                        stem_cf == target_cf
+                        or _fold_segment(match.stem) == target_fold
+                        or target_cf in stem_cf
+                        or target_fold in _fold_segment(match.stem)
+                    ):
                         return match
             except OSError:
                 LOGGER.warning("No se pudo buscar en %s", root)
@@ -180,6 +339,9 @@ def resolve_delivery_path(
     if expanded.is_absolute():
         if expanded.is_file() and is_delivery_allowed(expanded, read_roots, deny):
             return expanded
+        alt = resolve_absolute_user_path_ci(expanded, read_roots)
+        if alt is not None and is_delivery_allowed(alt, read_roots, deny):
+            return alt
     else:
         found = find_file_by_name(str(expanded), read_roots, deny_roots=deny)
         if found is not None:

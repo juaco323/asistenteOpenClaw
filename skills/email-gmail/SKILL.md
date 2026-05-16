@@ -53,6 +53,14 @@ gog auth list
 gog gmail drafts create -a "prueba.openclaw.fj@gmail.com" --to "destinatario@dominio.com" --subject "Asunto" --body "Cuerpo en texto plano"
 ```
 
+**Borrador con adjunto(s)** — flag repetible `--attach` con **ruta absoluta** accesible desde donde ejecuta `gog` (en Docker del gateway suele coincidir con la del host si el home está montado igual). Ejemplo:
+
+```bash
+gog gmail drafts create -a "prueba.openclaw.fj@gmail.com" --to "destinatario@dominio.com" --subject "Asunto" --body "Cuerpo" --attach "/ruta/al/archivo.pdf" --attach "/ruta/al/otro.png"
+```
+
+Desde **Telegram**, los documentos o fotos que envía el usuario en `/chat` el bot los guarda bajo `Documentos/telegram-openclaw-incoming/` (respecto a `TELEGRAM_HOST_HOME`); usa esa ruta absoluta en `--attach`.
+
 **Listar borradores**:
 
 ```bash
@@ -65,7 +73,8 @@ Si ya mostraste al usuario **asunto**, **cuerpo** e **ID de borrador**, una resp
 
 **Conducta:**
 
-- Ejecutar en el mismo turno `gog gmail drafts send "DRAFT_ID"`; **no** repitas borrador íntegro como si ignoraras la orden, salvo que el usuario pida revisión textual.
+- Ejecutar en el mismo turno `gog gmail drafts send "DRAFT_ID"`; **prohibido** tras «envíalo» / equivalentes volver a pegar **asunto o cuerpo enteros** (el usuario ya los vio). Respuesta breve: resultado del comando + ID (y trazas si aplicas).
+- **Excepción:** solo si el usuario pide explícitamente «muéstrame otra vez el borrador» o «repítelo», puedes reproducir asunto/cuerpo.
 - Si varios borradores están «activos» y el mensaje es ambiguo, pregunta qué **`DRAFT_ID`** enviar antes de lanzar `drafts send`.
 - Cancelación u objeción («no mandes», «cancela», «espera») **no** dispara envío.
 

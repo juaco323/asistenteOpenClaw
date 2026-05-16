@@ -29,6 +29,11 @@ from app.file_delivery import (
     parse_file_request,
     send_telegram_file,
 )
+from app.telegram_incoming import (
+    build_user_message_for_incoming,
+    resolve_incoming_dir,
+    save_telegram_upload,
+)
 from app.openclaw.client import OpenClawClient, build_openclaw_client
 
 
@@ -62,6 +67,12 @@ def build_application(settings: Settings) -> Application:
     # ConversationHandler del chat antes que /salir global: si no, /salir no cierra
     # CHAT_ACTIVE y /chat puede reanudar el perfil sin nueva contraseña.
     application.add_handler(_build_main_conversation())
+    application.add_handler(
+        MessageHandler(
+            (filters.Document.ALL | filters.PHOTO) & ~filters.COMMAND,
+            routed_orphan_media,
+        )
+    )
     application.add_handler(CommandHandler("workspace", workspace_command))
     application.add_handler(
         CallbackQueryHandler(
@@ -113,6 +124,10 @@ def _build_main_conversation() -> ConversationHandler:
         states={
             CHAT_ACTIVE: [
                 CommandHandler("get", get_command),
+                MessageHandler(
+                    (filters.Document.ALL | filters.PHOTO) & ~filters.COMMAND,
+                    forward_chat_media,
+                ),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, forward_chat_message),
             ],
             REMINDER_MENU: [
@@ -124,6 +139,10 @@ def _build_main_conversation() -> ConversationHandler:
                 CallbackQueryHandler(reminders_close_callback, pattern=r"^reminders:close$"),
             ],
             REMINDER_CREATE: [
+                MessageHandler(
+                    (filters.Document.ALL | filters.PHOTO) & ~filters.COMMAND,
+                    reminder_reject_media,
+                ),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, reminder_create_message),
             ],
         },
@@ -327,9 +346,9 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         "Usa /chat para hablar con el agente remoto.\n"
         "Usa /correo para redactar o enviar correo Gmail (borrador y confirmación en este chat; "
         "mismas credenciales que el asistente en el gateway).\n"
-        "En modo chat puedes pedir archivos en lenguaje natural "
-        "(entrégame el archivo informe.pptx, envíame el informe.docx, dame presentacion.pptx).\n"
-        "Usa /get nombre_archivo para recibir un adjunto directo.\n"
+        "En modo /chat puedes pedir archivos del equipo en lenguaje natural "
+        "(entrégame el archivo informe.pptx, …) o **enviar un documento o foto** para correo con adjunto.\n"
+        "Usa /get nombre_archivo para recibir un adjunto directo desde el equipo.\n"
         "Usa /recordatorios para revisar o crear tareas.\n"
         "Usa /estado para revisar conectividad.\n"
         "Usa /prueba_llm <texto> para una prueba registrada solo en perfil Administrador (ver README).\n"
@@ -477,11 +496,14 @@ async def enter_chat_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         return ConversationHandler.END
 
     workspace = settings.get_workspace(workspace_name)
+    incoming_hint = resolve_incoming_dir(settings.host_home)
     await update.message.reply_text(
         f"Entraste en modo chat con {workspace.label}.\n"
         "Escribe cualquier mensaje y lo enviaremos a OpenClaw por Telegram.\n"
         "Puedes pedir correo Gmail (borrador y envío tras confirmación); también /correo resume el protocolo.\n"
-        "Para recibir archivos usa lenguaje natural: entrégame el archivo X, envíame X, dame X, etc.\n"
+        "Puedes **enviar un documento o foto**; el bot lo guarda y el asistente puede usarlo en Gmail con "
+        f"`gog ... --attach` y la ruta que te indique (carpeta típica: `{incoming_hint}`).\n"
+        "Para recibir archivos del equipo usa lenguaje natural: entrégame el archivo X, envíame X, etc.\n"
         "Usa /salir para terminar el chat y cerrar la sesión del perfil."
     )
     context.user_data["chat_active"] = True
@@ -525,9 +547,12 @@ async def enter_correo_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         return ConversationHandler.END
 
     workspace = settings.get_workspace(workspace_name)
+    incoming_hint = resolve_incoming_dir(settings.host_home)
     await update.message.reply_text(
         f"Modo correo con {workspace.label} (mismo gateway y credenciales GOG que el asistente).\n\n"
         "Indica destinatario, asunto y texto del mensaje en tus siguientes mensajes.\n"
+        "También puedes **enviar un documento o foto**: se guarda en el equipo y el borrador puede incluir "
+        f"`--attach` con esa ruta (típico: `{incoming_hint}`).\n"
         "El agente creará primero un borrador en Gmail y te mostrará su ID.\n"
         "Para enviar, una sola aclaración al estilo borrador siguiente basta si ya mostraste el ID: "
         "«envíalo», «mándalo», «hazlo», «dale», «sí», «vale», «ok», «confirmo», «procede», "
@@ -669,7 +694,9 @@ async def forward_chat_message(update: Update, context: ContextTypes.DEFAULT_TYP
     client = _get_client(context)
     text = (update.message.text or "").strip()
     if not text:
-        await update.message.reply_text("Enviame un mensaje de texto para pasarlo a OpenClaw.")
+        await update.message.reply_text(
+            "Enviame un mensaje de texto o un documento/foto (en /chat) para pasarlo a OpenClaw."
+        )
         return CHAT_ACTIVE
 
     context.user_data["chat_active"] = True
@@ -700,6 +727,116 @@ async def forward_chat_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
     await _reply_with_optional_files(update, settings, workspace_name, reply)
     return CHAT_ACTIVE
+
+
+async def forward_chat_media(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Guarda documento/foto de Telegram y reenvía al gateway con ruta para --attach."""
+    if update.message is None or not await _ensure_authorized(update, context):
+        return ConversationHandler.END
+    if update.effective_user is None:
+        return CHAT_ACTIVE
+
+    if not context.user_data.get(WORKSPACE_AUTH_KEY):
+        await update.message.reply_text(
+            "La sesión del perfil está cerrada.\n"
+            "Usa /workspace para autenticarte y luego /chat."
+        )
+        return ConversationHandler.END
+
+    settings = _get_settings(context)
+    workspace_name = _resolve_workspace_from_context(context)
+    if workspace_name is None:
+        await update.message.reply_text("Primero selecciona un workspace con /workspace.")
+        return ConversationHandler.END
+
+    write_roots = settings.write_roots_for(workspace_name)
+    deny_roots = settings.deny_roots_for(workspace_name)
+    user_id = update.effective_user.id
+    try:
+        saved = await save_telegram_upload(
+            update,
+            context,
+            host_home=settings.host_home,
+            write_roots=write_roots,
+            deny_roots=deny_roots,
+            user_id=user_id,
+        )
+    except PermissionError as exc:
+        await update.message.reply_text(str(exc))
+        return CHAT_ACTIVE
+    except ValueError as exc:
+        await update.message.reply_text(str(exc))
+        return CHAT_ACTIVE
+    except Exception as exc:  # pragma: no cover
+        LOGGER.exception("Fallo guardando archivo entrante de Telegram")
+        await update.message.reply_text(
+            format_gateway_error(
+                settings,
+                workspace_name,
+                exc,
+                action="guardar el archivo recibido por Telegram",
+            )
+        )
+        return CHAT_ACTIVE
+
+    await update.message.reply_text(
+        "Archivo guardado en el equipo; enviando al asistente…\n"
+        f"{saved.resolve()}"
+    )
+    prompt = build_user_message_for_incoming(
+        saved_path=saved,
+        caption=update.message.caption,
+    )
+    context.user_data["chat_active"] = True
+    client = _get_client(context)
+    chat_id = update.effective_chat.id if update.effective_chat else update.effective_user.id
+    try:
+        reply = await client.chat(
+            workspace=workspace_name,
+            user_id=user_id,
+            username=update.effective_user.username,
+            message=prompt,
+            chat_id=chat_id,
+        )
+    except Exception as exc:  # pragma: no cover
+        LOGGER.exception("Chat forwarding failed (media)")
+        await update.message.reply_text(
+            format_gateway_error(
+                settings,
+                workspace_name,
+                exc,
+                action="obtener la respuesta del agente",
+            )
+        )
+        return CHAT_ACTIVE
+
+    await _reply_with_optional_files(update, settings, workspace_name, reply)
+    return CHAT_ACTIVE
+
+
+async def reminder_reject_media(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+) -> int:
+    if update.message:
+        await update.message.reply_text(
+            "Solo puedo registrar recordatorios con texto. Escribe el contenido del recordatorio."
+        )
+    return REMINDER_CREATE
+
+
+async def routed_orphan_media(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.message is None or not await _ensure_authorized(update, context):
+        return
+    if context.user_data.get(PENDING_WORKSPACE_KEY):
+        await update.message.reply_text(
+            "Para iniciar sesión en un perfil envía la **contraseña en texto**, no un archivo ni foto."
+        )
+        return
+    await update.message.reply_text(
+        "Para que el asistente procese un archivo o lo use en un correo, entra antes con /chat "
+        "(perfil autenticado) y vuelve a enviar el documento o la foto."
+    )
 
 
 async def reminders_menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:

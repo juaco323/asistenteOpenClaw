@@ -31,6 +31,7 @@ Al finalizar:
 - [ ] Probar `/workspace`
 - [ ] Probar `/chat`
 - [ ] Probar `/recordatorios`
+- [ ] (Opcional) En `/chat`, enviar un documento o foto y pedir borrador de correo con ese adjunto
 
 ## Paso 1. Rotar el token de Telegram
 
@@ -194,6 +195,13 @@ docker/admin/update.sh
 docker/empleado/update.sh
 docker/telegram/update.sh
 ```
+
+## Correo con adjunto desde Telegram
+
+1. Autentica perfil con `/workspace` y entra en `/chat` o `/correo`.
+2. Envía un **documento** o **foto** (puedes añadir pie de mensaje con destinatario, asunto e instrucciones).
+3. El bot guarda el archivo bajo `Documentos/telegram-openclaw-incoming/` en `TELEGRAM_HOST_HOME` y reenvía la ruta al gateway; el agente debe crear el borrador con `gog gmail drafts create … --attach /ruta/…`.
+4. Confirma el envío en el chat como siempre («envíalo», «mándalo», etc.). Usa el mismo home en `OPENCLAW_HOST_HOME` y `TELEGRAM_HOST_HOME` para que la ruta sea válida en el contenedor del gateway.
 
 ## Problemas comunes
 

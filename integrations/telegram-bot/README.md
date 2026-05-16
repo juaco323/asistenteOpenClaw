@@ -12,8 +12,10 @@ Usa `long polling` y el gateway real de OpenClaw mediante `POST /v1/chat/complet
 ## Funcionalidades
 
 - `/workspace` — selección de perfil con **contraseña** (Admin / Empleado)
-- `/chat` — conversación con el agente del perfil autenticado
-- `/get` y lenguaje natural — entrega de archivos (`entrégame el archivo…`, `envíame…`, etc.)
+- `/chat` — conversación con el agente del perfil autenticado (texto, documentos y fotos para tareas o correo con adjunto)
+- `/correo` — mismo flujo que `/chat` con recordatorio del protocolo Gmail
+- `/get` y lenguaje natural — entrega de archivos del equipo (`entrégame el archivo…`, etc.)
+- Archivos **entrantes** por Telegram en `/chat`: se guardan en `Documentos/telegram-openclaw-incoming/` bajo `TELEGRAM_HOST_HOME`; el agente puede usar `gog … --attach` con esa ruta
 - `/recordatorios` — listar o crear recordatorios
 - `/estado` — salud de ambos gateways
 - `/salir` — cierra el chat **y la sesión del perfil** (requiere volver a autenticarse)
@@ -41,7 +43,7 @@ Auditoría de entregas: `data/file-delivery-audit.jsonl`
 ## Código principal
 
 - `app/bot.py` — handlers Telegram
-- `app/file_delivery.py` — búsqueda y envío de adjuntos
+- `app/telegram_incoming.py` — recepción y guardado de documentos/fotos desde Telegram
 - `app/workspace_policy.py` — carga de política YAML
 - `app/telegram_context.py` — contexto de canal inyectado al agente
 - `app/openclaw/http_client.py` — cliente gateway

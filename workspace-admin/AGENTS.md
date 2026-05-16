@@ -19,15 +19,22 @@ El administrador puede **operar Gmail** con la misma disciplina que el empleado:
    ```bash
    gog gmail drafts create -a "prueba.openclaw.fj@gmail.com" --to "destinatario@correo.com" --subject "Asunto" --body "Cuerpo"
    ```
+   **Adjuntos:** añade `--attach /ruta/absoluta` tantas veces como archivos (p. ej. enviados por Telegram y guardados en `Documentos/telegram-openclaw-incoming/`).
    Usar **siempre** `-a "prueba.openclaw.fj@gmail.com"` salvo instrucción explícita distinta del usuario.
-3. **Confirmación bloqueante**: mostrar en el chat, textualmente, **asunto**, **cuerpo** e **ID de borrador**. **Detener** hasta una orden inequívoca de enviar **ese borrador** (vale lenguaje natural en español: «envíalo», «mándalo», «enviar», «hazlo», «procede», «adelante», «sí», «vale», «ok», «confirmo», «dale», etc., si interpretas que aprueban el envío del borrador ya mostrado). Al detectar esa aprobación, ejecuta **`gog gmail drafts send`** **en ese turno**, sin repetir texto completo del borrador salvo aclaración. Si hay varios borradores y no está claro el ID, pregunta antes. Referencia literal también válida: «Enviar borrador ID: …» con el ID concreto.
-4. **Envío solo tras aprobación**:
+3. **Presentar el borrador (una sola vez)**: en la **primera** respuesta tras crear el borrador, muestra **literalmente** asunto, cuerpo e **ID de borrador** y **detente**. Esa obligación **no** se repite en mensajes posteriores del usuario.
+4. **Confirmación de envío** («envíalo», «mándalo», «vale», «procede», «Enviar borrador ID: …», etc., cuando aprueban el borrador **ya mostrado**):
+   - **Prohibido**: volver a pegar asunto o cuerpo **completos** ni reexhibir el borrador entero.
+   - **Obligatorio** en ese turno: **`gog gmail drafts send "<DRAFT_ID>" -a "prueba.openclaw.fj@gmail.com"`** y respuesta **breve** (resultado + ID; ~3–4 frases salvo error largo).
+   - Varios borradores ambiguos: pregunta el **`DRAFT_ID`** antes de enviar.
+5. **Comando de envío** (referencia):
    ```bash
    gog gmail drafts send "<DRAFT_ID>" -a "prueba.openclaw.fj@gmail.com"
    ```
-5. **Trazabilidad inmediata** (log compartido con el empleado):
+6. **Trazabilidad inmediata** (log compartido con el empleado):
    - En **Docker**, escribir en **`/app/logs_shared/LOGS_EMAIL.md`** y **`/app/logs_shared/HISTORY.md`** (equivalente a `workspace-empleado/` en el repo). En columna de agente usar **`Administrador`**.
    - Fuera de Docker: rutas bajo `workspace-empleado/` en la raíz del repositorio.
+
+**Resolución de rutas locales (obligatorio en Telegram y en chat directo del gateway):** el usuario puede equivocarse en mayúsculas, acentos o en el nombre de carpeta. **No afirmes que no existe** sin buscar con criterio **insensible a mayúsculas** y razonablemente tolerante a **acentos** (p. ej. `find ~/Documentos -iname '*patrón*'`, listar subcarpetas). Si hay varios candidatos, lista rutas o pide precisión. Para `gog --attach` y `[[TELEGRAM_FILE:…]]`, usa la **ruta absoluta canónica** del fichero en disco.
 
 **Prohibido**: pedir contraseñas o secretos en el chat; usar `gog gmail send` como atajo sin borrador + confirmación; omitir el registro en los archivos anteriores tras crear borradores relevantes o enviar.
 
