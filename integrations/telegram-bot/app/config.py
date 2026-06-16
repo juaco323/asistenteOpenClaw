@@ -137,7 +137,7 @@ def load_settings() -> Settings:
     if openclaw_mode not in {"mock", "gateway"}:
         raise RuntimeError("OPENCLAW_MODE must be either 'mock' or 'gateway'.")
 
-    timeout = float(os.getenv("OPENCLAW_REQUEST_TIMEOUT_SECONDS", "20").strip())
+    timeout = float(os.getenv("OPENCLAW_REQUEST_TIMEOUT_SECONDS", "600").strip())
     sync_telegram_commands = _parse_bool(
         os.getenv("SYNC_TELEGRAM_COMMANDS", "true"),
         default=True,

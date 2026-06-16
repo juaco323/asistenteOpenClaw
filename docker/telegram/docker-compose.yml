@@ -14,6 +14,7 @@ services:
     volumes:
       - ../../integrations/telegram-bot/data:/app/data
       - ../../workspace-admin/.llm-test-runs.jsonl:/data/llm-test-runs.jsonl:rw
-      - ${TELEGRAM_HOST_HOME:-/home/joaquin}:/home/joaquin:ro
+      # Mismo path dentro y fuera del contenedor (TELEGRAM_HOST_HOME); no usar /home/joaquin fijo.
+      - ${TELEGRAM_HOST_HOME:-/home/joaquin}:${TELEGRAM_HOST_HOME:-/home/joaquin}:ro
       # Escritura solo en carpeta de recepción (correo con adjunto vía Telegram); el resto del home sigue en ro.
       - ${TELEGRAM_HOST_HOME:-/home/joaquin}/Documentos/telegram-openclaw-incoming:${TELEGRAM_HOST_HOME:-/home/joaquin}/Documentos/telegram-openclaw-incoming:rw

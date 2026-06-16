@@ -24,10 +24,11 @@ RUN apt-get update \
   && mkdir -p /home/node/.config \
   && chown -R node:node /home/node/.config
 
-COPY gog-wrapper.sh entrypoint-gateway.sh /tmp/oc-bin/
+COPY gog-wrapper.sh gog-gmail-draft-wrap.py entrypoint-gateway.sh /tmp/oc-bin/
 RUN set -eu \
   && mv /usr/local/bin/gog /usr/local/bin/gog.real \
   && install -m 0755 /tmp/oc-bin/gog-wrapper.sh /usr/local/bin/gog \
+  && install -m 0755 /tmp/oc-bin/gog-gmail-draft-wrap.py /usr/local/bin/gog-gmail-draft-wrap.py \
   && install -m 0755 /tmp/oc-bin/entrypoint-gateway.sh /usr/local/bin/entrypoint-gateway.sh \
   && rm -rf /tmp/oc-bin
 

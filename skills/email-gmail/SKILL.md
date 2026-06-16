@@ -47,10 +47,40 @@ gog auth add prueba.openclaw.fj@gmail.com --services gmail
 gog auth list
 ```
 
+**Formato del cuerpo (obligatorio):** el correo debe leerse como texto formal normal en Gmail. **Prohibido** en `--body`:
+- secuencias literales `\n`, `\r`, `\t` (provocan «Hola,\n\n…» en el mensaje recibido);
+- prefijo `$` u otros restos de shell/heredoc al inicio del texto.
+
+Para **cualquier** mensaje con más de una línea o párrafos, usar **`--body-file`** (o el script `scripts/gog-gmail-draft.sh`) con saltos de línea **reales** en el archivo, no escapes.
+
 **Crear borrador** (paso obligatorio antes de un envío nuevo):
 
 ```bash
-gog gmail drafts create -a "prueba.openclaw.fj@gmail.com" --to "destinatario@dominio.com" --subject "Asunto" --body "Cuerpo en texto plano"
+# Cuerpo de una sola línea (sin párrafos):
+gog gmail drafts create -a "prueba.openclaw.fj@gmail.com" --to "destinatario@dominio.com" --subject "Asunto" --body "Cuerpo en una línea"
+
+# Cuerpo con párrafos (recomendado):
+BODY="$(mktemp)"
+cat >"$BODY" <<'EOF'
+Estimado/a,
+
+Le escribo para confirmar la reunión de hoy a las 22:00.
+
+Saludos cordiales.
+EOF
+gog gmail drafts create -a "prueba.openclaw.fj@gmail.com" \
+  --to "destinatario@dominio.com" --subject "Asunto" --body-file "$BODY"
+rm -f "$BODY"
+
+# O desde stdin:
+gog gmail drafts create -a "prueba.openclaw.fj@gmail.com" \
+  --to "destinatario@dominio.com" --subject "Asunto" --body-file - <<'EOF'
+Estimado/a,
+
+Mensaje con párrafos reales.
+
+Saludos cordiales.
+EOF
 ```
 
 **Borrador con adjunto(s)** — flag repetible `--attach` con **ruta absoluta** accesible desde donde ejecuta `gog` (en Docker del gateway suele coincidir con la del host si el home está montado igual). Ejemplo:

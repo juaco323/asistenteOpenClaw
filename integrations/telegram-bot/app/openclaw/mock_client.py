@@ -19,6 +19,8 @@ class MockOpenClawClient:
         username: str | None,
         message: str,
         chat_id: int | None = None,
+        admin_validated: bool = False,
+        image_path: Path | None = None,
     ) -> str:
         identity = username or f"user-{user_id}"
         return (

@@ -10,6 +10,7 @@ from telegram.ext import ContextTypes
 from app.file_delivery import MAX_FILE_BYTES, is_path_allowed, is_path_denied
 
 INCOMING_DIRNAME = "telegram-openclaw-incoming"
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
 
 
 def resolve_incoming_dir(host_home: Path) -> Path:
@@ -128,6 +129,28 @@ def build_user_message_for_incoming(
 ) -> str:
     cap = (caption or "").strip()
     path_str = str(saved_path.resolve())
+    is_image = saved_path.suffix.lower() in IMAGE_EXTENSIONS
+
+    if is_image:
+        intro = (
+            "[Imagen recibida por Telegram — analizar con visión]\n"
+            f"Ruta absoluta en el equipo: {path_str}\n"
+            f"Nombre: {saved_path.name}\n\n"
+        )
+        if cap:
+            return intro + f"Instrucción del usuario:\n{cap}"
+        return (
+            intro
+            + "El usuario no escribió instrucción junto a la imagen. "
+            "Analízala visualmente y clasifícala en UNO de estos tipos (excluyentes): "
+            "(1) Texto narrativo — si predominan párrafos o frases, transcribe y genera solo la sección '## Texto narrativo'; "
+            "(2) Lista de tareas — si predominan ítems, viñetas o pasos, genera solo la sección '## Lista de tareas' con '- [ ] …'; "
+            "(3) Diagrama/gráfico — si predominan figuras o flechas, genera solo '## Análisis del diagrama'. "
+            "No incluyas ambas secciones de texto narrativo Y lista de tareas a la vez salvo que la imagen las mezcle de forma equitativa. "
+            "Guarda el resultado en ~/Documentos/Reportes/ con nombre descriptivo (.md) "
+            "y confirma la ruta exacta donde lo guardaste."
+        )
+
     intro = (
         "[Archivo recibido por Telegram]\n"
         f"Ruta absoluta en el equipo (úsame con `gog gmail drafts create` y `--attach`): "

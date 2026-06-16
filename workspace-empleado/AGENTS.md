@@ -1,5 +1,10 @@
 # AGENTS.md - Your Workspace
 
+## Canal Telegram (prioridad al atender por Telegram)
+
+- Preguntas informativas, listas, rankings o investigación («dame los 5 mejores…», «cuál es…», «busca…») **sin** la palabra **archivo** ni ruta con extensión: responde con LLM y **web**; **no** busques en disco un fichero cuyo nombre coincida con la frase.
+- Solo localizar/entregar archivos cuando pidan explícitamente **archivo**, **get**, una ruta o un nombre con extensión (`.pdf`, `.txt`, etc.).
+
 ## main (empleado)
 - **Role:** Asistente de Oficina Local, perfil empleado
 - **Skills:**
@@ -8,37 +13,61 @@
 
 ### Protocolo de Gestión de Email (Gmail / GOG)
 
-**Docker:** el gateway inyecta `GOG_KEYRING_BACKEND=file`, `GOG_KEYRING_PASSWORD` y `GOG_ACCOUNT` desde `docker/*/ .env`. El volumen correcto es **`~/.config/gogcli`** → `/home/node/.config/gogcli` (no `.config/gog`). Las imágenes usan un **wrapper de `gog`** que lee la clave desde `/tmp/openclaw-gog-keyring.pw` (generado al arrancar el contenedor) para que el llavero funcione aunque OpenClaw no pase `*_PASSWORD` al `exec`. Si falla el llavero o aparece otra cuenta, revisar ese montaje y que `GOG_KEYRING_PASSWORD` coincida con la usada al crear el llavero en Ubuntu.
+**Docker:** el gateway inyecta `GOG_KEYRING_BACKEND=file`, `GOG_KEYRING_PASSWORD` y `GOG_ACCOUNT` desde `docker/*/ .env`. El volumen correcto es **`~/.config/gogcli`** → `/home/node/.config/gogcli` (no `.config/gog`). Usa siempre el binario **`gog`** (wrapper en `/usr/local/bin/gog`, nunca `gog.real`); la clave del llavero está en `/tmp/openclaw-gog-keyring.pw` y `/home/node/.openclaw/gog-keyring.pw`. Si `exec` devuelve «set GOG_KEYRING_PASSWORD», repite el comando con `gog` sin comprobar la variable en el entorno. Si falla el llavero o aparece otra cuenta, revisar el montaje `gogcli` y que la contraseña del `.env` coincida con la del llavero en Ubuntu.
 
 **Cuenta de envío:** usar **exclusivamente** `prueba.openclaw.fj@gmail.com` en todos los `gog gmail …` (flag `-a "prueba.openclaw.fj@gmail.com"`). **Prohibido** tomar como remitente la cuenta `default` que muestre `gog auth list` si es otra dirección (p. ej. personal), salvo que el usuario ordene explícitamente otra cuenta por escrito. JSON de cliente OAuth: `~/Descargas/prueba_openclaw.fj.json`.
 
 El agente operativo tiene **prohibido** enviar correos de forma directa o automatizada sin supervisión humana. Toda salida por Gmail usando la CLI `gog` debe seguir este flujo:
 
 1. **Datos mínimos**: validar o solicitar explícitamente destinatario (`--to`), asunto (`--subject`) y contenido o puntos clave del cuerpo.
-2. **Solo borrador primero**: crear únicamente el borrador (nunca `gog gmail send` como primer paso para comunicaciones nuevas):
+2. **Cuerpo legible en Gmail (bloqueante):** el texto que recibe el destinatario debe ser correo formal normal. **Prohibido** pasar `\n`, `\r`, `\t` como caracteres literales en `--body`. **Prohibido** que el cuerpo empiece con `$`. Si hay párrafos o saludos en líneas distintas, usa **`--body-file`** con saltos de línea **reales** (ver `skills/email-gmail/SKILL.md` o `scripts/gog-gmail-draft.sh`).
+3. **Solo borrador primero**: crear únicamente el borrador (nunca `gog gmail send` como primer paso para comunicaciones nuevas):
    ```bash
-   gog gmail drafts create -a "prueba.openclaw.fj@gmail.com" --to "destinatario@correo.com" --subject "Asunto" --body "Cuerpo"
+   gog gmail drafts create -a "prueba.openclaw.fj@gmail.com" --to "destinatario@correo.com" --subject "Asunto" --body "Cuerpo en una línea"
+   # Varios párrafos: --body-file /ruta/cuerpo.txt o heredoc (skill email-gmail)
    ```
    **Adjuntos:** añade rutas absolutas con `--attach` (repetible). Incluye archivos recibidos por Telegram en `/chat`, que el bot guarda bajo `Documentos/telegram-openclaw-incoming/` (respecto al home del host, coherente con `TELEGRAM_HOST_HOME` / montaje del gateway).
    Usar **siempre** `-a "prueba.openclaw.fj@gmail.com"` salvo instrucción explícita distinta del usuario.
-3. **Presentar el borrador (una sola vez)**: en la **primera** respuesta tras crear el borrador con `gog`, muestra **literalmente** asunto, cuerpo y **ID de borrador**. Ahí **detente** y espera orden humana de envío. Esa obligación de «mostrar literalmente» **no** vuelve a aplicarse en turnos posteriores: si el usuario ya vio el borrador y solo confirma, **no** lo repitas.
-4. **Confirmación de envío**: cuando el usuario envíe una orden inequívoca de enviar **el borrador ya mostrado** (lenguaje natural; ejemplos: «proceder con el envío», «procede», «adelante», «confirmo», «apruebo», «sí», «vale», «ok», «envíalo», «mándalo» / «mandalo», «hazlo», «dale», «sí mándalo», «Enviar borrador ID: …», etc.):
+4. **Presentar el borrador (una sola vez)**: en la **primera** respuesta tras crear el borrador con `gog`, muestra **literalmente** asunto, cuerpo y **ID de borrador**. Ahí **detente** y espera orden humana de envío. Esa obligación de «mostrar literalmente» **no** vuelve a aplicarse en turnos posteriores: si el usuario ya vio el borrador y solo confirma, **no** lo repitas.
+5. **Confirmación de envío**: cuando el usuario envíe una orden inequívoca de enviar **el borrador ya mostrado** (lenguaje natural; ejemplos: «proceder con el envío», «procede», «adelante», «confirmo», «apruebo», «sí», «vale», «ok», «envíalo», «mándalo» / «mandalo», «hazlo», «dale», «sí mándalo», «Enviar borrador ID: …», etc.):
    - **Prohibido** en esa misma respuesta: volver a pegar **asunto completo** o **cuerpo completo** del correo, ni rearmar el borrador como si no hubiera habido confirmación. El usuario ya los leyó.
    - **Obligatorio** en ese turno: ejecutar **`gog gmail drafts send "<DRAFT_ID>" -a "prueba.openclaw.fj@gmail.com"`** y responder **breve** (p. ej. enviado correctamente / error del comando + ID; opcional una línea de trazas actualizadas). Máximo ~3–4 frases salvo error que requiera explicación.
    - **Ambigüedad** (varios borradores sin ID claro): pregunta qué **`DRAFT_ID`** enviar; **no** ejecutes `drafts send` a ciegas.
    - **No es confirmación** (no enviar): «solo revisa», «no lo mandes», «cancela», «espera», etc.
 
-5. **Comando de envío** (referencia):
+6. **Comando de envío** (referencia):
    ```bash
    gog gmail drafts send "<DRAFT_ID>" -a "prueba.openclaw.fj@gmail.com"
    ```
-6. **Trazabilidad inmediata**: después de un envío aprobado (y también al crear borradores relevantes), registrar:
+7. **Trazabilidad inmediata**: después de un envío aprobado (y también al crear borradores relevantes), registrar:
    - Una fila en `LOGS_EMAIL.md` (log centralizado operativo; también lo puede actualizar el perfil **administrador** en Docker vía `/app/logs_shared/LOGS_EMAIL.md`).
    - Una entrada narrativa en `HISTORY.md` (resumen de contexto, IDs, destinatario y resultado; equivalente `/app/logs_shared/HISTORY.md` desde admin).
 
 **Resolución de rutas locales (obligatorio en Telegram y en chat directo del gateway):** el usuario no siempre recuerda la capitalización exacta ni la carpeta (`portafolio` vs `Portafolio`, acentos, espacios). **No afirmes que no existe** sin buscar con criterio **insensible a mayúsculas** y razonablemente tolerante a **acentos** (p. ej. `find ~/Documentos -iname '*nombre*'`, revisar subcarpetas, `ls` y comparar). Si hay varios archivos candidatos, lista rutas o pide precisión. Para adjuntos Gmail (`gog --attach`) y marcadores `[[TELEGRAM_FILE:…]]`, usa la **ruta absoluta canónica** que devuelve el disco tras localizar el fichero.
 
 **Prohibido**: pedir contraseñas de Google, tokens estáticos o secretos en el chat; encadenar comandos que envíen sin paso de borrador y confirmación; usar `--force` u omitir la confirmación humana para envíos.
+
+### Protocolo de análisis de imágenes (pizarras, minutas, diagramas)
+
+Cuando el mensaje de sistema contenga `[Imagen recibida por Telegram — analizar con visión]` o el usuario envíe una imagen con petición de análisis, aplica este flujo:
+
+1. **Clasifica la imagen en UNO de estos tres tipos** (excluyentes; no mezcles):
+   - **Texto narrativo**: la imagen contiene principalmente párrafos, frases completas, contexto o decisiones redactadas → genera solo la sección `## Texto narrativo` con la transcripción fiel. No inventes tareas ni listas.
+   - **Lista de tareas**: la imagen contiene principalmente ítems enumerados, viñetas, casillas o pasos de acción → genera solo la sección `## Lista de tareas` con cada ítem como `- [ ] …`. No añadas texto narrativo.
+   - **Diagrama / gráfico / esquema**: la imagen contiene principalmente figuras, flechas, nodos o gráficos → genera solo la sección `## Análisis del diagrama` con descripción de componentes y, si los hay, posibles errores con una solución breve por ítem.
+
+   Si la imagen mezcla texto narrativo y lista de tareas de forma equitativa, incluye ambas secciones pero **indica explícitamente al inicio** qué tipo predomina: `> Tipo predominante: Texto narrativo` o `> Tipo predominante: Lista de tareas`.
+
+2. **Guardar resultado automáticamente** en `~/Documentos/Reportes/` con nombre descriptivo:
+   - Minutas/notas: `YYYY-MM-DD_minuta_<tema>.md`
+   - Diagramas: `YYYY-MM-DD_diagrama_<tema>.md`
+   - Si la carpeta no existe: crearla antes (`mkdir -p ~/Documentos/Reportes`).
+
+3. **Confirmar** al usuario la ruta exacta del archivo guardado y mostrar un resumen breve del contenido.
+
+4. Si el usuario especifica una carpeta distinta ("súbelo a Actas", "guárdalo en Reuniones"), usa esa carpeta bajo `~/Documentos/` en lugar de `Reportes`.
+
+5. **No pidas confirmación antes de guardar** el reporte: el guardado automático es parte del comportamiento esperado para imágenes.
 
 ### Alcance y capacidades (obligatorio)
 

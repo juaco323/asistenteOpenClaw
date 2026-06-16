@@ -23,3 +23,18 @@ _Cada fila nueva se añade al final de la tabla, manteniendo el encabezado._
 | 2026-05-16 04:46 UTC | Empleado | Correo enviado | prueba.openclaw.fj@gmail.com | acv1324@gmail.com | Anda a acostarte, Doria | r8363244273495347858 |
 | 2026-05-16 04:50 UTC | Empleado | Borrador creado | prueba.openclaw.fj@gmail.com | joaquin.fuenzalida51@gmail.com | test | r627174621781871500 |
 | 2026-05-16 04:51 UTC | Empleado | Correo enviado | prueba.openclaw.fj@gmail.com | joaquin.fuenzalida51@gmail.com | test | r627174621781871500 |
+| 2026-05-25 17:28 UTC | Administrador | Borrador creado | prueba.openclaw.fj@gmail.com | fernycalderonsolis@gmail.com | Recordatorio: jugar hoy Valorant a las 10 PM | r-6480057617700128976 |
+| 2026-05-25 17:28 UTC | Administrador | Correo enviado | prueba.openclaw.fj@gmail.com | fernycalderonsolis@gmail.com | Recordatorio: jugar hoy Valorant a las 10 PM | r-6480057617700128976 |
+| 2026-05-25 17:33 UTC | Administrador | Borrador creado | prueba.openclaw.fj@gmail.com | fernycalderonsolis@gmail.com | Recordatorio: jugar hoy Valorant a las 10 PM | r-4183869581734308442 |
+| 2026-05-25 17:33 UTC | Administrador | Correo enviado | prueba.openclaw.fj@gmail.com | fernycalderonsolis@gmail.com | Recordatorio: jugar hoy Valorant a las 10 PM | r-4183869581734308442 |
+| 2026-05-25 17:34 UTC | Administrador | Borrador creado | prueba.openclaw.fj@gmail.com | fernycalderonsolis@gmail.com | Recordatorio: jugar hoy Valorant a las 10 PM | r-3360170560771289710 |
+| 2026-05-25 17:34 UTC | Administrador | Correo enviado | prueba.openclaw.fj@gmail.com | fernycalderonsolis@gmail.com | Recordatorio: jugar hoy Valorant a las 10 PM | r-3360170560771289710 |
+| 2026-05-25 18:00 UTC | Administrador | Borrador creado | prueba.openclaw.fj@gmail.com | joaquin.fuenzalida51@gmail.com | Recordatorio: reunión mañana a las 4 PM | r5412524415607206701 |
+| 2026-05-25 18:02 UTC | Administrador | Correo enviado | prueba.openclaw.fj@gmail.com | joaquin.fuenzalida51@gmail.com | Recordatorio: reunión mañana a las 4 PM | r5412524415607206701 |
+| 2026-05-25 | Administrador | BORRADOR | joaquin.fuenzalida51@gmail.com | Recordatorio reunión mañana | r4912418844213010512 |
+| 2026-05-25 | Administrador | ENVIADO | joaquin.fuenzalida51@gmail.com | Recordatorio reunión mañana | 19e60543145d4788 |
+| 2026-05-25 | Administrador | BORRADOR | joaquin.fuenzalida51@gmail.com | Recordatorio reunión mañana | r5738080128564405249 |
+| 2026-05-25 | Administrador | ENVIADO | joaquin.fuenzalida51@gmail.com | Recordatorio reunión mañana | 19e606b364b17f8c |
+| 2026-05-25 | Administrador | BORRADOR | carla.taramasco@unab.cl | Recordatorio reunión mañana | r513061347335142387 |
+| 2026-05-25 | Administrador | ENVIADO | carla.taramasco@unab.cl | Recordatorio reunión mañana | 19e606d281eb787c |
+- 2026-06-15 23:13 UTC | Administrador | Enviado | Draft ID: r5784576001265582332 | Para: joaquin.fuenzalida51@gmail.com | Asunto: Recordatorio: prueba de infraestructura TI el miércoles 1 a las 8:30 AM

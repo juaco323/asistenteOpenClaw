@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -7,6 +9,29 @@ import httpx
 from app.config import WorkspaceSettings
 from app.workspace_policy import WorkspaceFilePolicy
 from app.telegram_context import build_telegram_system_message
+
+_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+_IMAGE_MIME: dict[str, str] = {
+    "jpg": "jpeg", "jpeg": "jpeg", "png": "png", "gif": "gif", "webp": "webp",
+}
+
+
+def _is_image_path(path: Path) -> bool:
+    return path.suffix.lower() in _IMAGE_EXTENSIONS
+
+
+def _build_user_content(message: str, image_path: Path | None) -> str | list:
+    if image_path is None or not _is_image_path(image_path):
+        return message
+    try:
+        data = base64.b64encode(image_path.read_bytes()).decode()
+        mime = _IMAGE_MIME.get(image_path.suffix.lower().lstrip("."), "jpeg")
+    except OSError:
+        return message
+    return [
+        {"type": "text", "text": message},
+        {"type": "image_url", "image_url": {"url": f"data:image/{mime};base64,{data}"}},
+    ]
 
 
 class GatewayOpenClawClient:
@@ -32,6 +57,8 @@ class GatewayOpenClawClient:
         username: str | None,
         message: str,
         chat_id: int | None = None,
+        admin_validated: bool = False,
+        image_path: Path | None = None,
     ) -> str:
         workspace_settings = self._get_workspace(workspace)
         policy = self._get_policy(workspace)
@@ -43,13 +70,15 @@ class GatewayOpenClawClient:
             user_id=user_id,
             username=username,
             policy=policy,
+            admin_validated=admin_validated,
         )
+        user_content = _build_user_content(message, image_path)
         return await self._send_chat_completion(
             workspace=workspace,
             user_id=user_id,
             messages=[
                 {"role": "system", "content": system_message},
-                {"role": "user", "content": message},
+                {"role": "user", "content": user_content},
             ],
         )
 

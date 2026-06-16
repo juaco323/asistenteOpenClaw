@@ -32,6 +32,8 @@ def _gmail_protocol_telegram() -> str:
         "Usa la CLI `gog` disponible en el gateway; remitente **obligatorio** en cada comando Gmail: "
         '-a "prueba.openclaw.fj@gmail.com". '
         "Flujo obligatorio para mensajes nuevos: reunir destinatario, asunto y cuerpo; "
+        "el cuerpo del correo debe ser texto formal legible (saltos de línea reales con `--body-file` o heredoc; "
+        "**prohibido** `\n` literal, prefijo `$` o escapes de programación en `--body`). "
         "**solo** `gog gmail drafts create` primero; en esa **primera** respuesta muestra asunto, cuerpo e **ID de borrador** y espera confirmación. "
         "**Tras confirmación** («envíalo», «mándalo», «vale», «dale», «sí», «ok», «confirmo», «procede», «proceder con el envío», «Enviar borrador ID: …», etc.): "
         "**prohibido** volver a mostrar asunto o cuerpo completos; ejecuta en el mismo turno `gog gmail drafts send \"<DRAFT_ID>\"` con `-a \"prueba.openclaw.fj@gmail.com\"` "
@@ -49,6 +51,19 @@ def _gmail_protocol_telegram() -> str:
     )
 
 
+def _admin_validation_text(admin_validated: bool) -> str:
+    if not admin_validated:
+        return ""
+    return (
+        "[ADMIN_VALIDADO: el usuario se autenticó con la contraseña de administrador "
+        "en el bot de Telegram antes de esta sesión. "
+        "Esta validación es suficiente como 'validación administrativa'; "
+        "no pidas contraseña ni credenciales adicionales para acceder a métricas, "
+        "historial de correos enviados, logs operativos ni cualquier dato de trazabilidad. "
+        "Muestra la información solicitada directamente.] "
+    )
+
+
 def build_telegram_system_message(
     *,
     workspace: str,
@@ -57,13 +72,21 @@ def build_telegram_system_message(
     user_id: int,
     username: str | None,
     policy: WorkspaceFilePolicy,
+    admin_validated: bool = False,
 ) -> str:
     handle = f"@{username}" if username else "sin_username"
     return (
-        "CONTEXTO DE CANAL (obligatorio, prioridad alta): "
+        _admin_validation_text(admin_validated)
+        + "CONTEXTO DE CANAL (obligatorio, prioridad alta): "
         "Estás atendiendo a un usuario exclusivamente a través de Telegram. "
         "El canal activo es Telegram; NO es webchat ni otro medio. "
         "No pidas chat_id, @username ni confirmación del canal: ya están disponibles. "
+        "Clasificación de mensajes: si el usuario pide información, listas, rankings, "
+        "investigación o redacción («dame los 5 mejores…», «explica…», «busca…») sin la palabra "
+        "**archivo** ni una ruta con extensión (.pdf, .txt, etc.), responde con LLM y web; "
+        "**no** busques en disco un fichero cuyo nombre coincida con la frase. "
+        "Solo entrega/busca archivos con [[TELEGRAM_FILE:…]] cuando pidan explícitamente un "
+        "archivo, usen get, o den un nombre con extensión. "
         f"Perfil/workspace activo: {workspace_label} ({workspace}). "
         f"chat_id de Telegram: {chat_id}. user_id: {user_id}. username: {handle}. "
         f"{_gmail_protocol_telegram()} "

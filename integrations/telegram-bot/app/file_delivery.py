@@ -22,8 +22,8 @@ FILE_REQUEST_PATTERNS: tuple[re.Pattern[str], ...] = (
         re.IGNORECASE,
     ),
     re.compile(
-        r"^\s*(?:env[ií]ame|m[aá]ndame|p[aá]same|entreg[aá]me|dame)\s+[\"']?(.+?)[\"']?\s*"
-        r"(?:por\s+telegram)?\s*$",
+        r"^\s*(?:env[ií]ame|m[aá]ndame|p[aá]same|entreg[aá]me|dame)\s+"
+        r"[\"']?([^\s\"']+\.[A-Za-z0-9]{1,10})[\"']?\s*(?:por\s+telegram)?\s*$",
         re.IGNORECASE,
     ),
     re.compile(

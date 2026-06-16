@@ -21,6 +21,7 @@ from telegram.ext import (
 
 from app.config import Settings
 from app.errors import format_gateway_error
+from app.gateway_progress import run_with_telegram_progress
 from app.llm_test_log import append_llm_test_run
 from app.file_delivery import (
     deliver_marked_files,
@@ -30,6 +31,7 @@ from app.file_delivery import (
     send_telegram_file,
 )
 from app.telegram_incoming import (
+    IMAGE_EXTENSIONS,
     build_user_message_for_incoming,
     resolve_incoming_dir,
     save_telegram_upload,
@@ -114,6 +116,16 @@ def _build_post_init(settings: Settings):
     return _post_init
 
 
+def _conversation_side_commands() -> list:
+    """Comandos que deben funcionar también dentro del modo /chat o recordatorios."""
+    return [
+        CommandHandler("workspace", workspace_command_in_conversation),
+        CommandHandler("chat", enter_chat_mode),
+        CommandHandler("correo", enter_correo_mode),
+        CommandHandler("estado", status_command_in_conversation),
+    ]
+
+
 def _build_main_conversation() -> ConversationHandler:
     return ConversationHandler(
         entry_points=[
@@ -124,6 +136,7 @@ def _build_main_conversation() -> ConversationHandler:
         states={
             CHAT_ACTIVE: [
                 CommandHandler("get", get_command),
+                *_conversation_side_commands(),
                 MessageHandler(
                     (filters.Document.ALL | filters.PHOTO) & ~filters.COMMAND,
                     forward_chat_media,
@@ -131,6 +144,7 @@ def _build_main_conversation() -> ConversationHandler:
                 MessageHandler(filters.TEXT & ~filters.COMMAND, forward_chat_message),
             ],
             REMINDER_MENU: [
+                *_conversation_side_commands(),
                 CallbackQueryHandler(reminder_list_callback, pattern=r"^reminders:list$"),
                 CallbackQueryHandler(
                     reminder_create_prompt_callback,
@@ -139,6 +153,7 @@ def _build_main_conversation() -> ConversationHandler:
                 CallbackQueryHandler(reminders_close_callback, pattern=r"^reminders:close$"),
             ],
             REMINDER_CREATE: [
+                *_conversation_side_commands(),
                 MessageHandler(
                     (filters.Document.ALL | filters.PHOTO) & ~filters.COMMAND,
                     reminder_reject_media,
@@ -228,6 +243,13 @@ def _resolve_workspace_from_context(context: ContextTypes.DEFAULT_TYPE) -> str |
     return None
 
 
+def _is_admin_validated(context: ContextTypes.DEFAULT_TYPE) -> bool:
+    return (
+        context.user_data.get(WORKSPACE_AUTH_KEY, False)
+        and context.user_data.get(SELECTED_WORKSPACE_KEY) == "admin"
+    )
+
+
 def _audit_path(settings: Settings) -> Path:
     return settings.data_dir / AUDIT_LOG_NAME
 
@@ -294,7 +316,8 @@ async def _complete_workspace_switch(
     if update.message is not None:
         await update.message.reply_text(
             "Contraseña correcta.\n"
-            f"Workspace activo: {workspace.label}."
+            f"Workspace activo: {workspace.label}.\n"
+            "Ya puedes escribir tu consulta aquí (sin /chat) o usar /chat para modo conversación."
         )
 
 
@@ -412,12 +435,17 @@ async def prueba_llm_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     chat_id = update.effective_chat.id if update.effective_chat else user.id
     t0 = time.perf_counter()
     try:
-        reply = await client.chat(
-            workspace="admin",
-            user_id=user.id,
-            username=user.username,
-            message=prompt,
-            chat_id=chat_id,
+        reply = await run_with_telegram_progress(
+            update,
+            label="Ejecutando prueba LLM…",
+            coro_factory=lambda: client.chat(
+                workspace="admin",
+                user_id=user.id,
+                username=user.username,
+                message=prompt,
+                chat_id=chat_id,
+                admin_validated=True,
+            ),
         )
     except Exception as exc:  # pragma: no cover
         LOGGER.exception("prueba_llm chat failed")
@@ -623,12 +651,17 @@ async def _handle_file_request(
         "No pidas chat_id ni confirmes el canal: ya es Telegram."
     )
     try:
-        reply = await client.chat(
-            workspace=workspace_name,
-            user_id=update.effective_user.id,
-            username=update.effective_user.username,
-            message=prompt,
-            chat_id=chat_id,
+        reply = await run_with_telegram_progress(
+            update,
+            label="Buscando el archivo solicitado…",
+            coro_factory=lambda: client.chat(
+                workspace=workspace_name,
+                user_id=update.effective_user.id,
+                username=update.effective_user.username,
+                message=prompt,
+                chat_id=chat_id,
+                admin_validated=_is_admin_validated(context),
+            ),
         )
     except Exception as exc:  # pragma: no cover
         LOGGER.exception("File request forwarding failed")
@@ -672,10 +705,79 @@ async def _reply_with_optional_files(
     )
 
 
+async def workspace_command_in_conversation(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    await workspace_command(update, context)
+    return _current_conversation_state(context)
+
+
+async def status_command_in_conversation(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    await status_command(update, context)
+    return _current_conversation_state(context)
+
+
+async def _deliver_openclaw_text(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    *,
+    text: str,
+    progress_label: str = "Procesando tu consulta…",
+) -> None:
+    if update.message is None or update.effective_user is None:
+        return
+
+    settings = _get_settings(context)
+    workspace_name = _resolve_workspace_from_context(context)
+    if workspace_name is None:
+        await update.message.reply_text("Primero selecciona un workspace con /workspace.")
+        return
+
+    client = _get_client(context)
+    chat_id = update.effective_chat.id if update.effective_chat else update.effective_user.id
+    file_query = parse_file_request(text)
+    if file_query is not None:
+        await _handle_file_request(update, context, file_query)
+        return
+
+    try:
+        reply = await run_with_telegram_progress(
+            update,
+            label=progress_label,
+            coro_factory=lambda: client.chat(
+                workspace=workspace_name,
+                user_id=update.effective_user.id,
+                username=update.effective_user.username,
+                message=text,
+                chat_id=chat_id,
+                admin_validated=_is_admin_validated(context),
+            ),
+        )
+    except Exception as exc:  # pragma: no cover
+        LOGGER.exception("OpenClaw chat delivery failed")
+        await update.message.reply_text(
+            format_gateway_error(
+                settings,
+                workspace_name,
+                exc,
+                action="obtener la respuesta del agente",
+            )
+        )
+        return
+
+    await _reply_with_optional_files(update, settings, workspace_name, reply)
+
+
 async def forward_chat_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if update.message is None or not await _ensure_authorized(update, context):
         return ConversationHandler.END
     if update.effective_user is None:
+        return CHAT_ACTIVE
+
+    if context.user_data.get(PENDING_WORKSPACE_KEY):
+        await workspace_password_message(update, context)
         return CHAT_ACTIVE
 
     if not context.user_data.get(WORKSPACE_AUTH_KEY):
@@ -685,13 +787,11 @@ async def forward_chat_message(update: Update, context: ContextTypes.DEFAULT_TYP
         )
         return ConversationHandler.END
 
-    settings = _get_settings(context)
     workspace_name = _resolve_workspace_from_context(context)
     if workspace_name is None:
         await update.message.reply_text("Primero selecciona un workspace con /workspace.")
         return ConversationHandler.END
 
-    client = _get_client(context)
     text = (update.message.text or "").strip()
     if not text:
         await update.message.reply_text(
@@ -700,32 +800,7 @@ async def forward_chat_message(update: Update, context: ContextTypes.DEFAULT_TYP
         return CHAT_ACTIVE
 
     context.user_data["chat_active"] = True
-    file_query = parse_file_request(text)
-    if file_query is not None:
-        return await _handle_file_request(update, context, file_query)
-
-    chat_id = update.effective_chat.id if update.effective_chat else update.effective_user.id
-    try:
-        reply = await client.chat(
-            workspace=workspace_name,
-            user_id=update.effective_user.id,
-            username=update.effective_user.username,
-            message=text,
-            chat_id=chat_id,
-        )
-    except Exception as exc:  # pragma: no cover
-        LOGGER.exception("Chat forwarding failed")
-        await update.message.reply_text(
-            format_gateway_error(
-                settings,
-                workspace_name,
-                exc,
-                action="obtener la respuesta del agente",
-            )
-        )
-        return CHAT_ACTIVE
-
-    await _reply_with_optional_files(update, settings, workspace_name, reply)
+    await _deliver_openclaw_text(update, context, text=text)
     return CHAT_ACTIVE
 
 
@@ -734,6 +809,12 @@ async def forward_chat_media(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if update.message is None or not await _ensure_authorized(update, context):
         return ConversationHandler.END
     if update.effective_user is None:
+        return CHAT_ACTIVE
+
+    if context.user_data.get(PENDING_WORKSPACE_KEY):
+        await update.message.reply_text(
+            "Para iniciar sesión en un perfil envía la **contraseña en texto**, no un archivo ni foto."
+        )
         return CHAT_ACTIVE
 
     if not context.user_data.get(WORKSPACE_AUTH_KEY):
@@ -779,8 +860,9 @@ async def forward_chat_media(update: Update, context: ContextTypes.DEFAULT_TYPE)
         )
         return CHAT_ACTIVE
 
+    is_image = saved.suffix.lower() in IMAGE_EXTENSIONS
     await update.message.reply_text(
-        "Archivo guardado en el equipo; enviando al asistente…\n"
+        ("Imagen" if is_image else "Archivo") + " guardado en el equipo; enviando al asistente…\n"
         f"{saved.resolve()}"
     )
     prompt = build_user_message_for_incoming(
@@ -790,13 +872,20 @@ async def forward_chat_media(update: Update, context: ContextTypes.DEFAULT_TYPE)
     context.user_data["chat_active"] = True
     client = _get_client(context)
     chat_id = update.effective_chat.id if update.effective_chat else update.effective_user.id
+    image_path_arg = saved if is_image else None
     try:
-        reply = await client.chat(
-            workspace=workspace_name,
-            user_id=user_id,
-            username=update.effective_user.username,
-            message=prompt,
-            chat_id=chat_id,
+        reply = await run_with_telegram_progress(
+            update,
+            label="Analizando imagen…" if is_image else "Procesando tu consulta…",
+            coro_factory=lambda: client.chat(
+                workspace=workspace_name,
+                user_id=user_id,
+                username=update.effective_user.username,
+                message=prompt,
+                chat_id=chat_id,
+                admin_validated=_is_admin_validated(context),
+                image_path=image_path_arg,
+            ),
         )
     except Exception as exc:  # pragma: no cover
         LOGGER.exception("Chat forwarding failed (media)")
@@ -1163,19 +1252,20 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 async def default_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.message is None or not await _ensure_authorized(update, context):
         return
+
+    text = (update.message.text or "").strip()
+    if not text:
+        return
+
     workspace_name = _resolve_workspace_from_context(context)
-    if workspace_name is None:
-        suffix = "Primero elige un perfil con /workspace (se solicita contraseña)."
-    else:
-        settings = _get_settings(context)
-        suffix = (
-            f"Workspace activo: {settings.get_workspace(workspace_name).label}. "
-            "Usa /salir para cerrar sesión del perfil."
-        )
+    if workspace_name is not None:
+        context.user_data["chat_active"] = True
+        await _deliver_openclaw_text(update, context, text=text)
+        return
+
     await update.message.reply_text(
-        "Usa /chat para hablar con OpenClaw, /correo para Gmail (borrador → confirmación) "
-        "o /recordatorios para gestionar tareas. "
-        + suffix
+        "Primero elige un perfil con /workspace (botón + contraseña en texto).\n"
+        "Después podrás escribir consultas directamente o usar /chat, /correo y /recordatorios."
     )
 
 
