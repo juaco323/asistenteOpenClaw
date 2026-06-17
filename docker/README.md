@@ -49,7 +49,22 @@ chmod +x scripts/ensure-dockerd.sh docker/stack-up-cloud.sh
 ./docker/stack-up-cloud.sh
 ```
 
-`stack-up-cloud.sh` aplica overrides de build (`network: host`) y runtime del bot Telegram.
+### PC local (`/home/joaquin` u otro home)
+
+Con Docker Desktop o Engine en marcha:
+
+```bash
+chmod +x scripts/pc-up.sh scripts/set-env-home.sh
+./scripts/pc-up.sh
+```
+
+`pc-up.sh` aplica credenciales desde `credentials-inbox/` si existen, ajusta rutas a `/home/joaquin`, crea carpetas de estado y ejecuta `./docker/stack-up.sh`.
+
+Solo reescribir rutas en `.env` ya existentes:
+
+```bash
+./scripts/set-env-home.sh /home/joaquin
+```
 
 ## Bajar todo
 

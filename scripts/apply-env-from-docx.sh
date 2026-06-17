@@ -19,9 +19,25 @@ require python3
 
 rewrite_host_paths() {
   local dst="$1"
-  if [ -f "$dst" ] && grep -q '/home/joaquin' "$dst" 2>/dev/null; then
-    sed -i "s|/home/joaquin|${HOST_HOME}|g" "$dst"
-    echo "  (rutas /home/joaquin → ${HOST_HOME})"
+  if [ ! -f "$dst" ]; then
+    return 0
+  fi
+  local changed=0
+  for old in /home/joaquin /home/fernanda2114t /home/ubuntu; do
+    if [ "$old" != "$HOST_HOME" ] && grep -q "$old" "$dst" 2>/dev/null; then
+      sed -i "s|${old}|${HOST_HOME}|g" "$dst"
+      changed=1
+    fi
+  done
+  if [ "$changed" -eq 1 ]; then
+    echo "  (rutas de home → ${HOST_HOME})"
+  fi
+  # PC local: Telegram → host.docker.internal (no 127.0.0.1 dentro del contenedor)
+  if [[ "$dst" == *docker/telegram/.env ]]; then
+    sed -i \
+      -e 's|OPENCLAW_ADMIN_BASE_URL=http://127.0.0.1:|OPENCLAW_ADMIN_BASE_URL=http://host.docker.internal:|g' \
+      -e 's|OPENCLAW_EMPLEADO_BASE_URL=http://127.0.0.1:|OPENCLAW_EMPLEADO_BASE_URL=http://host.docker.internal:|g' \
+      "$dst"
   fi
 }
 
