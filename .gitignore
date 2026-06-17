@@ -8,6 +8,20 @@
 !**/.env.example
 !**/.env.pc-oficina.example
 
+# Credenciales Docker OpenClaw (valores reales; nunca versionar)
+docker/admin/.env
+docker/empleado/.env
+docker/telegram/.env
+
+# Bandeja local de credenciales (admin.env, .docx, etc.)
+credentials-inbox/*
+!credentials-inbox/README.md
+
+# Otros .env con nombre de perfil (p. ej. admin.env en Documentos)
+**/admin.env
+**/empleado.env
+**/telegram.env
+
 # Credenciales consolidadas (solo copia local; nunca versionar)
 CREDENCIALES-USO-PRIVADO.md
 *.local

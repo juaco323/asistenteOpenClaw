@@ -18,7 +18,13 @@ if tracked_env="$(git ls-files | grep -E '(^|/)\.env(\.|$)' | grep -vE '\.env\.(
 fi
 
 echo "== .env locales ignorados por git =="
-for f in docker/admin/.env docker/empleado/.env docker/telegram/.env; do
+for f in \
+  docker/admin/.env \
+  docker/empleado/.env \
+  docker/telegram/.env \
+  credentials-inbox/admin.env \
+  credentials-inbox/empleado.env \
+  credentials-inbox/telegram.env; do
   if [ -f "$f" ]; then
     if git check-ignore -q "$f"; then
       echo "OK ignorado: $f"
