@@ -27,6 +27,30 @@ chmod +x docker/stack-up.sh docker/stack-down.sh
 
 Eso ejecuta `docker compose up` para `docker/admin`, `docker/empleado` y `docker/telegram` en ese orden.
 
+### Credenciales desde `.docx`
+
+Si tienes los tres archivos `.env admin.docx`, `.env empleado.docx` y `.env telegram.docx`:
+
+```bash
+cp "/ruta/.env admin.docx" credentials-inbox/
+cp "/ruta/.env empleado.docx" credentials-inbox/
+cp "/ruta/.env telegram.docx" credentials-inbox/
+chmod +x scripts/apply-env-from-docx.sh
+./scripts/apply-env-from-docx.sh
+./docker/stack-up.sh   # o stack-up-cloud.sh en entornos cloud sin DNS en bridge Docker
+```
+
+### Entornos cloud / sin DNS en bridge Docker
+
+En máquinas donde `docker build` o contenedores no resuelven DNS (p. ej. agentes cloud), usa:
+
+```bash
+chmod +x scripts/ensure-dockerd.sh docker/stack-up-cloud.sh
+./docker/stack-up-cloud.sh
+```
+
+`stack-up-cloud.sh` aplica overrides de build (`network: host`) y runtime del bot Telegram.
+
 ## Bajar todo
 
 ```bash

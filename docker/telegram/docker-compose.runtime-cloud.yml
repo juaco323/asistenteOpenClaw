@@ -1,0 +1,8 @@
+# Runtime en cloud: DNS del bridge Docker no resuelve; usar red del host.
+services:
+  telegram-openclaw-bot:
+    network_mode: host
+    extra_hosts: []
+    environment:
+      OPENCLAW_ADMIN_BASE_URL: http://127.0.0.1:18789
+      OPENCLAW_EMPLEADO_BASE_URL: http://127.0.0.1:18790

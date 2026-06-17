@@ -1,0 +1,7 @@
+services:
+  openclaw-empleado:
+    build:
+      network: host
+  openclaw-empleado-llm-panel:
+    build:
+      network: host

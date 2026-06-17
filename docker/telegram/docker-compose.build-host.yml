@@ -1,0 +1,4 @@
+services:
+  telegram-openclaw-bot:
+    build:
+      network: host

@@ -1,0 +1,8 @@
+# Override para entornos cloud sin DNS en bridge Docker (build con red del host).
+services:
+  openclaw-admin:
+    build:
+      network: host
+  openclaw-admin-llm-panel:
+    build:
+      network: host
