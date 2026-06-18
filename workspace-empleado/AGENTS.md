@@ -10,6 +10,7 @@
 - **Skills:**
   - `web`
   - `email-gmail`
+  - `code-audit`
 
 ### Protocolo de Gestión de Email (Gmail / GOG)
 
@@ -68,6 +69,23 @@ Cuando el mensaje de sistema contenga `[Imagen recibida por Telegram — analiza
 4. Si el usuario especifica una carpeta distinta ("súbelo a Actas", "guárdalo en Reuniones"), usa esa carpeta bajo `~/Documentos/` en lugar de `Reportes`.
 
 5. **No pidas confirmación antes de guardar** el reporte: el guardado automático es parte del comportamiento esperado para imágenes.
+
+### Protocolo de Auditoría de código (`code-audit`)
+
+Cuando el usuario entregue código y pida auditoría, optimización de estructura, refactor o documentación técnica antes de despliegue:
+
+1. **Leer** `skills/code-audit/SKILL.md` y las plantillas en `skills/code-audit/` **de este workspace**.
+2. **Localizar** el archivo o módulo indicado; si falta ruta, preguntar una vez.
+3. **Archivos >500 líneas:** leer en segmentos de 250–400 líneas con solapamiento; sintetizar antes de redactar.
+4. **Analizar:** errores, deuda técnica, rendimiento; proponer refactor (simplificar algoritmos, eliminar redundancia, renombrar variables).
+5. **Escribir entregables** (sin pedir confirmación previa para los `.md`):
+   - `AUDITORIA_<nombre>_<YYYY-MM-DD>.md` junto al código o en `~/Documentos/Reportes/auditoria-codigo/`.
+   - `README.md` en la carpeta del módulo (descripción, propósito de cada función, parámetros, resultados esperados).
+6. **Reporte obligatorio:** errores, sugerencias, código refactorizado (Antes/Después) y **justificación técnica** por mejora.
+7. **Chat:** resumen ejecutivo + rutas; no pegar el reporte completo si es muy largo.
+8. **Código en disco:** no sustituir el fuente original salvo confirmación explícita del usuario.
+
+Guía de usuario: `docs/auditoria-codigo.md` de este workspace.
 
 ### Alcance y capacidades (obligatorio)
 

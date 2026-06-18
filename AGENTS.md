@@ -5,6 +5,7 @@
 - **Skills:**
   - `web`
   - `email-gmail`
+  - `code-audit`
 
 ### Gmail (gog) en este monorepo
 

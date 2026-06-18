@@ -25,3 +25,9 @@ Para tareas ofimáticas (PPTX, imágenes, descargas HTTP) ya están disponibles:
 - `Pillow`
 
 No hace falta pedir autorización para instalar estos paquetes base; si falta otra librería específica, aplicar el protocolo de `SOUL.md` § *Dependencias y librerías del entorno*.
+
+## Auditoría de código (`code-audit`)
+
+- Skill y plantillas: `skills/code-audit/` en este workspace.
+- Guía: `docs/auditoria-codigo.md`.
+- Reportes alternativos: `~/Documentos/Reportes/auditoria-codigo/` (crear con `mkdir -p` si no existe).

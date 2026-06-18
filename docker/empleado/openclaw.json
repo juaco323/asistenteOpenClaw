@@ -43,6 +43,8 @@
     },
     "controlUi": {
       "allowedOrigins": [
+        "http://127.0.0.1:18790",
+        "http://localhost:18790",
         "http://127.0.0.1:18793",
         "http://localhost:18793"
       ]

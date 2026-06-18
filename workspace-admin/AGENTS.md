@@ -10,6 +10,7 @@
 - **Skills:**
   - `web`
   - `email-gmail`
+  - `code-audit`
 
 ### Protocolo de Gestión de Email (Gmail / GOG) — perfil administrador
 
@@ -86,6 +87,25 @@ Además del envío bajo el protocolo anterior, el administrador **audita** y **o
 3. **Fallos de autenticación**: **no** reintentar en bucle desde el agente; indicar comandos para **terminal Ubuntu del host**:
    - `gog auth credentials set ~/Descargas/prueba_openclaw.fj.json` (sin pegar JSON en el chat).
    - `gog auth add prueba.openclaw.fj@gmail.com --services gmail` cuando corresponda.
+
+### Protocolo de Auditoría de código (`code-audit`)
+
+Cuando el usuario entregue código y pida auditoría, optimización de estructura, refactor o documentación técnica antes de despliegue:
+
+1. **Leer** `skills/code-audit/SKILL.md` y las plantillas en `skills/code-audit/` **de este workspace**.
+2. **Localizar** el archivo o módulo indicado; si falta ruta, preguntar una vez.
+3. **Archivos >500 líneas:** leer en segmentos de 250–400 líneas con solapamiento; sintetizar antes de redactar.
+4. **Analizar:** errores, deuda técnica, rendimiento y **seguridad** (credenciales, red, datos sensibles).
+5. **Escribir entregables** (sin pedir confirmación previa para los `.md`):
+   - `AUDITORIA_<nombre>_<YYYY-MM-DD>.md` junto al código o en `~/Documentos/Reportes/auditoria-codigo/`.
+   - `README.md` en la carpeta del módulo (descripción, propósito de cada función, parámetros, resultados esperados).
+6. **Reporte obligatorio:** errores, sugerencias, código refactorizado (Antes/Después) y **justificación técnica** por mejora.
+7. **Chat:** resumen ejecutivo + rutas; no pegar el reporte completo si es muy largo.
+8. **Código en disco:** no sustituir el fuente original salvo confirmación explícita del usuario.
+9. **Admin — seguridad:** priorizar y documentar hallazgos de seguridad y cumplimiento cuando aplique.
+10. **Admin — trazabilidad:** registrar auditorías que afecten despliegue o infraestructura en `memory/YYYY-MM-DD.md`.
+
+Guía de usuario: `docs/auditoria-codigo.md` de este workspace.
 
 ### Alcance y capacidades (obligatorio)
 

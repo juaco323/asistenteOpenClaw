@@ -13,7 +13,9 @@ Cada agente esta pensado para ejecutarse por separado, manteniendo su propio est
 - `docker/empleado`: stack Docker para el perfil empleado
 - `docker/telegram`: despliegue del bot de Telegram que conversa con ambas instancias
 - `workspace-admin`: workspace del agente administrador (montado en el contenedor admin)
-- `workspace-empleado`: workspace del agente empleado (montado en el contenedor empleado)
+- `workspace-admin`: workspace del agente administrador (montado en el contenedor admin); incluye `skills/code-audit/` y `docs/auditoria-codigo.md`
+- `workspace-empleado`: workspace del agente empleado (montado en el contenedor empleado); incluye `skills/code-audit/` y `docs/auditoria-codigo.md`
+- `skills/`: skills compartidas del monorepo (`web`, `email-gmail`); montadas en cada contenedor junto a las skills locales de cada workspace
 
 ## Levantar todo el stack (Docker)
 

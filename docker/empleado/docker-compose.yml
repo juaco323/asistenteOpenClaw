@@ -28,6 +28,9 @@ services:
       - ${OPENCLAW_STATE_DIR}:/home/node/.openclaw
       # Workspace versionado en el repo (no copia a ~/.openclaw-empleado/workspace).
       - ../../workspace-empleado:/home/node/.openclaw/workspace:rw
+      # Skills compartidas del monorepo (web, email-gmail); code-audit vive en workspace-empleado/skills/
+      - ../../skills/web:/home/node/.openclaw/workspace/skills/web:ro
+      - ../../skills/email-gmail:/home/node/.openclaw/workspace/skills/email-gmail:ro
       - ./openclaw.json:/etc/openclaw/openclaw.json
       # Mismo criterio que admin: home del host + carpetas de usuario (Documentos, Descargas, …).
       - ${OPENCLAW_HOST_HOME}:${OPENCLAW_HOST_HOME}:rw

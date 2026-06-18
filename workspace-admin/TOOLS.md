@@ -30,3 +30,10 @@ Things like:
 - Preferred voice: "Nova" (warm, slightly British)
 - Default speaker: Kitchen HomePod
 ```
+
+## Auditoría de código (`code-audit`)
+
+- Skill y plantillas: `skills/code-audit/` en este workspace.
+- Guía: `docs/auditoria-codigo.md`.
+- Reportes alternativos: `~/Documentos/Reportes/auditoria-codigo/` (crear con `mkdir -p` si no existe).
+- Perfil admin: priorizar seguridad; registrar en `memory/YYYY-MM-DD.md` si afecta despliegue.
