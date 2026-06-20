@@ -1,0 +1,5 @@
+{
+  "slug": "drive",
+  "version": "1.0.0",
+  "description": "Acceso restringido a Google Drive mediante gog drive: solo lectura y creación de archivos nuevos."
+}

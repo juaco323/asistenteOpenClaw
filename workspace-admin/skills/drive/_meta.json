@@ -1,0 +1,5 @@
+{
+  "slug": "drive",
+  "version": "1.0.0",
+  "description": "Acceso completo a Google Drive mediante gog drive: listar, leer, crear, modificar y eliminar archivos."
+}

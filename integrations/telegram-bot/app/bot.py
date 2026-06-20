@@ -31,6 +31,7 @@ from app.file_delivery import (
     send_telegram_file,
 )
 from app.telegram_incoming import (
+    AUDIO_EXTENSIONS,
     IMAGE_EXTENSIONS,
     build_user_message_for_incoming,
     resolve_incoming_dir,
@@ -71,7 +72,7 @@ def build_application(settings: Settings) -> Application:
     application.add_handler(_build_main_conversation())
     application.add_handler(
         MessageHandler(
-            (filters.Document.ALL | filters.PHOTO) & ~filters.COMMAND,
+            (filters.Document.ALL | filters.PHOTO | filters.VOICE | filters.AUDIO) & ~filters.COMMAND,
             routed_orphan_media,
         )
     )
@@ -138,7 +139,7 @@ def _build_main_conversation() -> ConversationHandler:
                 CommandHandler("get", get_command),
                 *_conversation_side_commands(),
                 MessageHandler(
-                    (filters.Document.ALL | filters.PHOTO) & ~filters.COMMAND,
+                    (filters.Document.ALL | filters.PHOTO | filters.VOICE | filters.AUDIO) & ~filters.COMMAND,
                     forward_chat_media,
                 ),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, forward_chat_message),
@@ -155,7 +156,7 @@ def _build_main_conversation() -> ConversationHandler:
             REMINDER_CREATE: [
                 *_conversation_side_commands(),
                 MessageHandler(
-                    (filters.Document.ALL | filters.PHOTO) & ~filters.COMMAND,
+                    (filters.Document.ALL | filters.PHOTO | filters.VOICE | filters.AUDIO) & ~filters.COMMAND,
                     reminder_reject_media,
                 ),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, reminder_create_message),
@@ -861,10 +862,14 @@ async def forward_chat_media(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return CHAT_ACTIVE
 
     is_image = saved.suffix.lower() in IMAGE_EXTENSIONS
-    await update.message.reply_text(
-        ("Imagen" if is_image else "Archivo") + " guardado en el equipo; enviando al asistente…\n"
-        f"{saved.resolve()}"
-    )
+    is_audio = saved.suffix.lower() in AUDIO_EXTENSIONS
+    if is_audio:
+        confirm_label = "Audio guardado en el equipo; transcribiendo con Whisper…"
+    elif is_image:
+        confirm_label = "Imagen guardada en el equipo; enviando al asistente…"
+    else:
+        confirm_label = "Archivo guardado en el equipo; enviando al asistente…"
+    await update.message.reply_text(f"{confirm_label}\n{saved.resolve()}")
     prompt = build_user_message_for_incoming(
         saved_path=saved,
         caption=update.message.caption,
@@ -873,10 +878,16 @@ async def forward_chat_media(update: Update, context: ContextTypes.DEFAULT_TYPE)
     client = _get_client(context)
     chat_id = update.effective_chat.id if update.effective_chat else update.effective_user.id
     image_path_arg = saved if is_image else None
+    if is_audio:
+        progress_label = "Transcribiendo audio…"
+    elif is_image:
+        progress_label = "Analizando imagen…"
+    else:
+        progress_label = "Procesando tu consulta…"
     try:
         reply = await run_with_telegram_progress(
             update,
-            label="Analizando imagen…" if is_image else "Procesando tu consulta…",
+            label=progress_label,
             coro_factory=lambda: client.chat(
                 workspace=workspace_name,
                 user_id=user_id,
@@ -919,12 +930,12 @@ async def routed_orphan_media(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
     if context.user_data.get(PENDING_WORKSPACE_KEY):
         await update.message.reply_text(
-            "Para iniciar sesión en un perfil envía la **contraseña en texto**, no un archivo ni foto."
+            "Para iniciar sesión en un perfil envía la **contraseña en texto**, no un archivo, foto ni audio."
         )
         return
     await update.message.reply_text(
-        "Para que el asistente procese un archivo o lo use en un correo, entra antes con /chat "
-        "(perfil autenticado) y vuelve a enviar el documento o la foto."
+        "Para que el asistente procese un archivo, foto o audio, entra antes con /chat "
+        "(perfil autenticado) y vuelve a enviar el documento, la foto o el audio."
     )
 
 

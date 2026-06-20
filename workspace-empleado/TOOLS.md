@@ -26,6 +26,14 @@ Para tareas ofimáticas (PPTX, imágenes, descargas HTTP) ya están disponibles:
 
 No hace falta pedir autorización para instalar estos paquetes base; si falta otra librería específica, aplicar el protocolo de `SOUL.md` § *Dependencias y librerías del entorno*.
 
+## Google Drive (`drive`)
+
+- Skill: `skills/drive/` en este workspace.
+- Cuenta: `prueba.openclaw.fj@gmail.com` (siempre `-a` en cada comando).
+- Permisos: **solo lectura y creación de archivos nuevos**. Prohibido modificar o eliminar.
+- Para enviar un archivo de Drive por Telegram: descargar a `/home/joaquin/Documentos/` y usar `[[TELEGRAM_FILE:ruta]]`.
+- Para subir archivos recibidos por Telegram: origen en `/home/joaquin/Documentos/telegram-openclaw-incoming/`.
+
 ## Auditoría de código (`code-audit`)
 
 - Skill y plantillas: `skills/code-audit/` en este workspace.

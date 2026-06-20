@@ -1,0 +1,5 @@
+{
+  "slug": "transcribe-audio",
+  "version": "1.0.0",
+  "description": "Transcripción de archivos de audio a texto usando la API Whisper de OpenAI vía curl."
+}

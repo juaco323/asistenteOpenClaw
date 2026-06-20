@@ -11,6 +11,7 @@ from app.file_delivery import MAX_FILE_BYTES, is_path_allowed, is_path_denied
 
 INCOMING_DIRNAME = "telegram-openclaw-incoming"
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+AUDIO_EXTENSIONS = {".mp3", ".mp4", ".mpeg", ".mpga", ".m4a", ".wav", ".webm", ".ogg", ".flac"}
 
 
 def resolve_incoming_dir(host_home: Path) -> Path:
@@ -104,8 +105,19 @@ async def save_telegram_upload(
         _check_size_limit(photo.file_size)
         safe = f"foto_{photo.file_unique_id}.jpg"
         tg_file = await context.bot.get_file(photo.file_id)
+    elif msg.voice:
+        voice = msg.voice
+        _check_size_limit(voice.file_size)
+        safe = f"voz_{voice.file_unique_id}.ogg"
+        tg_file = await context.bot.get_file(voice.file_id)
+    elif msg.audio:
+        audio = msg.audio
+        _check_size_limit(audio.file_size)
+        raw_name = audio.file_name or f"audio_{audio.file_unique_id}.mp3"
+        safe = sanitize_upload_filename(raw_name, audio.file_id)
+        tg_file = await context.bot.get_file(audio.file_id)
     else:
-        raise ValueError("Tipo de mensaje no soportado (usa documento o foto).")
+        raise ValueError("Tipo de mensaje no soportado (usa documento, foto, nota de voz o archivo de audio).")
 
     dest = build_unique_destination(incoming_dir, user_id, safe)
     await tg_file.download_to_drive(custom_path=str(dest))
@@ -129,7 +141,33 @@ def build_user_message_for_incoming(
 ) -> str:
     cap = (caption or "").strip()
     path_str = str(saved_path.resolve())
-    is_image = saved_path.suffix.lower() in IMAGE_EXTENSIONS
+    suffix = saved_path.suffix.lower()
+    is_image = suffix in IMAGE_EXTENSIONS
+    is_audio = suffix in AUDIO_EXTENSIONS
+
+    if is_audio:
+        intro = (
+            "[Audio recibido por Telegram — transcribir con skill transcribe-audio]\n"
+            f"Ruta absoluta en el equipo: {path_str}\n"
+            f"Nombre: {saved_path.name}\n\n"
+        )
+        if cap:
+            return (
+                intro
+                + f"Instrucción del usuario:\n{cap}\n\n"
+                "Transcribe primero el archivo usando la skill `transcribe-audio` "
+                "(comando `curl` con `$OPENAI_API_KEY` y modelo `whisper-1`). "
+                "Luego aplica la instrucción del usuario sobre el texto obtenido."
+            )
+        return (
+            intro
+            + "El usuario no escribió instrucción junto al audio. "
+            "Transcribe este archivo usando la skill `transcribe-audio` "
+            "(comando `curl` con `$OPENAI_API_KEY` y modelo `whisper-1`). "
+            "Presenta el texto resultante de forma clara. "
+            "Si el contenido parece una reunión o conversación, "
+            "ofrece generar un acta o resumen ejecutivo."
+        )
 
     if is_image:
         intro = (
@@ -137,18 +175,33 @@ def build_user_message_for_incoming(
             f"Ruta absoluta en el equipo: {path_str}\n"
             f"Nombre: {saved_path.name}\n\n"
         )
+        auto_save = (
+            "Independientemente de la instrucción, guarda siempre el resultado en "
+            "~/Documentos/Reportes/ con un nombre de archivo descriptivo "
+            "(usa el formato preferido del workspace: .docx si está configurado, .md si no). "
+            "Si el usuario indicó una subcarpeta distinta (ej. 'Actas'), guarda ahí dentro de ~/Documentos/. "
+            "Confirma la ruta exacta donde guardaste el archivo."
+        )
         if cap:
-            return intro + f"Instrucción del usuario:\n{cap}"
+            return (
+                intro
+                + f"Instrucción del usuario:\n{cap}\n\n"
+                + auto_save
+            )
         return (
             intro
             + "El usuario no escribió instrucción junto a la imagen. "
-            "Analízala visualmente y clasifícala en UNO de estos tipos (excluyentes): "
-            "(1) Texto narrativo — si predominan párrafos o frases, transcribe y genera solo la sección '## Texto narrativo'; "
-            "(2) Lista de tareas — si predominan ítems, viñetas o pasos, genera solo la sección '## Lista de tareas' con '- [ ] …'; "
-            "(3) Diagrama/gráfico — si predominan figuras o flechas, genera solo '## Análisis del diagrama'. "
-            "No incluyas ambas secciones de texto narrativo Y lista de tareas a la vez salvo que la imagen las mezcle de forma equitativa. "
-            "Guarda el resultado en ~/Documentos/Reportes/ con nombre descriptivo (.md) "
-            "y confirma la ruta exacta donde lo guardaste."
+            "Analízala visualmente y clasifícala en UNO de estos tipos (excluyentes):\n"
+            "(1) Texto narrativo — si predominan párrafos o frases, transcribe con precisión "
+            "y genera la sección '## Texto narrativo'.\n"
+            "(2) Lista de tareas — si predominan ítems, viñetas o pasos, genera la sección "
+            "'## Lista de tareas' con '- [ ] …' por cada ítem.\n"
+            "(3) Diagrama o gráfico — si predominan figuras, flechas o elementos visuales, "
+            "genera '## Análisis del diagrama' explicando cada componente, "
+            "identifica posibles errores o inconsistencias y proporciona una solución detallada "
+            "para cada punto de fallo detectado.\n"
+            "No mezcles secciones salvo que la imagen combine tipos de forma equitativa.\n\n"
+            + auto_save
         )
 
     intro = (

@@ -31,6 +31,22 @@ Things like:
 - Default speaker: Kitchen HomePod
 ```
 
+## Google Drive (`drive`)
+
+- Skill: `skills/drive/` en este workspace.
+- Cuenta: `prueba.openclaw.fj@gmail.com` (siempre `-a` en cada comando).
+- Permisos: lectura, creación, modificación y eliminación completa.
+- Para enviar un archivo de Drive por Telegram: descargar a `~/Documentos/` y usar `[[TELEGRAM_FILE:ruta]]`.
+- Para subir archivos recibidos por Telegram: origen en `~/Documentos/telegram-openclaw-incoming/`.
+
+## Transcripción de audio (`transcribe-audio`)
+
+- Skill: `skills/transcribe-audio/` en este workspace.
+- Usa la API Whisper de OpenAI via `curl` (variable `OPENAI_API_KEY` disponible en el contenedor).
+- Formatos soportados: `mp3`, `mp4`, `m4a`, `wav`, `webm`, `ogg`, `flac` (máx. 25 MB).
+- Archivos recibidos por Telegram: `~/Documentos/telegram-openclaw-incoming/`.
+- Idioma por defecto: `es` (español). Omitir si el idioma es desconocido.
+
 ## Auditoría de código (`code-audit`)
 
 - Skill y plantillas: `skills/code-audit/` en este workspace.
