@@ -56,12 +56,30 @@ if [[ -n "${ENV_FILE}" && -f "${ENV_FILE}" ]]; then
   source <(grep -E '^GOG_KEYRING_PASSWORD=' "${ENV_FILE}" | sed 's/^/export /')
 fi
 export GOG_KEYRING_BACKEND=file
-export XDG_CONFIG_HOME="${HOME}/.config}"
+export XDG_CONFIG_HOME="${HOME}/.config"
 
 GOG_BASE=(gog)
+GOG_READ=(gog)
 [[ -n "${DRY_RUN}" ]] && GOG_BASE+=(-n)
 
-EVENT_JSON=$("${GOG_BASE[@]}" calendar events list "${CALENDAR_ID}" -a "${ACCOUNT}" --json 2>/dev/null || echo '{}')
+fetch_event_json() {
+  local out
+  out=$("${GOG_READ[@]}" calendar event "${CALENDAR_ID}" "${EVENT_ID}" \
+    -a "${ACCOUNT}" --json 2>/dev/null || true)
+  if echo "${out}" | python3 -c 'import sys,json; d=json.load(sys.stdin); ev=d.get("event",d); sys.exit(0 if (ev or {}).get("id") else 1)' 2>/dev/null; then
+    echo "${out}"
+    return 0
+  fi
+  "${GOG_READ[@]}" calendar events list "${CALENDAR_ID}" \
+    -a "${ACCOUNT}" \
+    --from=-30d \
+    --to=+30d \
+    --all-pages \
+    --max 250 \
+    --json 2>/dev/null || echo '{}'
+}
+
+EVENT_JSON=$(fetch_event_json)
 
 PARSED=$(
   EVENT_JSON="${EVENT_JSON}" EVENT_ID="${EVENT_ID}" ATTENDEES_OVERRIDE="${ATTENDEES_OVERRIDE}" ACCOUNT="${ACCOUNT}" python3 <<'PY'
@@ -78,7 +96,9 @@ except json.JSONDecodeError:
     data = {}
 
 events = data.get("events", data if isinstance(data, list) else [])
-ev = next((e for e in events if e.get("id") == eid), None)
+ev = data.get("event")
+if not ev or not ev.get("id"):
+    ev = next((e for e in events if e.get("id") == eid), None)
 
 if override:
     attendees = [a.strip() for a in override.split(",") if a.strip()]
@@ -102,7 +122,12 @@ ATTENDEES=$(echo "${PARSED}" | python3 -c 'import sys,json; print(",".join(json.
 FOUND=$(echo "${PARSED}" | python3 -c 'import sys,json; print("1" if json.load(sys.stdin)["found"] else "0")')
 
 if [[ "${FOUND}" != "1" && -z "${ATTENDEES_OVERRIDE}" ]]; then
-  echo "AVISO: no se encontró el evento ${EVENT_ID} en el listado; usa --attendees si aún debes notificar por correo." >&2
+  echo "AVISO: no se encontró el evento ${EVENT_ID}; pasa --attendees con los correos del resumen." >&2
+fi
+
+if [[ -z "${ATTENDEES}" ]]; then
+  echo "ERROR: sin destinatarios para el correo de cancelación. Pasa --attendees o verifica el event-id." >&2
+  exit 1
 fi
 
 BODY_FILE=$(mktemp)
@@ -168,8 +193,6 @@ sys.exit(1)
     "${GOG_BASE[@]}" gmail drafts send "${DRAFT_ID}" -a "${ACCOUNT}" --json >/dev/null
     echo "CORREO_ENVIADO: sí (draft ${DRAFT_ID})"
   fi
-else
-  echo "== Paso 1: sin invitados — se omite correo =="
 fi
 
 echo "== Paso 2: eliminar evento en Calendar (notificación estándar) =="

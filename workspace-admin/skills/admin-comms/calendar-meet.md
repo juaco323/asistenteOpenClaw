@@ -73,18 +73,19 @@ Script auxiliar: `scripts/gog-calendar-meet-create.sh` (solo admin).
 
 Cuando el usuario pida **cancelar**, **anular** o **eliminar** una reunión ya creada en Calendar:
 
-1. **Identificar** el evento: `LOGS_COMMS.md` (Event ID / título), o `gog calendar events list primary -a "prueba.openclaw.fj@gmail.com" --json`.
-2. **Motivo obligatorio:** si el admin no indicó por qué se cancela, **preguntar** antes de cualquier acción externa. **Prohibido** cancelar sin motivo. El motivo será el **asunto del correo**.
-3. **Nombre del administrador obligatorio:** si no indicó quién cancela, **preguntar** (nombre de la persona que cancela). Aparecerá en la descripción del correo (`Atte: …`).
-4. **Resumen** para confirmar: título, fecha/hora, invitados, **motivo** (asunto) y **nombre del administrador**. Estado `pendiente_confirmacion` (tipo `reunion_cancelacion`) en `LOGS_COMMS.md`.
-5. **Confirmación explícita** en chat («cancela la reunión», «sí, anúlala», etc.) — autoriza el envío automático del correo; no hace falta un segundo «envíalo».
-6. **Ejecutar en el mismo turno**:
+1. **Identificar** el evento: `LOGS_COMMS.md` (título / invitados / Meet link), o `gog calendar event primary <eventId> -a "prueba.openclaw.fj@gmail.com" --json`, o `gog calendar events list primary --from today --days 14 --json`.
+2. **Motivo obligatorio:** si el admin no indicó por qué se cancela, **preguntar** antes de continuar. **Prohibido** cancelar sin motivo. El motivo será el **asunto del correo**.
+3. **Nombre para firma obligatorio:** si no indicó con qué nombre firmar el correo (`Atte:`), **preguntar explícitamente** (p. ej. «¿Con qué nombre firmo el correo de cancelación?»). **Prohibido** mostrar el resumen de confirmación ni ejecutar el script sin este dato.
+4. **Resumen** para confirmar: título, fecha/hora, **invitados (correos)**, **motivo** (asunto) y **nombre para Atte**. Estado `pendiente_confirmacion` (tipo `reunion_cancelacion`) en `LOGS_COMMS.md`.
+5. **Confirmación explícita** en chat («confirma cancelación», «sí, anúlala», etc.) — autoriza el envío automático del correo; no hace falta un segundo «envíalo».
+6. **Ejecutar en el mismo turno** (incluir siempre `--attendees` con los correos del resumen):
 
 ```bash
 gog-calendar-meet-cancel.sh \
   --event-id "<ID>" \
   --reason "<motivo de cancelación>" \
-  --admin-name "<nombre del administrador>"
+  --admin-name "<nombre para Atte>" \
+  --attendees "invitado1@empresa.com,invitado2@empresa.com"
 ```
 
 (ruta en contenedor admin: `/usr/local/bin/gog-calendar-meet-cancel.sh`)
@@ -134,5 +135,6 @@ Columna **Agente:** `Administrador`. Puede `gog calendar update` / `delete` tras
 | `No tokens stored` | `./scripts/gog-auth-setup.sh` |
 | `403 accessNotConfigured` / API disabled | Habilitar **Google Calendar API** en Google Cloud: ver `docs/habilitar-google-calendar-api.md` (proyecto `august-victor-496423-e8`) |
 | Invitados no reciben correo al crear | Falta `--send-updates all` (default de `gog` es `none`). Reenviar: `gog calendar update primary <eventId> -a "…" --send-updates all` |
-| `gog calendar delete` bloqueado | Usar `gog-calendar-meet-cancel.sh --event-id … --reason … --admin-name …` |
-| Cancelar sin motivo o sin nombre admin | **Prohibido.** Preguntar motivo (asunto) y nombre del administrador antes de cancelar |
+| `gog calendar delete` bloqueado | Usar `gog-calendar-meet-cancel.sh --event-id … --reason … --admin-name … --attendees …` |
+| Cancelar sin motivo o sin nombre para Atte | **Prohibido.** Preguntar motivo (asunto) y nombre para firma **antes** del resumen |
+| Correo de cancelación no enviado | Incluir `--attendees` del resumen; el script obtiene invitados con `gog calendar event <id>` |

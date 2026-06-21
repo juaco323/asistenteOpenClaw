@@ -39,8 +39,10 @@ def _admin_comms_protocol_telegram(*, workspace: str) -> str:
             "`gog calendar create primary` o `scripts/gog-calendar-meet-create.sh` con "
             '`-a "prueba.openclaw.fj@gmail.com"`, `--with-meet`, `--send-updates all` (obligatorio si hay invitados), '
             '`--reminder popup:30m,email:1d` → `reunion_creada` + Meet link en LOGS_COMMS. '
-            "**Cancelar reunión:** preguntar **motivo** (asunto del correo) y **nombre del administrador** (`Atte:`) si faltan; "
-            "confirmación → `gog-calendar-meet-cancel.sh --event-id … --reason … --admin-name …` "
+            "**Cancelar reunión:** orden fijo — (1) motivo si falta; (2) **preguntar nombre para Atte** si falta "
+            "(prohibido resumen o script sin él); (3) resumen con invitados (correos), motivo y Atte; "
+            "(4) confirmación → `gog-calendar-meet-cancel.sh --event-id … --reason … --admin-name … "
+            "--attendees \"correo1,correo2\"` "
             "(correo automático: asunto=motivo, cuerpo «La reunión ha sido cancelada.» + Atte: nombre). "
             "**Prohibido** `gog calendar create` o `delete` sin confirmación del usuario en este chat. "
         )

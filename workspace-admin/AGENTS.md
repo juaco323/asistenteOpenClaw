@@ -127,11 +127,12 @@ Cuando el usuario pida **agendar reunión**, **crear Meet** o **evento en calend
 Cuando el usuario pida **cancelar**, **anular** o **eliminar** una reunión ya agendada:
 
 1. **Leer** `skills/admin-comms/calendar-meet.md` (sección **Cancelar reunión**).
-2. **Identificar** evento (`LOGS_COMMS.md` o `gog calendar events list`).
-3. **Motivo obligatorio** (será el **asunto** del correo) y **nombre del administrador obligatorio** (aparece en `Atte:` del cuerpo). Preguntar lo que falte antes de cancelar.
-4. **Resumen** con título, invitados, motivo y nombre admin → `pendiente_confirmacion` (tipo `reunion_cancelacion`).
-5. Tras confirmación explícita: **`gog-calendar-meet-cancel.sh --event-id … --reason … --admin-name …`** en el mismo turno.
-6. Estado **`reunion_cancelada`** en `/app/logs_shared/LOGS_COMMS.md` (notas: motivo + admin).
+2. **Identificar** evento (`LOGS_COMMS.md`, `gog calendar event primary <id> --json`, o `gog calendar events list`).
+3. **Motivo obligatorio** (será el **asunto** del correo). Si falta, **preguntar** antes de continuar.
+4. **Nombre para firma obligatorio** (`Atte:` en el cuerpo). Si falta, **preguntar explícitamente** (p. ej. «¿Con qué nombre firmo el correo?»). **Prohibido** el resumen de confirmación sin este dato.
+5. **Resumen** con título, **correos de invitados**, motivo y nombre para Atte → `pendiente_confirmacion` (tipo `reunion_cancelacion`).
+6. Tras confirmación explícita: **`gog-calendar-meet-cancel.sh --event-id … --reason … --admin-name … --attendees "…"`** en el mismo turno (`--attendees` obligatorio con los correos del resumen).
+7. Estado **`reunion_cancelada`** en `/app/logs_shared/LOGS_COMMS.md` (notas: motivo + Atte + invitados).
 
 Guía: `docs/gestion-comunicaciones.md`.
 

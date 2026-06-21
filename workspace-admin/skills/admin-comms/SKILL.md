@@ -35,7 +35,7 @@ Columna **Agente** en tablas: `Administrador`.
 
 ## Reuniones Google Meet + Calendar
 
-**Exclusivo perfil Administrador** (Telegram y Control UI `:18791`). Cancelar: motivo + **nombre admin** + confirmación → `gog-calendar-meet-cancel.sh --event-id … --reason … --admin-name …`.
+**Exclusivo perfil Administrador** (Telegram y Control UI `:18791`). Cancelar: motivo + **nombre para Atte** (preguntar si falta) + confirmación → `gog-calendar-meet-cancel.sh --event-id … --reason … --admin-name … --attendees "…"`.
 
 El perfil empleado **no** ejecuta `gog calendar`; solo redacta recordatorios por correo.
 

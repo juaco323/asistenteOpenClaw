@@ -39,9 +39,9 @@ Flujo `email-gmail` separado.
 Cancela la reunión MundoPokeDs del 21 de junio
 ```
 
-1. El asistente **pregunta el motivo** (asunto del correo) y el **nombre del administrador** si no los diste.
-2. Resumen (título, invitados, motivo, nombre admin) → confirmación («sí, cancela»).
-3. Ejecuta `gog-calendar-meet-cancel.sh --event-id … --reason … --admin-name …`.
+1. El asistente **pregunta el motivo** (asunto del correo) y el **nombre para Atte** si no los diste (pregunta explícita antes del resumen).
+2. Resumen (título, invitados con correos, motivo, Atte) → confirmación («confirma cancelación»).
+3. Ejecuta `gog-calendar-meet-cancel.sh --event-id … --reason … --admin-name … --attendees "correo1,correo2"`.
 4. Correo: **asunto** = motivo; **cuerpo** = «La reunión ha sido cancelada.» + `Atte: {nombre}`.
 
 ```bash

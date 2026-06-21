@@ -683,8 +683,8 @@ async def enter_comunicaciones_mode(update: Update, context: ContextTypes.DEFAUL
     meet_hint = (
         "En perfil **Administrador** también puedes **crear** reuniones con **Google Meet** "
         "(confirmación en este chat antes de `gog calendar create`) y **cancelarlas** "
-        "(motivo → asunto del correo; **nombre del administrador** obligatorio → `Atte:` en el cuerpo; "
-        "confirmación → `gog-calendar-meet-cancel.sh`).\n"
+        "(motivo → asunto; **preguntaré tu nombre para Atte** si no lo indicas; resumen con invitados; "
+        "confirmación → `gog-calendar-meet-cancel.sh` con `--attendees`).\n"
         if workspace_name == "admin"
         else "Para **crear o cancelar** reuniones en Google Meet/Calendar, usa perfil Administrador: /workspace admin.\n"
     )
