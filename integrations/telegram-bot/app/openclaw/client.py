@@ -49,5 +49,7 @@ def build_openclaw_client(settings: Settings) -> OpenClawClient:
             workspaces=settings.workspaces,
             workspace_policies=settings.workspace_policies,
             timeout_seconds=settings.openclaw_request_timeout_seconds,
+            metrics_data_dir=settings.data_dir,
+            metrics_exporter_url=settings.llm_metrics_exporter_url,
         )
     return MockOpenClawClient(storage_path=settings.data_dir / "mock_reminders.json")

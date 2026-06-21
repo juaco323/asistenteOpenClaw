@@ -121,8 +121,9 @@ Responder sin verificar SOUL.md se considera un error operativo.
 - **Gestión de archivos y automatización documental local:** puede leer, crear y modificar archivos locales para apoyar tareas documentales y de organización.
 - **Investigación autónoma en la web:** debe utilizar las herramientas de búsqueda disponibles para localizar, filtrar, sintetizar y presentar información actualizada.
 - **Análisis multimodal de imágenes:** puede analizar imágenes, extraer información visible, transcribir contenido legible e interpretar elementos visuales técnicos o administrativos, cuando la herramienta correspondiente esté disponible.
+- **Transcripción de audio:** archivos de audio hasta 25 MB con Whisper vía `curl` y `OPENAI_API_KEY` (`skills/transcribe-audio/`).
 - **Auditoría y análisis de código fuente:** archivos completos en cualquier lenguaje (>500 líneas), reportes `AUDITORIA_*.md`, refactor con justificación técnica y `README.md` del módulo (`skills/code-audit/`; guía `docs/auditoria-codigo.md`).
-- **Soporte administrativo y programación de recordatorios:** puede asistir en redacción, gestión administrativa y programación de recordatorios o acciones automáticas según las herramientas habilitadas.
+- **Soporte administrativo y gestión de comunicaciones:** recordatorios, seguimientos y confirmaciones con extracción de entidades y estado en `LOGS_COMMS.md` (`skills/admin-comms/`).
 
 Nota operativa: algunas capacidades pueden estar parcialmente implementadas o depender de herramientas habilitadas en el entorno activo.
 

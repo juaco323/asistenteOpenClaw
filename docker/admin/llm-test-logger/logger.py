@@ -7,7 +7,7 @@ import argparse
 import os
 import sys
 import time
-from pathlib import Path
+from typing import Any
 
 import httpx
 from dotenv import load_dotenv
@@ -59,6 +59,24 @@ def _resolve_gateway(profile: str) -> tuple[str, str, str]:
     return base, token, agent_id
 
 
+def _extract_usage(data: dict) -> dict[str, Any]:
+    usage = data.get("usage") or {}
+    if not isinstance(usage, dict):
+        return {}
+    out: dict[str, Any] = {}
+    for key in ("prompt_tokens", "completion_tokens", "total_tokens"):
+        val = usage.get(key)
+        if val is not None:
+            try:
+                out[key] = int(val)
+            except (TypeError, ValueError):
+                pass
+    model = data.get("model")
+    if isinstance(model, str) and model.strip():
+        out["model"] = model.strip()
+    return out
+
+
 def _chat_completion(
     *,
     base_url: str,
@@ -67,7 +85,7 @@ def _chat_completion(
     user_message: str,
     timeout: float,
     profile: str,
-) -> str:
+) -> tuple[str, dict[str, Any]]:
     url = f"{base_url.rstrip('/')}/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -83,13 +101,14 @@ def _chat_completion(
         response = client.post(url, headers=headers, json=payload)
         response.raise_for_status()
         data = response.json()
+    usage = _extract_usage(data)
     choices = data.get("choices") or []
     if not choices:
         raise RuntimeError("Respuesta sin choices.")
     message = choices[0].get("message") or {}
     content = message.get("content")
     if isinstance(content, str) and content.strip():
-        return content.strip()
+        return content.strip(), usage
     if isinstance(content, list):
         parts: list[str] = []
         for item in content:
@@ -98,7 +117,7 @@ def _chat_completion(
                 if isinstance(text, str) and text.strip():
                     parts.append(text.strip())
         if parts:
-            return "\n".join(parts)
+            return "\n".join(parts), usage
     raise RuntimeError("No se pudo extraer texto de la respuesta.")
 
 
@@ -175,7 +194,7 @@ def main() -> int:
     tracker = Tracker(log_path)
     t0 = time.perf_counter()
     try:
-        output = _chat_completion(
+        output, usage = _chat_completion(
             base_url=base_url,
             token=token,
             agent_id=agent_id,
@@ -190,6 +209,7 @@ def main() -> int:
             output_text=f"<error: {exc!r}>",
             latency_seconds=latency,
             source="cli",
+            workspace=args.profile,
             extra={"ok": False, "profile": args.profile},
         )
         print(str(exc), file=sys.stderr)
@@ -200,7 +220,12 @@ def main() -> int:
         output_text=output,
         latency_seconds=latency,
         source="cli",
-        extra={"ok": True, "profile": args.profile},
+        workspace=args.profile,
+        model=usage.get("model") or "gpt-5.4",
+        prompt_tokens=usage.get("prompt_tokens"),
+        completion_tokens=usage.get("completion_tokens"),
+        total_tokens=usage.get("total_tokens"),
+        extra={"ok": True, "profile": args.profile, **usage},
     )
     print("Registro completado. Revisa el panel de OpenClaw.")
     return 0

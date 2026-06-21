@@ -24,6 +24,47 @@ def _delete_policy_text(policy: WorkspaceFilePolicy) -> str:
     )
 
 
+def _admin_comms_protocol_telegram(*, workspace: str) -> str:
+    logs_path = (
+        "/app/logs_shared/LOGS_COMMS.md"
+        if workspace == "admin"
+        else "LOGS_COMMS.md"
+    )
+    meet_block = ""
+    if workspace == "admin":
+        meet_block = (
+            "Google Calendar + Meet (**solo perfil Administrador**): si piden agendar reunión, "
+            "videollamada Meet o evento en calendario, aplica `skills/admin-comms/calendar-meet.md`. "
+            "Flujo: propuesta → confirmación explícita en Telegram → `gog calendar create primary` "
+            'con `-a "prueba.openclaw.fj@gmail.com"`, `--with-meet`, `--reminder popup:30m,email:1d` '
+            "→ estado `reunion_creada` en LOGS_COMMS + Meet link en borrador. "
+            "Enviar link por correo: paso aparte con `email-gmail`. "
+            "**Prohibido** `gog calendar create` sin confirmación del usuario en este chat. "
+        )
+    else:
+        meet_block = (
+            "Google Calendar + Meet: **prohibido** en perfil empleado. Si lo piden, indica que deben "
+            "cambiar a perfil **Administrador** (`/workspace admin`) y ofrece redactar recordatorio por correo "
+            "con `admin-comms`. "
+        )
+    return (
+        "Comunicaciones administrativas (`admin-comms`, skill del workspace activo): "
+        "si el usuario pide recordatorio, seguimiento, confirmación o mensaje formal a terceros, "
+        "aplica `skills/admin-comms/SKILL.md` y el protocolo de `AGENTS.md` § comunicaciones. "
+        "Extrae destinatario, fecha/plazo, responsable y acción pendiente; si falta lo esencial, pregunta. "
+        "Redacta asunto y cuerpo en español profesional; guarda borrador en "
+        "`~/Documentos/Comunicaciones/borradores/COMMS_<fecha>_<tema>.md` (`mkdir -p` si falta). "
+        f"Registra estado en `{logs_path}` como `pendiente_confirmacion` (columna Agente: "
+        f"{'Administrador' if workspace == 'admin' else 'Empleado'}). "
+        "Presenta borrador **una vez** y detente. "
+        "**Telegram es canal válido de confirmación** («envíalo», «vale», «confirma», «agéndala», etc.). "
+        "Sin confirmación explícita: **prohibido** despacho externo (correo, calendar). "
+        "Tras confirmar envío por correo, encadena `email-gmail` (borrador gog → confirmación → send) "
+        "y actualiza LOGS_COMMS + LOGS_EMAIL/HISTORY si aplica. "
+        f"{meet_block}"
+    )
+
+
 def _gmail_protocol_telegram() -> str:
     return (
         "Correo Gmail (gog, misma infraestructura que el asistente en OpenClaw): "
@@ -90,6 +131,7 @@ def build_telegram_system_message(
         f"Perfil/workspace activo: {workspace_label} ({workspace}). "
         f"chat_id de Telegram: {chat_id}. user_id: {user_id}. username: {handle}. "
         f"{_gmail_protocol_telegram()} "
+        f"{_admin_comms_protocol_telegram(workspace=workspace)} "
         "Política de archivos del perfil activo: "
         f"lectura/entrega (get) permitida en: {_format_paths(policy.read_roots)}. "
         f"escritura/creación permitida en: {_format_paths(policy.write_roots)}. "

@@ -1,0 +1,5 @@
+{
+  "slug": "admin-comms",
+  "version": "1.0.0",
+  "description": "Gestión de comunicaciones administrativas: recordatorios, seguimientos y confirmaciones con confirmación humana obligatoria"
+}

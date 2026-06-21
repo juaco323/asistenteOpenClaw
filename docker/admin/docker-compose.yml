@@ -1,8 +1,8 @@
 services:
   openclaw-admin:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: docker/admin/Dockerfile
       args:
         OPENCLAW_BASE_IMAGE: ${OPENCLAW_IMAGE}
     image: ${OPENCLAW_CONTAINER_NAME}:local
@@ -24,6 +24,7 @@ services:
       GOG_KEYRING_BACKEND: file
       GOG_KEYRING_PASSWORD: ${GOG_KEYRING_PASSWORD:-}
       GOG_ACCOUNT: ${GOG_ACCOUNT:-}
+      OPENCLAW_WORKSPACE_PROFILE: admin
     volumes:
       - ${OPENCLAW_STATE_DIR}:/home/node/.openclaw
       # Workspace versionado en el repo (no copia a ~/.openclaw-admin/workspace).

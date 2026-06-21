@@ -34,8 +34,22 @@ No hace falta pedir autorización para instalar estos paquetes base; si falta ot
 - Para enviar un archivo de Drive por Telegram: descargar a `/home/joaquin/Documentos/` y usar `[[TELEGRAM_FILE:ruta]]`.
 - Para subir archivos recibidos por Telegram: origen en `/home/joaquin/Documentos/telegram-openclaw-incoming/`.
 
+## Transcripción de audio (`transcribe-audio`)
+
+- Skill: `skills/transcribe-audio/` en este workspace.
+- Usa la API Whisper de OpenAI vía `curl` (`OPENAI_API_KEY` en `docker/empleado/.env`).
+- Audios de Telegram: `~/Documentos/telegram-openclaw-incoming/`.
+- Guardar transcripciones/actas en `~/Documentos/Reportes/`.
+
 ## Auditoría de código (`code-audit`)
 
 - Skill y plantillas: `skills/code-audit/` en este workspace.
 - Guía: `docs/auditoria-codigo.md`.
 - Reportes alternativos: `~/Documentos/Reportes/auditoria-codigo/` (crear con `mkdir -p` si no existe).
+
+## Comunicaciones administrativas (`admin-comms`)
+
+- Skill: `skills/admin-comms/`; guía `docs/gestion-comunicaciones.md`.
+- Borradores: `~/Documentos/Comunicaciones/borradores/`.
+- Estados: `LOGS_COMMS.md` (compartido con admin vía `/app/logs_shared/`).
+- Envío correo: confirmación explícita + protocolo `email-gmail`.

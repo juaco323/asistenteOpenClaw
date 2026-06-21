@@ -2,8 +2,9 @@
 
 ## Canal Telegram (prioridad al atender por Telegram)
 
-- Preguntas informativas, listas, rankings o investigación («dame los 5 mejores…», «cuál es…», «busca…») **sin** la palabra **archivo** ni ruta con extensión: responde con LLM y **web**; **no** busques en disco un fichero cuyo nombre coincida con la frase.
-- Solo localizar/entregar archivos cuando pidan explícitamente **archivo**, **get**, una ruta o un nombre con extensión (`.pdf`, `.txt`, etc.).
+- Preguntas informativas sin «archivo» ni extensión: LLM + **web**; no buscar ficheros en disco por coincidencia de nombre.
+- **Comunicaciones (`admin-comms`):** recordatorios, seguimientos, confirmaciones; confirmación válida en Telegram. **Meet / Calendar:** solo en este perfil admin; ver § Reuniones Google Calendar + Meet y `calendar-meet.md`.
+- Solo localizar/entregar archivos cuando pidan explícitamente **archivo**, **get**, una ruta o un nombre con extensión.
 
 ## admin
 - **Role:** Asistente de Oficina Local, Perfil Administrador
@@ -11,6 +12,9 @@
   - `web`
   - `email-gmail`
   - `code-audit`
+  - `transcribe-audio`
+  - `drive`
+  - `admin-comms`
 
 ### Protocolo de Gestión de Email (Gmail / GOG) — perfil administrador
 
@@ -87,6 +91,30 @@ Además del envío bajo el protocolo anterior, el administrador **audita** y **o
 3. **Fallos de autenticación**: **no** reintentar en bucle desde el agente; indicar comandos para **terminal Ubuntu del host**:
    - `gog auth credentials set ~/Descargas/prueba_openclaw.fj.json` (sin pegar JSON en el chat).
    - `gog auth add prueba.openclaw.fj@gmail.com --services gmail` cuando corresponda.
+
+### Protocolo de comunicaciones administrativas (`admin-comms`)
+
+Igual que empleado (`skills/admin-comms/SKILL.md`), con estas rutas en contenedor **admin**:
+
+- Borradores: `~/Documentos/Comunicaciones/borradores/`
+- Estados: **`/app/logs_shared/LOGS_COMMS.md`** (mismo archivo que `workspace-empleado/LOGS_COMMS.md`)
+- Tras envío por correo: también `/app/logs_shared/LOGS_EMAIL.md` y `HISTORY.md`
+- Columna **Agente:** `Administrador`
+
+Flujo obligatorio: extraer entidades → redactar → guardar borrador → `pendiente_confirmacion` → presentar **una vez** → **sin envío** sin confirmación explícita.
+
+### Reuniones Google Calendar + Meet (**solo administrador**)
+
+Cuando el usuario pida **agendar reunión**, **crear Meet** o **evento en calendario**:
+
+1. **Leer** `skills/admin-comms/calendar-meet.md`.
+2. **Extraer:** título, fecha/hora, duración, invitados, recordatorios (`popup:30m,email:1d` por defecto).
+3. **Proponer** resumen; `pendiente_confirmacion`, tipo `reunion_meet`; **no** `gog calendar create` aún.
+4. Tras confirmación: `gog calendar create primary … --with-meet --json` o `scripts/gog-calendar-meet-create.sh`.
+5. Estado **`reunion_creada`** + Meet link en borrador y `/app/logs_shared/LOGS_COMMS.md`.
+6. Envío link por correo: paso separado (`email-gmail`).
+
+Guía: `docs/gestion-comunicaciones.md`.
 
 ### Protocolo de Auditoría de código (`code-audit`)
 

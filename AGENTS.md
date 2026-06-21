@@ -6,6 +6,7 @@
   - `web`
   - `email-gmail`
   - `code-audit`
+  - `admin-comms`
 
 ### Gmail (gog) en este monorepo
 

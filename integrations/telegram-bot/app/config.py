@@ -50,6 +50,9 @@ class Settings:
     admin_llm_test_log_path: Path | None
     workspace_policies: dict[str, WorkspaceFilePolicy]
     workspace_passwords: dict[str, str]
+    auth_max_attempts: int
+    auth_lockout_seconds: int
+    llm_metrics_exporter_url: str | None
     default_workspace: str | None
     workspaces: dict[str, WorkspaceSettings]
 
@@ -90,6 +93,8 @@ DEFAULT_WORKSPACE_PASSWORDS = {
     "admin": "Admin1234*",
     "empleado": "Empleado1234*",
 }
+
+MAX_WORKSPACE_PASSWORD_ATTEMPTS_DEFAULT = 5
 
 
 def _load_workspace_settings(workspace_name: str) -> WorkspaceSettings | None:
@@ -183,6 +188,14 @@ def load_settings() -> Settings:
             DEFAULT_WORKSPACE_PASSWORDS["empleado"],
         ),
     }
+    auth_max_attempts = int(
+        os.getenv("TELEGRAM_AUTH_MAX_ATTEMPTS", str(MAX_WORKSPACE_PASSWORD_ATTEMPTS_DEFAULT)).strip()
+    )
+    auth_lockout_seconds = int(
+        os.getenv("TELEGRAM_AUTH_LOCKOUT_SECONDS", "900").strip()
+    )
+    _exporter_raw = os.getenv("LLM_METRICS_EXPORTER_URL", "").strip()
+    llm_metrics_exporter_url = _exporter_raw or None
 
     return Settings(
         telegram_bot_token=telegram_bot_token,
@@ -196,6 +209,9 @@ def load_settings() -> Settings:
         admin_llm_test_log_path=admin_llm_test_log_path,
         workspace_policies=workspace_policies,
         workspace_passwords=workspace_passwords,
+        auth_max_attempts=auth_max_attempts,
+        auth_lockout_seconds=auth_lockout_seconds,
+        llm_metrics_exporter_url=llm_metrics_exporter_url,
         default_workspace=default_workspace,
         workspaces=workspaces,
     )

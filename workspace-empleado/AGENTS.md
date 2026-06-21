@@ -2,8 +2,9 @@
 
 ## Canal Telegram (prioridad al atender por Telegram)
 
-- Preguntas informativas, listas, rankings o investigación («dame los 5 mejores…», «cuál es…», «busca…») **sin** la palabra **archivo** ni ruta con extensión: responde con LLM y **web**; **no** busques en disco un fichero cuyo nombre coincida con la frase.
-- Solo localizar/entregar archivos cuando pidan explícitamente **archivo**, **get**, una ruta o un nombre con extensión (`.pdf`, `.txt`, etc.).
+- Preguntas informativas sin «archivo» ni extensión: LLM + **web**; no buscar ficheros en disco por coincidencia de nombre.
+- **Comunicaciones (`admin-comms`):** si el mensaje de sistema incluye contexto Telegram y el usuario pide recordatorio, seguimiento o confirmación, aplica el protocolo § comunicaciones administrativas. Confirmación válida en Telegram («envíalo», «vale», «confirma»). **No** crear Google Meet ni `gog calendar` (solo Administrador; indica `/workspace admin` en el bot).
+- Solo localizar/entregar archivos cuando pidan explícitamente **archivo**, **get**, una ruta o un nombre con extensión.
 
 ## main (empleado)
 - **Role:** Asistente de Oficina Local, perfil empleado
@@ -11,6 +12,9 @@
   - `web`
   - `email-gmail`
   - `code-audit`
+  - `transcribe-audio`
+  - `drive`
+  - `admin-comms`
 
 ### Protocolo de Gestión de Email (Gmail / GOG)
 
@@ -69,6 +73,36 @@ Cuando el mensaje de sistema contenga `[Imagen recibida por Telegram — analiza
 4. Si el usuario especifica una carpeta distinta ("súbelo a Actas", "guárdalo en Reuniones"), usa esa carpeta bajo `~/Documentos/` en lugar de `Reportes`.
 
 5. **No pidas confirmación antes de guardar** el reporte: el guardado automático es parte del comportamiento esperado para imágenes.
+
+### Protocolo de transcripción de audio (`transcribe-audio`)
+
+Cuando el mensaje de sistema contenga `[Audio recibido por Telegram — transcribir con skill transcribe-audio]` o el usuario pida transcribir un audio:
+
+1. **Leer** `skills/transcribe-audio/SKILL.md` de este workspace.
+2. **Localizar** el archivo (ruta absoluta en el mensaje o `~/Documentos/telegram-openclaw-incoming/`).
+3. **Verificar** tamaño ≤ 25 MB y formato soportado.
+4. **Transcribir** con `curl` + Whisper (`whisper-1`, `$OPENAI_API_KEY`); **no** mostrar la API key en el chat.
+5. **Aplicar** la instrucción del usuario sobre el texto (acta, resumen, etc.).
+6. **Guardar** transcripción y/o acta en `~/Documentos/Reportes/` (crear carpeta si falta) con nombre `YYYY-MM-DD_transcripcion_<tema>.txt` o `.md`.
+7. **Confirmar** al usuario la ruta y un resumen breve.
+
+### Protocolo de comunicaciones administrativas (`admin-comms`)
+
+Cuando el usuario pida recordatorio, seguimiento, confirmación o mensaje formal a terceros:
+
+1. **Leer** `skills/admin-comms/SKILL.md` y `skills/admin-comms/draft-template.md`.
+2. **Extraer entidades:** destinatario, fecha/plazo, responsable, acción pendiente. Si falta destinatario o propósito, **preguntar**; no redactar borrador final incompleto.
+3. **Clasificar** tipo: `recordatorio` | `seguimiento` | `confirmación`.
+4. **Redactar** asunto y cuerpo en español **profesional** (claro, editable).
+5. **Guardar** en `~/Documentos/Comunicaciones/borradores/COMMS_<fecha>_<tema>.md` (`mkdir -p` si falta).
+6. **Registrar** en `LOGS_COMMS.md`: ID `COMMS-YYYY-MM-DD-NNN`, estado **`pendiente_confirmacion`**, tipo, destinatario, ruta del archivo.
+7. **Presentar** borrador **una sola vez** (entidades + asunto + cuerpo + ID + estado). **Detener** sin enviar.
+8. **Confirmación de envío** (solo si el usuario lo pide y el canal es correo): aplicar protocolo **`email-gmail`**; actualizar estado a `confirmado` → tras envío `enviado` + `LOGS_EMAIL.md` / `HISTORY.md`. Sin confirmación explícita: **prohibido** despacho externo (Escenario 2).
+9. **Cancelación** («cancela», «no lo mandes»): estado `cancelado` en `LOGS_COMMS.md`.
+
+**Google Calendar / Meet (solo administrador):** si piden agendar reunión con Meet o crear evento en calendario, **no** ejecutes `gog calendar`. Indica que deben usar el **perfil Administrador** y ofrece redactar un **recordatorio por correo** con esta skill.
+
+Guía: `docs/gestion-comunicaciones.md`.
 
 ### Protocolo de Auditoría de código (`code-audit`)
 

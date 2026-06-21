@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import base64
+import time
 from pathlib import Path
 from typing import Any
 
 import httpx
 
 from app.config import WorkspaceSettings
+from app.llm_metrics import extract_usage_from_payload, record_llm_call
 from app.workspace_policy import WorkspaceFilePolicy
 from app.telegram_context import build_telegram_system_message
 
@@ -41,9 +43,13 @@ class GatewayOpenClawClient:
         workspaces: dict[str, WorkspaceSettings],
         workspace_policies: dict[str, WorkspaceFilePolicy],
         timeout_seconds: float,
+        metrics_data_dir: Path | None = None,
+        metrics_exporter_url: str | None = None,
     ) -> None:
         self._workspaces = workspaces
         self._workspace_policies = workspace_policies
+        self._metrics_data_dir = metrics_data_dir
+        self._metrics_exporter_url = metrics_exporter_url
         self._client = httpx.AsyncClient(
             timeout=timeout_seconds,
             headers={"Content-Type": "application/json"},
@@ -159,33 +165,66 @@ class GatewayOpenClawClient:
         workspace: str,
         user_id: int,
         messages: list[dict[str, str]],
+        source: str = "telegram",
     ) -> str:
         workspace_settings = self._get_workspace(workspace)
-        response = await self._client.post(
-            f"{workspace_settings.base_url}/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {workspace_settings.gateway_token}",
-                "x-openclaw-agent-id": workspace_settings.agent_id,
-            },
-            json={
-                "model": "openclaw",
-                "user": f"telegram:{workspace}:{user_id}",
-                "messages": messages,
-            },
-        )
+        user_preview = ""
+        for msg in reversed(messages):
+            if msg.get("role") == "user":
+                content = msg.get("content")
+                if isinstance(content, str):
+                    user_preview = content
+                break
+        t0 = time.perf_counter()
+        ok = True
+        usage: dict[str, Any] = {}
+        try:
+            response = await self._client.post(
+                f"{workspace_settings.base_url}/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {workspace_settings.gateway_token}",
+                    "x-openclaw-agent-id": workspace_settings.agent_id,
+                },
+                json={
+                    "model": "openclaw",
+                    "user": f"telegram:{workspace}:{user_id}",
+                    "messages": messages,
+                },
+            )
 
-        if response.status_code in {401, 403}:
-            raise RuntimeError(
-                f"{workspace_settings.label}: token invalido o sin permisos. "
-                "Revisa OPENCLAW_*_GATEWAY_TOKEN."
-            )
-        if response.status_code == 404:
-            raise RuntimeError(
-                f"{workspace_settings.label}: falta habilitar /v1/chat/completions "
-                "en la configuracion del gateway."
-            )
-        response.raise_for_status()
-        return self._extract_response_text(response.json())
+            if response.status_code in {401, 403}:
+                raise RuntimeError(
+                    f"{workspace_settings.label}: token invalido o sin permisos. "
+                    "Revisa OPENCLAW_*_GATEWAY_TOKEN."
+                )
+            if response.status_code == 404:
+                raise RuntimeError(
+                    f"{workspace_settings.label}: falta habilitar /v1/chat/completions "
+                    "en la configuracion del gateway."
+                )
+            response.raise_for_status()
+            payload = response.json()
+            usage = extract_usage_from_payload(payload)
+            return self._extract_response_text(payload)
+        except Exception:
+            ok = False
+            raise
+        finally:
+            if self._metrics_data_dir is not None:
+                latency = time.perf_counter() - t0
+                record_llm_call(
+                    data_dir=self._metrics_data_dir,
+                    workspace=workspace,
+                    source=source,
+                    latency_seconds=latency,
+                    ok=ok,
+                    model=usage.get("model"),
+                    prompt_tokens=usage.get("prompt_tokens"),
+                    completion_tokens=usage.get("completion_tokens"),
+                    total_tokens=usage.get("total_tokens"),
+                    input_preview=user_preview,
+                    exporter_url=self._metrics_exporter_url,
+                )
 
     def _get_policy(self, workspace: str) -> WorkspaceFilePolicy:
         try:

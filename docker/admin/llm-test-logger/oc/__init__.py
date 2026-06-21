@@ -26,6 +26,11 @@ class Tracker:
         output_text: str,
         latency_seconds: float,
         source: str = "cli",
+        workspace: str | None = None,
+        model: str | None = None,
+        prompt_tokens: int | None = None,
+        completion_tokens: int | None = None,
+        total_tokens: int | None = None,
         extra: dict[str, Any] | None = None,
     ) -> None:
         row: dict[str, Any] = {
@@ -35,6 +40,16 @@ class Tracker:
             "input": input_text,
             "output": output_text,
         }
+        if workspace:
+            row["workspace"] = workspace
+        if model:
+            row["model"] = model
+        if prompt_tokens is not None:
+            row["prompt_tokens"] = int(prompt_tokens)
+        if completion_tokens is not None:
+            row["completion_tokens"] = int(completion_tokens)
+        if total_tokens is not None:
+            row["total_tokens"] = int(total_tokens)
         if extra:
             row["extra"] = extra
         line = json.dumps(row, ensure_ascii=False) + "\n"

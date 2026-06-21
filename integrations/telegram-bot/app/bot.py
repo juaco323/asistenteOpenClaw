@@ -19,7 +19,8 @@ from telegram.ext import (
     filters,
 )
 
-from app.config import Settings
+from app.auth_lockout import AuthLockoutStore
+from app.config import DEFAULT_WORKSPACE_PASSWORDS, Settings
 from app.errors import format_gateway_error
 from app.gateway_progress import run_with_telegram_progress
 from app.llm_test_log import append_llm_test_run
@@ -52,7 +53,7 @@ SELECTED_WORKSPACE_KEY = "selected_workspace"
 PENDING_WORKSPACE_KEY = "pending_workspace"
 WORKSPACE_AUTH_KEY = "workspace_authenticated"
 WORKSPACE_AUTH_ATTEMPTS_KEY = "workspace_auth_attempts"
-MAX_WORKSPACE_PASSWORD_ATTEMPTS: Final[int] = 5
+AUTH_LOCKOUT_STORE_KEY = "auth_lockout_store"
 AUDIT_LOG_NAME = "file-delivery-audit.jsonl"
 
 
@@ -67,6 +68,12 @@ def build_application(settings: Settings) -> Application:
 
     application.bot_data[OPENCLAW_CLIENT_KEY] = client
     application.bot_data[SETTINGS_KEY] = settings
+    application.bot_data[AUTH_LOCKOUT_STORE_KEY] = AuthLockoutStore(
+        settings.data_dir / "auth-lockouts.json",
+        max_attempts=settings.auth_max_attempts,
+        lockout_seconds=settings.auth_lockout_seconds,
+    )
+    _warn_default_workspace_passwords(settings)
     # ConversationHandler del chat antes que /salir global: si no, /salir no cierra
     # CHAT_ACTIVE y /chat puede reanudar el perfil sin nueva contraseña.
     application.add_handler(_build_main_conversation())
@@ -105,6 +112,7 @@ def _build_post_init(settings: Settings):
                 BotCommand("start", "Muestra ayuda del bot"),
                 BotCommand("chat", "Habla con OpenClaw"),
                 BotCommand("correo", "Redactar o enviar Gmail (mismo gateway)"),
+                BotCommand("comunicaciones", "Recordatorios y reuniones Meet (admin)"),
                 BotCommand("get", "Recibe un archivo por nombre"),
                 BotCommand("recordatorios", "Lista o crea recordatorios"),
                 BotCommand("workspace", "Cambia entre admin y empleado"),
@@ -123,6 +131,7 @@ def _conversation_side_commands() -> list:
         CommandHandler("workspace", workspace_command_in_conversation),
         CommandHandler("chat", enter_chat_mode),
         CommandHandler("correo", enter_correo_mode),
+        CommandHandler("comunicaciones", enter_comunicaciones_mode),
         CommandHandler("estado", status_command_in_conversation),
     ]
 
@@ -132,6 +141,7 @@ def _build_main_conversation() -> ConversationHandler:
         entry_points=[
             CommandHandler("chat", enter_chat_mode),
             CommandHandler("correo", enter_correo_mode),
+            CommandHandler("comunicaciones", enter_comunicaciones_mode),
             CommandHandler("recordatorios", reminders_menu_command),
         ],
         states={
@@ -172,6 +182,28 @@ def _build_main_conversation() -> ConversationHandler:
 
 def _get_client(context: ContextTypes.DEFAULT_TYPE) -> OpenClawClient:
     return context.application.bot_data[OPENCLAW_CLIENT_KEY]
+
+
+def _get_lockout_store(context: ContextTypes.DEFAULT_TYPE) -> AuthLockoutStore:
+    return context.application.bot_data[AUTH_LOCKOUT_STORE_KEY]
+
+
+def _warn_default_workspace_passwords(settings: Settings) -> None:
+    for name, default in DEFAULT_WORKSPACE_PASSWORDS.items():
+        if settings.workspace_passwords.get(name) == default:
+            LOGGER.warning(
+                "Contraseña por defecto activa para perfil %s; cambia TELEGRAM_%s_PASSWORD en producción",
+                name,
+                name.upper(),
+            )
+
+
+def _lockout_reply(lockout) -> str:
+    minutes = max(1, (lockout.seconds_remaining + 59) // 60)
+    return (
+        f"Demasiados intentos fallidos. Acceso bloqueado durante ~{minutes} min.\n"
+        "Vuelve a intentar más tarde o contacta al administrador del sistema."
+    )
 
 
 def _get_settings(context: ContextTypes.DEFAULT_TYPE) -> Settings:
@@ -288,6 +320,18 @@ async def _begin_workspace_switch(
 ) -> None:
     settings = _get_settings(context)
     workspace = settings.get_workspace(workspace_name)
+    user = update.effective_user
+    if user is not None:
+        lockout_store = _get_lockout_store(context)
+        lockout_store.reset_attempts(user.id)
+        lockout = lockout_store.ensure_can_attempt(user.id)
+        if lockout.locked:
+            message = _lockout_reply(lockout)
+            if update.message is not None:
+                await update.message.reply_text(message)
+            elif update.callback_query is not None and update.callback_query.message is not None:
+                await update.callback_query.message.reply_text(message)
+            return
     context.user_data[PENDING_WORKSPACE_KEY] = workspace_name
     context.user_data[WORKSPACE_AUTH_ATTEMPTS_KEY] = 0
     prompt = (
@@ -314,6 +358,9 @@ async def _complete_workspace_switch(
     context.user_data[SELECTED_WORKSPACE_KEY] = workspace_name
     context.user_data[WORKSPACE_AUTH_KEY] = True
     context.user_data.pop(PENDING_WORKSPACE_KEY, None)
+    user = update.effective_user
+    if user is not None:
+        _get_lockout_store(context).clear_user(user.id)
     if update.message is not None:
         await update.message.reply_text(
             "Contraseña correcta.\n"
@@ -370,6 +417,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         "Usa /chat para hablar con el agente remoto.\n"
         "Usa /correo para redactar o enviar correo Gmail (borrador y confirmación en este chat; "
         "mismas credenciales que el asistente en el gateway).\n"
+        "Usa /comunicaciones para recordatorios, seguimientos y confirmaciones (admin-comms); "
+        "en perfil Administrador también reuniones Google Meet.\n"
         "En modo /chat puedes pedir archivos del equipo en lenguaje natural "
         "(entrégame el archivo informe.pptx, …) o **enviar un documento o foto** para correo con adjunto.\n"
         "Usa /get nombre_archivo para recibir un adjunto directo desde el equipo.\n"
@@ -530,6 +579,7 @@ async def enter_chat_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         f"Entraste en modo chat con {workspace.label}.\n"
         "Escribe cualquier mensaje y lo enviaremos a OpenClaw por Telegram.\n"
         "Puedes pedir correo Gmail (borrador y envío tras confirmación); también /correo resume el protocolo.\n"
+        "Puedes pedir recordatorios y comunicaciones formales con /comunicaciones (admin-comms).\n"
         "Puedes **enviar un documento o foto**; el bot lo guarda y el asistente puede usarlo en Gmail con "
         f"`gog ... --attach` y la ruta que te indique (carpeta típica: `{incoming_hint}`).\n"
         "Para recibir archivos del equipo usa lenguaje natural: entrégame el archivo X, envíame X, etc.\n"
@@ -587,6 +637,63 @@ async def enter_correo_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         "«envíalo», «mándalo», «hazlo», «dale», «sí», «vale», «ok», «confirmo», «procede», "
         "«proceder con el envío» o «Enviar borrador ID: …» con el número que devolvió gog.\n\n"
         "Usa /salir para terminar el modo chat y cerrar la sesión del perfil."
+    )
+    context.user_data["chat_active"] = True
+    return CHAT_ACTIVE
+
+
+async def enter_comunicaciones_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Modo comunicaciones: admin-comms (recordatorios) y Meet solo en perfil admin."""
+    if update.message is None or not await _ensure_authorized(update, context):
+        return ConversationHandler.END
+
+    settings = _get_settings(context)
+    pending = context.user_data.get(PENDING_WORKSPACE_KEY)
+    if isinstance(pending, str) and pending in settings.workspaces:
+        await update.message.reply_text(
+            f"Aún falta la contraseña del perfil {settings.get_workspace(pending).label}.\n"
+            "Escríbela en un mensaje de texto antes de usar /comunicaciones.\n"
+            "Usa /salir para cancelar."
+        )
+        return ConversationHandler.END
+
+    if not context.user_data.get(WORKSPACE_AUTH_KEY):
+        await update.message.reply_text(
+            "No hay un perfil autenticado.\n"
+            f"Usa /workspace para elegir entre {_workspace_prompt(settings)} e ingresar la contraseña.",
+            reply_markup=_workspace_keyboard(settings)
+            if _available_workspace_names(settings)
+            else None,
+        )
+        return ConversationHandler.END
+
+    workspace_name = _resolve_workspace_from_context(context)
+    if workspace_name is None:
+        await update.message.reply_text(
+            "No hay un workspace activo.\n"
+            f"Usa /workspace para elegir entre {_workspace_prompt(settings)}.",
+            reply_markup=_workspace_keyboard(settings)
+            if _available_workspace_names(settings)
+            else None,
+        )
+        return ConversationHandler.END
+
+    workspace = settings.get_workspace(workspace_name)
+    meet_hint = (
+        "En perfil **Administrador** también puedes agendar reuniones con **Google Meet** "
+        "y evento en Calendar (confirmación en este chat antes de crear).\n"
+        if workspace_name == "admin"
+        else "Para **Google Meet / Calendar**, cambia a perfil Administrador con /workspace admin.\n"
+    )
+    await update.message.reply_text(
+        f"Modo comunicaciones con {workspace.label}.\n\n"
+        "Puedes pedir:\n"
+        "• **Recordatorio**, seguimiento o confirmación (redacto borrador formal)\n"
+        "• Guardado en `~/Documentos/Comunicaciones/` y estado en LOGS_COMMS\n"
+        f"{meet_hint}"
+        "Confirmaciones válidas en Telegram: «envíalo», «vale», «confirma», «agéndala», etc.\n"
+        "El correo Gmail sigue el mismo flujo borrador → confirmación (`/correo` si solo quieres email).\n\n"
+        "Usa /salir para cerrar sesión del perfil."
     )
     context.user_data["chat_active"] = True
     return CHAT_ACTIVE
@@ -1145,7 +1252,7 @@ async def workspace_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         f"{estado}\n\n"
         "Pulsa Administrador o Empleado y luego escribe la contraseña en el chat. "
         "El botón no basta para iniciar sesión.\n"
-        "Cuando veas «Contraseña correcta», usa /chat o /correo.",
+        "Cuando veas «Contraseña correcta», usa /chat, /correo o /comunicaciones.",
         reply_markup=_workspace_keyboard(settings),
     )
 
@@ -1173,13 +1280,24 @@ async def workspace_password_message(update: Update, context: ContextTypes.DEFAU
         return
 
     settings = _get_settings(context)
+    user = update.effective_user
+    if user is None:
+        return
+
+    lockout_store = _get_lockout_store(context)
+    lockout = lockout_store.ensure_can_attempt(user.id)
+    if lockout.locked:
+        await _secure_delete_message(update)
+        await update.message.reply_text(_lockout_reply(lockout))
+        return
+
     pending = context.user_data.get(PENDING_WORKSPACE_KEY)
     if not isinstance(pending, str) or pending not in settings.workspaces:
         await update.message.reply_text("No hay un cambio de perfil pendiente. Usa /workspace.")
         return
 
     attempts = int(context.user_data.get(WORKSPACE_AUTH_ATTEMPTS_KEY, 0))
-    if attempts >= MAX_WORKSPACE_PASSWORD_ATTEMPTS:
+    if attempts >= settings.auth_max_attempts:
         await _secure_delete_message(update)
         context.user_data.pop(PENDING_WORKSPACE_KEY, None)
         await update.message.reply_text(
@@ -1194,7 +1312,12 @@ async def workspace_password_message(update: Update, context: ContextTypes.DEFAU
     if not secrets.compare_digest(provided, expected):
         attempts += 1
         context.user_data[WORKSPACE_AUTH_ATTEMPTS_KEY] = attempts
-        remaining = MAX_WORKSPACE_PASSWORD_ATTEMPTS - attempts
+        lockout = lockout_store.record_failure(user.id)
+        if lockout.locked:
+            context.user_data.pop(PENDING_WORKSPACE_KEY, None)
+            await update.message.reply_text(_lockout_reply(lockout))
+            return
+        remaining = settings.auth_max_attempts - attempts
         if remaining <= 0:
             context.user_data.pop(PENDING_WORKSPACE_KEY, None)
             await update.message.reply_text(
@@ -1276,7 +1399,7 @@ async def default_text_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
     await update.message.reply_text(
         "Primero elige un perfil con /workspace (botón + contraseña en texto).\n"
-        "Después podrás escribir consultas directamente o usar /chat, /correo y /recordatorios."
+        "Después podrás escribir consultas directamente o usar /chat, /correo, /comunicaciones y /recordatorios."
     )
 
 
