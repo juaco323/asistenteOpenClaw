@@ -112,7 +112,7 @@ def _build_post_init(settings: Settings):
                 BotCommand("start", "Muestra ayuda del bot"),
                 BotCommand("chat", "Habla con OpenClaw"),
                 BotCommand("correo", "Redactar o enviar Gmail (mismo gateway)"),
-                BotCommand("comunicaciones", "Recordatorios y reuniones Meet (admin)"),
+                BotCommand("comunicaciones", "Recordatorios; Meet crear/cancelar (admin)"),
                 BotCommand("get", "Recibe un archivo por nombre"),
                 BotCommand("recordatorios", "Lista o crea recordatorios"),
                 BotCommand("workspace", "Cambia entre admin y empleado"),
@@ -418,7 +418,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         "Usa /correo para redactar o enviar correo Gmail (borrador y confirmación en este chat; "
         "mismas credenciales que el asistente en el gateway).\n"
         "Usa /comunicaciones para recordatorios, seguimientos y confirmaciones (admin-comms); "
-        "en perfil Administrador también reuniones Google Meet.\n"
+        "en perfil Administrador también **crear y cancelar** reuniones Google Meet/Calendar.\n"
         "En modo /chat puedes pedir archivos del equipo en lenguaje natural "
         "(entrégame el archivo informe.pptx, …) o **enviar un documento o foto** para correo con adjunto.\n"
         "Usa /get nombre_archivo para recibir un adjunto directo desde el equipo.\n"
@@ -579,7 +579,8 @@ async def enter_chat_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         f"Entraste en modo chat con {workspace.label}.\n"
         "Escribe cualquier mensaje y lo enviaremos a OpenClaw por Telegram.\n"
         "Puedes pedir correo Gmail (borrador y envío tras confirmación); también /correo resume el protocolo.\n"
-        "Puedes pedir recordatorios y comunicaciones formales con /comunicaciones (admin-comms).\n"
+        "Puedes pedir recordatorios y comunicaciones formales con /comunicaciones (admin-comms). "
+        "En perfil **Administrador**: crear y cancelar reuniones Meet/Calendar (solo admin).\n"
         "Puedes **enviar un documento o foto**; el bot lo guarda y el asistente puede usarlo en Gmail con "
         f"`gog ... --attach` y la ruta que te indique (carpeta típica: `{incoming_hint}`).\n"
         "Para recibir archivos del equipo usa lenguaje natural: entrégame el archivo X, envíame X, etc.\n"
@@ -680,10 +681,12 @@ async def enter_comunicaciones_mode(update: Update, context: ContextTypes.DEFAUL
 
     workspace = settings.get_workspace(workspace_name)
     meet_hint = (
-        "En perfil **Administrador** también puedes agendar reuniones con **Google Meet** "
-        "y evento en Calendar (confirmación en este chat antes de crear).\n"
+        "En perfil **Administrador** también puedes **crear** reuniones con **Google Meet** "
+        "(confirmación en este chat antes de `gog calendar create`) y **cancelarlas** "
+        "(motivo → asunto del correo; **nombre del administrador** obligatorio → `Atte:` en el cuerpo; "
+        "confirmación → `gog-calendar-meet-cancel.sh`).\n"
         if workspace_name == "admin"
-        else "Para **Google Meet / Calendar**, cambia a perfil Administrador con /workspace admin.\n"
+        else "Para **crear o cancelar** reuniones en Google Meet/Calendar, usa perfil Administrador: /workspace admin.\n"
     )
     await update.message.reply_text(
         f"Modo comunicaciones con {workspace.label}.\n\n"
@@ -691,7 +694,7 @@ async def enter_comunicaciones_mode(update: Update, context: ContextTypes.DEFAUL
         "• **Recordatorio**, seguimiento o confirmación (redacto borrador formal)\n"
         "• Guardado en `~/Documentos/Comunicaciones/` y estado en LOGS_COMMS\n"
         f"{meet_hint}"
-        "Confirmaciones válidas en Telegram: «envíalo», «vale», «confirma», «agéndala», etc.\n"
+        "Confirmaciones válidas en Telegram: «envíalo», «vale», «confirma», «agéndala», «cancela la reunión», etc.\n"
         "El correo Gmail sigue el mismo flujo borrador → confirmación (`/correo` si solo quieres email).\n\n"
         "Usa /salir para cerrar sesión del perfil."
     )
@@ -802,6 +805,13 @@ async def _reply_with_optional_files(
         await update.message.reply_text(f"[{workspace.label}]\n{clean_text}")
     elif paths:
         await update.message.reply_text(f"[{workspace.label}] Enviando archivo(s)...")
+    elif (reply or "").strip():
+        await update.message.reply_text(f"[{workspace.label}]\n{reply.strip()}")
+    else:
+        await update.message.reply_text(
+            f"[{workspace.label}] La acción se procesó en el gateway, pero no hubo texto en la respuesta. "
+            "Revisa LOGS_COMMS o el calendario si esperabas confirmación de una reunión."
+        )
     await deliver_marked_files(
         update,
         read_roots=read_roots,

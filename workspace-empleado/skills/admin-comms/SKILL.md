@@ -15,7 +15,7 @@ Activa esta skill cuando el usuario pida, de forma explícita o implícita:
 
 **No sustituye** `email-gmail`: si el canal es correo, esta skill prepara el contenido y el estado; el envío real sigue el protocolo Gmail (borrador `gog` → confirmación → `drafts send`).
 
-**Google Calendar / Meet:** **prohibido** en perfil empleado. Si el usuario pide agendar reunión con Meet o crear evento en calendario, indica que esa capacidad es **solo del perfil Administrador** y ofrece redactar el **recordatorio por correo** (texto con fecha/hora) con esta misma skill.
+**Google Calendar / Meet:** **prohibido** en perfil empleado (**crear y cancelar** reuniones). Si lo piden, indica **perfil Administrador** (`/workspace admin` en Telegram; Control UI en `:18791`) y ofrece redactar recordatorio por correo con esta skill.
 
 ## Tipos de comunicación
 
@@ -25,7 +25,7 @@ Activa esta skill cuando el usuario pida, de forma explícita o implícita:
 | `seguimiento` | Retomar tema pendiente, solicitar actualización |
 | `confirmación` | Confirmar asistencia, recepción o acuerdos |
 
-**No aplica en empleado:** tipo `reunion_meet` (solo administrador).
+**No aplica en empleado:** tipos `reunion_meet` y `reunion_cancelacion` (solo administrador; crear y cancelar en Calendar).
 
 ## Extracción de entidades (obligatorio)
 

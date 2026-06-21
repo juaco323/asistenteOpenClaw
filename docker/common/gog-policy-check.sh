@@ -31,3 +31,18 @@ if [ "$profile" = "empleado" ]; then
 		;;
 	esac
 fi
+
+# Perfil admin: cancelar reunión solo vía script (correo con motivo automático).
+if [ "$profile" = "admin" ]; then
+	case "$2" in
+	delete | del | rm | remove)
+		case "$1" in
+		calendar | cal)
+			if [ "${OPENCLAW_MEET_CANCEL_APPROVED:-}" != "1" ]; then
+				die "calendar delete bloqueado: use gog-calendar-meet-cancel.sh --event-id ID --reason \"motivo\" --admin-name \"Nombre\" (envía correo a invitados y luego elimina el evento)"
+			fi
+			;;
+		esac
+		;;
+	esac
+fi

@@ -52,6 +52,7 @@ Documento para responsables de desarrollo/seguridad: inventario de capacidades O
 |--------|-----|
 | `gog-auth-setup.sh` | OAuth interactivo, escribe `~/.config/gogcli` |
 | `gog-calendar-meet-create.sh` | `gog calendar create` |
+| `gog-calendar-meet-cancel.sh` | `gog calendar delete` (con notificación) |
 | `gog-gmail-draft.sh` | Borradores Gmail |
 | `pc-up.sh`, `stack-up.sh` | Docker compose |
 

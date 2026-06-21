@@ -14,7 +14,7 @@ Usa `long polling` y el gateway real de OpenClaw mediante `POST /v1/chat/complet
 - `/workspace` — selección de perfil con **contraseña** (Admin / Empleado)
 - `/chat` — conversación con el agente del perfil autenticado (texto, documentos y fotos para tareas o correo con adjunto)
 - `/correo` — mismo flujo que `/chat` con recordatorio del protocolo Gmail
-- `/comunicaciones` — recordatorios, seguimientos y confirmaciones (`admin-comms`); en perfil **Administrador** también reuniones Google Meet + Calendar
+- `/comunicaciones` — recordatorios, seguimientos y confirmaciones (`admin-comms`); en perfil **Administrador** también **crear y cancelar** reuniones Google Meet + Calendar (mismo protocolo que Control UI `:18791`)
 - `/get` y lenguaje natural — entrega de archivos del equipo (`entrégame el archivo…`, etc.)
 - Archivos **entrantes** por Telegram en `/chat`: se guardan en `Documentos/telegram-openclaw-incoming/` bajo `TELEGRAM_HOST_HOME`; el agente puede usar `gog … --attach` con esa ruta
 - `/recordatorios` — listar o crear recordatorios

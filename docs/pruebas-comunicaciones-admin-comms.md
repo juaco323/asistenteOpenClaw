@@ -122,22 +122,38 @@ Debe aparecer `prueba.openclaw.fj@gmail.com` con servicios `gmail` (y `calendar`
 
 ### Resultado esperado (fase 2)
 
-- Ejecuta `gog calendar create primary … --with-meet`.
+- Ejecuta `gog calendar create primary … --with-meet --send-updates all`.
+- Los invitados reciben **correo de invitación de Google Calendar al instante** (no confundir con `--reminder email:1d`, que avisa 1 día antes).
 - Estado **`reunion_creada`** en `LOGS_COMMS.md`.
 - Muestra enlace Meet y ID de evento.
-- Opcional: si pides enviar el enlace por correo, nuevo borrador Gmail → confirmación → `drafts send`.
+- Opcional: correo personalizado adicional vía Gmail → borrador → confirmación → `drafts send`.
+
+### Prueba C — Cancelar reunión (solo admin)
+
+1. Perfil **Administrador** en Telegram.
+2. Pide:
+
+   > Cancela la reunión MundoPokeDs del 21 de junio.
+
+3. Si no diste **motivo** (asunto) ni **nombre del administrador**, el asistente **debe preguntarlos**.
+4. Confirma: **«sí, cancela»** tras ver el resumen.
+
+**Resultado esperado:**
+
+- Correo Gmail: **asunto** = motivo; **cuerpo** = `La reunión ha sido cancelada.` + `Atte: {nombre admin}`.
+- `gog-calendar-meet-cancel.sh` + estado **`reunion_cancelada`** en `LOGS_COMMS.md`.
 
 ---
 
 ## 4. Prueba D — Gateway web (Control UI)
 
-Repite la **Prueba A** sin Telegram:
+Repite las pruebas **A**, **B** (crear reunión) y **C** (cancelar reunión) sin Telegram:
 
 1. Abre `http://127.0.0.1:18790/` (empleado) o `http://127.0.0.1:18791/` (admin).
-2. En el chat del gateway, pide el mismo recordatorio.
+2. En el chat del gateway, pide el mismo recordatorio o reunión.
 3. Verifica los mismos archivos de trazabilidad.
 
-Para admin + Meet, usa el puerto **18791**.
+Para admin + Meet (crear/cancelar), usa el puerto **18791**. En empleado debe **rechazar** crear o cancelar reuniones.
 
 ---
 

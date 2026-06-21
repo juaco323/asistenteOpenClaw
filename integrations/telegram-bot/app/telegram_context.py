@@ -33,19 +33,22 @@ def _admin_comms_protocol_telegram(*, workspace: str) -> str:
     meet_block = ""
     if workspace == "admin":
         meet_block = (
-            "Google Calendar + Meet (**solo perfil Administrador**): si piden agendar reunión, "
-            "videollamada Meet o evento en calendario, aplica `skills/admin-comms/calendar-meet.md`. "
-            "Flujo: propuesta → confirmación explícita en Telegram → `gog calendar create primary` "
-            'con `-a "prueba.openclaw.fj@gmail.com"`, `--with-meet`, `--reminder popup:30m,email:1d` '
-            "→ estado `reunion_creada` en LOGS_COMMS + Meet link en borrador. "
-            "Enviar link por correo: paso aparte con `email-gmail`. "
-            "**Prohibido** `gog calendar create` sin confirmación del usuario en este chat. "
+            "Google Calendar + Meet — **solo perfil Administrador** (Telegram y Control UI `:18791`). "
+            "Leer `skills/admin-comms/calendar-meet.md`. "
+            "**Crear reunión:** propuesta → confirmación en chat → "
+            "`gog calendar create primary` o `scripts/gog-calendar-meet-create.sh` con "
+            '`-a "prueba.openclaw.fj@gmail.com"`, `--with-meet`, `--send-updates all` (obligatorio si hay invitados), '
+            '`--reminder popup:30m,email:1d` → `reunion_creada` + Meet link en LOGS_COMMS. '
+            "**Cancelar reunión:** preguntar **motivo** (asunto del correo) y **nombre del administrador** (`Atte:`) si faltan; "
+            "confirmación → `gog-calendar-meet-cancel.sh --event-id … --reason … --admin-name …` "
+            "(correo automático: asunto=motivo, cuerpo «La reunión ha sido cancelada.» + Atte: nombre). "
+            "**Prohibido** `gog calendar create` o `delete` sin confirmación del usuario en este chat. "
         )
     else:
         meet_block = (
-            "Google Calendar + Meet: **prohibido** en perfil empleado. Si lo piden, indica que deben "
-            "cambiar a perfil **Administrador** (`/workspace admin`) y ofrece redactar recordatorio por correo "
-            "con `admin-comms`. "
+            "Google Calendar + Meet — **prohibido** en perfil empleado (crear **y** cancelar reuniones). "
+            "Si lo piden, indica perfil **Administrador** (`/workspace admin`; Control UI gateway `:18791`) "
+            "y ofrece recordatorio por correo con `admin-comms`. "
         )
     return (
         "Comunicaciones administrativas (`admin-comms`, skill del workspace activo): "
@@ -57,7 +60,7 @@ def _admin_comms_protocol_telegram(*, workspace: str) -> str:
         f"Registra estado en `{logs_path}` como `pendiente_confirmacion` (columna Agente: "
         f"{'Administrador' if workspace == 'admin' else 'Empleado'}). "
         "Presenta borrador **una vez** y detente. "
-        "**Telegram es canal válido de confirmación** («envíalo», «vale», «confirma», «agéndala», etc.). "
+        "**Telegram es canal válido de confirmación** («envíalo», «vale», «confirma», «agéndala», «cancela la reunión», etc.). "
         "Sin confirmación explícita: **prohibido** despacho externo (correo, calendar). "
         "Tras confirmar envío por correo, encadena `email-gmail` (borrador gog → confirmación → send) "
         "y actualiza LOGS_COMMS + LOGS_EMAIL/HISTORY si aplica. "
@@ -76,7 +79,10 @@ def _gmail_protocol_telegram() -> str:
         "el cuerpo del correo debe ser texto formal legible (saltos de línea reales con `--body-file` o heredoc; "
         "**prohibido** `\n` literal, prefijo `$` o escapes de programación en `--body`). "
         "**solo** `gog gmail drafts create` primero; en esa **primera** respuesta muestra asunto, cuerpo e **ID de borrador** y espera confirmación. "
-        "**Tras confirmación** («envíalo», «mándalo», «vale», «dale», «sí», «ok», «confirmo», «procede», «proceder con el envío», «Enviar borrador ID: …», etc.): "
+        "**Tras confirmación** («envíalo», «mándalo», «vale», …): "
+        "**Excepción cancelación reunión (solo admin):** si confirmó cancelar con motivo, ejecuta `scripts/gog-calendar-meet-cancel.sh` "
+        "en el mismo turno — correo con motivo **automático**, sin segundo «envíalo». "
+        "En el resto de casos: "
         "**prohibido** volver a mostrar asunto o cuerpo completos; ejecuta en el mismo turno `gog gmail drafts send \"<DRAFT_ID>\"` con `-a \"prueba.openclaw.fj@gmail.com\"` "
         "y responde **muy breve** (resultado del comando + ID; sin rearmar el borrador). "
         "**Adjuntos:** si el mensaje del usuario incluye ruta de archivo (p. ej. tras enviar documento/foto "

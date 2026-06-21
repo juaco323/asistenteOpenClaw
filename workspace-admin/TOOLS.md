@@ -60,4 +60,4 @@ Things like:
 - Borradores: `~/Documentos/Comunicaciones/borradores/`.
 - Estados: `/app/logs_shared/LOGS_COMMS.md` (repo: `workspace-empleado/LOGS_COMMS.md`).
 - Envío correo: confirmación explícita + `email-gmail` + logs compartidos.
-- **Calendar + Meet (solo admin):** `skills/admin-comms/calendar-meet.md`; `scripts/gog-calendar-meet-create.sh`.
+- **Calendar + Meet (solo admin):** `skills/admin-comms/calendar-meet.md`; `scripts/gog-calendar-meet-create.sh`; cancelar: `scripts/gog-calendar-meet-cancel.sh`.

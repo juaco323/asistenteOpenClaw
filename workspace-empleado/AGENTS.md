@@ -1,9 +1,12 @@
 # AGENTS.md - Your Workspace
 
-## Canal Telegram (prioridad al atender por Telegram)
+## Canales de atención (Telegram y Control UI OpenClaw)
+
+Protocolos en **Telegram** (bot) y **Control UI** del gateway (`http://127.0.0.1:18790/` empleado). Mismas reglas en ambos.
 
 - Preguntas informativas sin «archivo» ni extensión: LLM + **web**; no buscar ficheros en disco por coincidencia de nombre.
-- **Comunicaciones (`admin-comms`):** si el mensaje de sistema incluye contexto Telegram y el usuario pide recordatorio, seguimiento o confirmación, aplica el protocolo § comunicaciones administrativas. Confirmación válida en Telegram («envíalo», «vale», «confirma»). **No** crear Google Meet ni `gog calendar` (solo Administrador; indica `/workspace admin` en el bot).
+- **Comunicaciones (`admin-comms`):** recordatorios, seguimientos, confirmaciones; confirmación válida en el chat activo.
+- **Google Calendar + Meet:** **prohibido** en empleado (crear **y** cancelar reuniones). Indica **perfil Administrador** (`/workspace admin` en Telegram o gateway `:18791`).
 - Solo localizar/entregar archivos cuando pidan explícitamente **archivo**, **get**, una ruta o un nombre con extensión.
 
 ## main (empleado)
@@ -100,7 +103,7 @@ Cuando el usuario pida recordatorio, seguimiento, confirmación o mensaje formal
 8. **Confirmación de envío** (solo si el usuario lo pide y el canal es correo): aplicar protocolo **`email-gmail`**; actualizar estado a `confirmado` → tras envío `enviado` + `LOGS_EMAIL.md` / `HISTORY.md`. Sin confirmación explícita: **prohibido** despacho externo (Escenario 2).
 9. **Cancelación** («cancela», «no lo mandes»): estado `cancelado` en `LOGS_COMMS.md`.
 
-**Google Calendar / Meet (solo administrador):** si piden agendar reunión con Meet o crear evento en calendario, **no** ejecutes `gog calendar`. Indica que deben usar el **perfil Administrador** y ofrece redactar un **recordatorio por correo** con esta skill.
+**Google Calendar / Meet (solo administrador):** si piden **agendar**, **crear** o **cancelar** reunión con Meet / evento en calendario, **no** ejecutes `gog calendar` ni `gog-calendar-meet-*.sh`. Indica **perfil Administrador** (Telegram: `/workspace admin`; Control UI: gateway `:18791`) y ofrece redactar **recordatorio por correo** con esta skill.
 
 Guía: `docs/gestion-comunicaciones.md`.
 

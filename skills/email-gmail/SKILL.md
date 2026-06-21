@@ -108,6 +108,8 @@ Si ya mostraste al usuario **asunto**, **cuerpo** e **ID de borrador**, una resp
 - Si varios borradores están «activos» y el mensaje es ambiguo, pregunta qué **`DRAFT_ID`** enviar antes de lanzar `drafts send`.
 - Cancelación u objeción («no mandes», «cancela», «espera») **no** dispara envío.
 
+**Excepción — correo de motivo al cancelar reunión (solo Administrador):** si el usuario ya confirmó la cancelación con motivo, ejecuta `scripts/gog-calendar-meet-cancel.sh` en el mismo turno; ese script envía el Gmail **automáticamente** (`drafts create` + `drafts send`). **No** muestres borrador ni pidas «envíalo» para ese correo.
+
 **Enviar un borrador existente** (solo tras confirmación inequívoca en el chat):
 
 ```bash

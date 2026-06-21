@@ -1,9 +1,15 @@
 # AGENTS.md - Your Workspace
 
-## Canal Telegram (prioridad al atender por Telegram)
+## Canales de atención (Telegram y Control UI OpenClaw)
 
+Estos protocolos aplican **igual** en:
+- **Telegram** (bot; perfil elegido con `/workspace`).
+- **Control UI / webchat** del gateway (`http://127.0.0.1:18791/` admin, `18790` empleado).
+
+Reglas comunes:
 - Preguntas informativas sin «archivo» ni extensión: LLM + **web**; no buscar ficheros en disco por coincidencia de nombre.
-- **Comunicaciones (`admin-comms`):** recordatorios, seguimientos, confirmaciones; confirmación válida en Telegram. **Meet / Calendar:** solo en este perfil admin; ver § Reuniones Google Calendar + Meet y `calendar-meet.md`.
+- **Comunicaciones (`admin-comms`):** recordatorios, seguimientos, confirmaciones; confirmación válida en el chat activo («envíalo», «vale», «confirma», «agéndala», «cancela la reunión», etc.).
+- **Google Calendar + Meet (crear y cancelar reuniones):** **solo este perfil Administrador**; ver § Reuniones y § Cancelar reunión + `skills/admin-comms/calendar-meet.md`.
 - Solo localizar/entregar archivos cuando pidan explícitamente **archivo**, **get**, una ruta o un nombre con extensión.
 
 ## admin
@@ -23,6 +29,8 @@
 **Cuenta de envío:** **solo** `prueba.openclaw.fj@gmail.com` con `-a "prueba.openclaw.fj@gmail.com"` en cada comando Gmail. **No** usar la cuenta `default` de `gog auth list` si no es la de pruebas. JSON OAuth: `~/Descargas/prueba_openclaw.fj.json`.
 
 El administrador puede **operar Gmail** con la misma disciplina que el empleado: **nunca** envío directo sin borrador visible y **confirmación humana explícita** en el chat.
+
+**Excepción — cancelación de reunión:** al confirmar cancelación con motivo, usar **`scripts/gog-calendar-meet-cancel.sh`**, que envía el correo con motivo **automáticamente** en el mismo turno (sin mostrar borrador ni pedir «envíalo»). Ver § Cancelar reunión Calendar + Meet.
 
 1. **Datos mínimos**: validar o solicitar destinatario (`--to`), asunto (`--subject`) y cuerpo o puntos clave.
 2. **Cuerpo legible en Gmail (bloqueante):** el texto que recibe el destinatario debe ser correo formal normal. **Prohibido** pasar `\n`, `\r`, `\t` como caracteres literales en `--body` (salen tal cual en Gmail). **Prohibido** que el cuerpo empiece con `$`. Si hay párrafos o saludos en líneas distintas, usa **`--body-file`** con un archivo o heredoc con saltos de línea **reales** (ver `skills/email-gmail/SKILL.md` o `scripts/gog-gmail-draft.sh`).
@@ -110,9 +118,20 @@ Cuando el usuario pida **agendar reunión**, **crear Meet** o **evento en calend
 1. **Leer** `skills/admin-comms/calendar-meet.md`.
 2. **Extraer:** título, fecha/hora, duración, invitados, recordatorios (`popup:30m,email:1d` por defecto).
 3. **Proponer** resumen; `pendiente_confirmacion`, tipo `reunion_meet`; **no** `gog calendar create` aún.
-4. Tras confirmación: `gog calendar create primary … --with-meet --json` o `scripts/gog-calendar-meet-create.sh`.
-5. Estado **`reunion_creada`** + Meet link en borrador y `/app/logs_shared/LOGS_COMMS.md`.
-6. Envío link por correo: paso separado (`email-gmail`).
+4. Tras confirmación: `gog calendar create primary … --with-meet --send-updates all --json` o `scripts/gog-calendar-meet-create.sh` (el script ya usa `send-updates all`).
+5. Estado **`reunion_creada`** + Meet link en borrador y `/app/logs_shared/LOGS_COMMS.md`. Con invitados, **deben recibir invitación por correo al instante** (Google Calendar).
+6. Correo personalizado adicional con el link: paso separado opcional (`email-gmail`).
+
+### Cancelar reunión Calendar + Meet (**solo administrador**)
+
+Cuando el usuario pida **cancelar**, **anular** o **eliminar** una reunión ya agendada:
+
+1. **Leer** `skills/admin-comms/calendar-meet.md` (sección **Cancelar reunión**).
+2. **Identificar** evento (`LOGS_COMMS.md` o `gog calendar events list`).
+3. **Motivo obligatorio** (será el **asunto** del correo) y **nombre del administrador obligatorio** (aparece en `Atte:` del cuerpo). Preguntar lo que falte antes de cancelar.
+4. **Resumen** con título, invitados, motivo y nombre admin → `pendiente_confirmacion` (tipo `reunion_cancelacion`).
+5. Tras confirmación explícita: **`gog-calendar-meet-cancel.sh --event-id … --reason … --admin-name …`** en el mismo turno.
+6. Estado **`reunion_cancelada`** en `/app/logs_shared/LOGS_COMMS.md` (notas: motivo + admin).
 
 Guía: `docs/gestion-comunicaciones.md`.
 

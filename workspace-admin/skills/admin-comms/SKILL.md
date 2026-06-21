@@ -35,7 +35,7 @@ Columna **Agente** en tablas: `Administrador`.
 
 ## Reuniones Google Meet + Calendar
 
-**Exclusivo perfil Administrador.** Ver `skills/admin-comms/calendar-meet.md`. Confirmación obligatoria antes de `gog calendar create --with-meet`. Estados: `reunion_creada`, luego opcional `enviado` si mandan link por Gmail.
+**Exclusivo perfil Administrador** (Telegram y Control UI `:18791`). Cancelar: motivo + **nombre admin** + confirmación → `gog-calendar-meet-cancel.sh --event-id … --reason … --admin-name …`.
 
 El perfil empleado **no** ejecuta `gog calendar`; solo redacta recordatorios por correo.
 

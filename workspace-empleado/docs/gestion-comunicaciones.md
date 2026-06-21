@@ -42,7 +42,7 @@ El asistente creará borrador Gmail (`gog`) y, tras tu confirmación coloquial, 
 2. Envía el recordatorio en lenguaje natural
 3. Confirma o deja pendiente en el mismo chat
 
-**Meet / Calendar:** no disponible en empleado; usa `/workspace admin` + `/comunicaciones`.
+**Meet / Calendar:** no disponible en empleado (crear ni cancelar); usa `/workspace admin` + `/comunicaciones` o Control UI `:18791`.
 
 ## Dónde revisar
 
