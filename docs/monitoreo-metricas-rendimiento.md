@@ -34,15 +34,16 @@ flowchart LR
 
 ## CPU y RAM (Prometheus + Grafana)
 
-| Métrica | Origen | Consulta ejemplo |
-|---------|--------|------------------|
-| CPU host | node-exporter | `100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100)` |
-| RAM host | node-exporter | `node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes` |
-| CPU contenedor | cAdvisor | `rate(container_cpu_usage_seconds_total{name=~"openclaw.*"}[2m])` |
-| RAM contenedor | cAdvisor | `container_memory_working_set_bytes{name=~"openclaw.*"}` |
+Stacks **independientes**:
 
-**Instalación:** `docker/monitoring/install.sh`  
-**Dashboard:** Grafana → *OpenClaw — Recursos y LLM*
+| Stack | Comando | URL |
+|-------|---------|-----|
+| Prometheus | `docker/prometheus/install.sh` | http://127.0.0.1:9090 |
+| Grafana | `docker/grafana/install.sh` | http://127.0.0.1:3000 |
+
+Orquestador opcional: `docker/monitoring/install.sh` (levanta ambos).
+
+**Dashboard:** *OpenClaw — Monitoreo completo* (provisionado en `docker/grafana/dashboards/`).
 
 ### Escenario inactividad
 

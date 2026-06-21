@@ -85,6 +85,8 @@ No hace falta copiar el workspace a `~/.openclaw-*/workspace`; el estado (sesion
 | `docker/admin` | Gateway admin + `gog`; `~/.config/gogcli`→`/home/node/.config/gogcli` (**rw**); `workspace-empleado`→`/app/logs_shared` (**rw**). Mantener **`GOG_ACCOUNT=prueba.openclaw.fj@gmail.com`** en `.env`. |
 | `docker/empleado` | Gateway empleado (Python + `gog`); `~/.config/gogcli`→`/home/node/.config/gogcli` (**rw**). **`GOG_ACCOUNT=prueba.openclaw.fj@gmail.com`**. |
 | `docker/telegram` | Bot que habla con ambos gateways |
+| `docker/prometheus` | Prometheus + exportadores (CPU/RAM, métricas LLM) |
+| `docker/grafana` | Grafana (dashboard monitoreo completo) |
 
 Instalación inicial por pieza: `docker/*/install.sh`. Actualizar: `docker/*/update.sh`.
 

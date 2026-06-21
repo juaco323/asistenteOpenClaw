@@ -1,65 +1,40 @@
-# Monitoreo OpenClaw (Prometheus + Grafana)
+# Monitoreo OpenClaw
 
-Stack opcional para métricas de **CPU/RAM** (host Ubuntu + contenedores Docker) y **latencia/tokens LLM** (GPT-5.4 vía gateway).
+Prometheus y Grafana corren en **contenedores Docker independientes**, siguiendo el mismo criterio que `docker/admin`, `docker/empleado` y `docker/telegram`.
 
-## Componentes
+| Stack | Ruta | Contenedor principal |
+|-------|------|----------------------|
+| **Prometheus** | `docker/prometheus/` | `openclaw-prometheus` |
+| **Grafana** | `docker/grafana/` | `openclaw-grafana` |
 
-| Servicio | Puerto | Función |
-|----------|--------|---------|
-| **Prometheus** | 9090 | Recolección de series temporales |
-| **Grafana** | 3000 | Dashboards (usuario `admin` por defecto) |
-| **node-exporter** | — | CPU/RAM del host Ubuntu |
-| **cAdvisor** | — | CPU/RAM por contenedor (`openclaw-*`, `telegram-*`) |
-| **llm-metrics-exporter** | 9092 | Latencia y tokens desde JSONL + POST en tiempo real |
-
-## Instalación
+## Instalación rápida (ambos stacks)
 
 ```bash
-chmod +x docker/monitoring/install.sh
-cp docker/monitoring/.env.example docker/monitoring/.env
+chmod +x docker/monitoring/install.sh docker/prometheus/install.sh docker/grafana/install.sh
 docker/monitoring/install.sh
 ```
 
-Abre Grafana: `http://127.0.0.1:3000` → dashboard **OpenClaw — Recursos y LLM**.
-
-## Métricas LLM (latencia y tokens)
-
-Fuentes de datos:
-
-1. `workspace-admin/.llm-test-runs.jsonl` y `workspace-empleado/.llm-test-runs.jsonl` (script `logger.py`, comando `/prueba_llm` en Telegram).
-2. `integrations/telegram-bot/data/llm-metrics.jsonl` (cada llamada al gateway desde Telegram).
-
-Variables opcionales en `docker/telegram/.env`:
+O por separado:
 
 ```bash
-LLM_METRICS_EXPORTER_URL=http://host.docker.internal:9092/v1/record
+docker/prometheus/install.sh   # primero
+docker/grafana/install.sh      # después
 ```
 
-## Escenarios de prueba
+## Dashboard Grafana
 
-### Inactividad (baseline CPU/RAM)
+Tras iniciar sesión en http://127.0.0.1:3000, abre la carpeta **OpenClaw** → **OpenClaw — Monitoreo completo**.
 
-1. Levanta el stack OpenClaw sin cargar chats.
-2. Espera 10–15 min.
-3. En Grafana, revisa paneles de CPU/RAM host y contenedores en reposo.
+Cubre todos los criterios de la HU de monitoreo:
 
-### Ejecución activa
+- CPU y RAM del host Ubuntu (inactividad y bajo carga)
+- CPU y RAM de contenedores OpenClaw/Telegram
+- Latencia de respuesta GPT-5.4 (p50, p95, media)
+- Consumo de tokens (prompt / completion)
+- Peticiones LLM OK vs error
 
-1. Ejecuta varias pruebas LLM:
+## Documentación
 
-   ```bash
-   docker/admin/llm-test-logger/run.sh "Responde OK."
-   docker/empleado/llm-test-logger/run.sh "Resume en tres frases qué es Prometheus."
-   ```
-
-2. Desde Telegram: `/prueba_llm` (admin) o varias consultas en `/chat`.
-3. Observa picos en CPU contenedores y latencia p95 en Grafana.
-
-## Langfuse / LiteLLM (extensión futura)
-
-Este stack usa **Prometheus + JSONL** integrado al repo. Para trazas detalladas por prompt, puede añadirse **Langfuse** o un proxy **LiteLLM** delante de la API OpenAI; ver `docs/monitoreo-metricas-rendimiento.md`.
-
-## Referencias
-
+- `docker/prometheus/README.md`
+- `docker/grafana/README.md`
 - `docs/monitoreo-metricas-rendimiento.md`
-- `docs/pruebas-latencia-ejemplos.md`

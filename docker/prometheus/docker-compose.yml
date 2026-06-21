@@ -1,3 +1,6 @@
+# Stack Prometheus — contenedor dedicado + exportadores (sin Grafana).
+# Grafana vive en docker/grafana/ como stack independiente.
+
 services:
   prometheus:
     image: prom/prometheus:v2.55.1
@@ -6,28 +9,13 @@ services:
     ports:
       - "${PROMETHEUS_HOST_PORT:-9090}:9090"
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.retention.time=30d
-
-  grafana:
-    image: grafana/grafana:11.4.0
-    container_name: openclaw-grafana
-    restart: unless-stopped
-    ports:
-      - "${GRAFANA_HOST_PORT:-3000}:3000"
-    environment:
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-openclaw}
-      GF_USERS_ALLOW_SIGN_UP: "false"
-    volumes:
-      - grafana-data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
-    depends_on:
-      - prometheus
+    networks:
+      - openclaw-metrics
 
   node-exporter:
     image: prom/node-exporter:v1.8.2
@@ -43,6 +31,8 @@ services:
       - --path.sysfs=/host/sys
       - --path.rootfs=/rootfs
       - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    networks:
+      - openclaw-metrics
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.49.1
@@ -54,11 +44,13 @@ services:
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - openclaw-metrics
 
   llm-metrics-exporter:
     build:
       context: ../..
-      dockerfile: docker/monitoring/llm-metrics-exporter/Dockerfile
+      dockerfile: docker/prometheus/llm-metrics-exporter/Dockerfile
     image: openclaw-llm-metrics-exporter:local
     container_name: openclaw-llm-metrics-exporter
     restart: unless-stopped
@@ -72,7 +64,12 @@ services:
       - ../../workspace-admin:/repo/workspace-admin:ro
       - ../../workspace-empleado:/repo/workspace-empleado:ro
       - ../../integrations/telegram-bot/data:/repo/integrations/telegram-bot/data:ro
+    networks:
+      - openclaw-metrics
+
+networks:
+  openclaw-metrics:
+    name: openclaw-metrics
 
 volumes:
   prometheus-data:
-  grafana-data:

@@ -1,0 +1,26 @@
+# Contenedor Grafana dedicado (independiente de Prometheus).
+# Prometheus debe estar en marcha en docker/prometheus (puerto 9090 por defecto).
+
+services:
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: openclaw-grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_HOST_PORT:-3000}:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-openclaw}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_INSTALL_PLUGINS: ""
+      # URL del Prometheus host (stack docker/prometheus)
+      PROMETHEUS_URL: ${PROMETHEUS_URL:-http://host.docker.internal:9090}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./provisioning:/etc/grafana/provisioning:ro
+      - ./dashboards:/var/lib/grafana/dashboards:ro
+
+volumes:
+  grafana-data:
