@@ -8,4 +8,4 @@ if [ ! -f .env ]; then
 fi
 docker compose --env-file .env up -d
 echo "Grafana: http://127.0.0.1:${GRAFANA_HOST_PORT:-3000}"
-echo "Dashboard: OpenClaw — Monitoreo completo (CPU/RAM + LLM GPT-5.4)"
+echo "Dashboard: OpenClaw — Monitoreo completo (CPU/RAM host y contenedores)"
