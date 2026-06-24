@@ -38,3 +38,8 @@ _Cada fila nueva se añade al final de la tabla, manteniendo el encabezado._
 | 2026-05-25 | Administrador | BORRADOR | carla.taramasco@unab.cl | Recordatorio reunión mañana | r513061347335142387 |
 | 2026-05-25 | Administrador | ENVIADO | carla.taramasco@unab.cl | Recordatorio reunión mañana | 19e606d281eb787c |
 - 2026-06-15 23:13 UTC | Administrador | Enviado | Draft ID: r5784576001265582332 | Para: joaquin.fuenzalida51@gmail.com | Asunto: Recordatorio: prueba de infraestructura TI el miércoles 1 a las 8:30 AM
+| 2026-06-24 UTC | Administrador | Borrador creado | prueba.openclaw.fj@gmail.com | joaquin.fuenzalida51@gmail.com | Vamos que se puede | r7653804893984176126 |
+2026-06-24	Administrador	email_enviado	Hola -> fernycalderonsolis@gmail.com | draft_id: r5461441974832606174
+2026-06-24	Administrador	email_enviado	Buenas noches -> f.calderonsolis@uandresbello.edu | draft_id: r-5371035708263308204
+2026-06-24	Administrador	email_enviado	Hola -> fernycalderonsolis@gmail.com | draft_id: r572148225652539337
+2026-06-24	Administrador	email_enviado	Hola -> f.calderonsolis@uandresbello.edu | draft_id: r-2243685304970419567

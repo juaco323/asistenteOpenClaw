@@ -97,6 +97,26 @@ Desde **Telegram**, los documentos o fotos que envía el usuario en `/chat` el b
 gog gmail drafts list -a "prueba.openclaw.fj@gmail.com"
 ```
 
+## Consultar bandeja — recibidos **y** enviados/respondidos (obligatorio)
+
+Cuando el usuario pida ver correos, la bandeja, mensajes recientes, **mensajes respondidos**, **enviados**, historial de Gmail o equivalente («¿qué correos tengo?», «muéstrame los respondidos», «últimos emails», etc.):
+
+1. **Ejecuta siempre dos consultas** (salvo que pida **explícitamente** solo recibidos o solo enviados):
+   - **Recibidos:** `gog gmail search "in:inbox" -a "prueba.openclaw.fj@gmail.com" --max 10 --plain`
+   - **Enviados / respondidos:** `gog gmail search "in:sent" -a "prueba.openclaw.fj@gmail.com" --max 10 --plain`
+2. **Presenta dos secciones claras** en el chat: `### Recibidos` y `### Enviados / respondidos`. Por cada fila resume fecha, remitente/destinatario (según columna FROM), asunto e ID.
+3. **Prohibido** responder solo con `in:inbox` si el usuario menciona respondidos, enviados, salida o historial de correos salientes.
+4. Si el usuario pide **solo respondidos/enviados**, usa `in:sent` (opcionalmente acotar: `in:sent newer_than:7d`, `from:prueba.openclaw.fj@gmail.com`).
+5. **Hilos con varias partes:** si la columna THREAD indica `[N msgs]`, puedes ampliar con `gog gmail thread get <threadId> -a "prueba.openclaw.fj@gmail.com" --plain` para mostrar la conversación completa (incluye respuestas).
+6. **Trazas locales complementarias** (no sustituyen la bandeja Gmail): leer `LOGS_EMAIL.md` y `HISTORY.md` (admin: `/app/logs_shared/…`) y mencionar envíos registrados por el agente (`EMAIL_SENT`, «Correo enviado») si aportan contexto.
+
+Ejemplo de consulta acotada:
+
+```bash
+gog gmail search "in:inbox is:unread" -a "prueba.openclaw.fj@gmail.com" --max 5 --plain
+gog gmail search "in:sent newer_than:14d" -a "prueba.openclaw.fj@gmail.com" --max 5 --plain
+```
+
 ## Confirmación de envío — lenguaje natural (es obligatorio aplicarla)
 
 Si ya mostraste al usuario **asunto**, **cuerpo** e **ID de borrador**, una respuesta posterior que **aprueba enviar ese borrador** en español coloquial es confirmación suficiente. Ejemplos no exhaustivos: «envíalo», «enviar», «mándalo», «mandalo», «hazlo», «procede», «adelante», «sí», «vale», «ok», «de acuerdo», «confirmo», «dale», «que lo mandes», «sí mándalo», etc.
@@ -108,7 +128,11 @@ Si ya mostraste al usuario **asunto**, **cuerpo** e **ID de borrador**, una resp
 - Si varios borradores están «activos» y el mensaje es ambiguo, pregunta qué **`DRAFT_ID`** enviar antes de lanzar `drafts send`.
 - Cancelación u objeción («no mandes», «cancela», «espera») **no** dispara envío.
 
-**Excepción — correo de motivo al cancelar reunión (solo Administrador):** si el usuario ya confirmó la cancelación con motivo, ejecuta `scripts/gog-calendar-meet-cancel.sh` en el mismo turno; ese script envía el Gmail **automáticamente** (`drafts create` + `drafts send`). **No** muestres borrador ni pidas «envíalo» para ese correo.
+**Excepción — correo de motivo al cancelar reunión (solo Administrador):** si el usuario ya confirmó la cancelación con motivo, ejecuta en el mismo turno:
+- **Google Calendar/Meet:** `scripts/gog-calendar-meet-cancel.sh`
+- **Zoom:** `scripts/zoom-meeting-cancel.sh`
+
+Esos scripts envían el Gmail **automáticamente** (`drafts create` + `drafts send`). **No** muestres borrador ni pidas «envíalo» para esos correos.
 
 **Enviar un borrador existente** (solo tras confirmación inequívoca en el chat):
 

@@ -32,6 +32,7 @@ services:
       # Skills compartidas del monorepo (web, email-gmail); code-audit vive en workspace-empleado/skills/
       - ../../skills/web:/home/node/.openclaw/workspace/skills/web:ro
       - ../../skills/email-gmail:/home/node/.openclaw/workspace/skills/email-gmail:ro
+      - ../../skills/formal-documents:/home/node/.openclaw/workspace/skills/formal-documents:ro
       - ./openclaw.json:/etc/openclaw/openclaw.json
       # Mismo criterio que admin: home del host + carpetas de usuario (Documentos, Descargas, …).
       - ${OPENCLAW_HOST_HOME}:${OPENCLAW_HOST_HOME}:rw

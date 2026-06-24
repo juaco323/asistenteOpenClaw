@@ -17,9 +17,10 @@ Usuario Linux del empleado: `joaquin` (uid 1000).
 
 ## Python preinstalado en el contenedor empleado
 
-Para tareas ofimáticas (PPTX, imágenes, descargas HTTP) ya están disponibles:
+Para tareas ofimáticas (DOCX, PPTX, imágenes, descargas HTTP) ya están disponibles:
 
 - `python3` / `pip3`
+- `python-docx`
 - `python-pptx`
 - `requests`
 - `Pillow`
@@ -53,3 +54,8 @@ No hace falta pedir autorización para instalar estos paquetes base; si falta ot
 - Borradores: `~/Documentos/Comunicaciones/borradores/`.
 - Estados: `LOGS_COMMS.md` (compartido con admin vía `/app/logs_shared/`).
 - Envío correo: confirmación explícita + protocolo `email-gmail`.
+
+## Documentos formales (`formal-documents`)
+
+- Skill: `skills/formal-documents/` (montada desde el monorepo).
+- Informes en chat: títulos, secciones, negritas; archivos: `~/Documentos/Reportes/` con `python-docx`.

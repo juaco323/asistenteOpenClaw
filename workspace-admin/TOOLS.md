@@ -31,6 +31,12 @@ Things like:
 - Default speaker: Kitchen HomePod
 ```
 
+## Python ofimática (contenedor admin)
+
+- `python3` / `pip3`
+- `python-docx` — informes y documentos formales (ver `skills/formal-documents/SKILL.md`)
+- `python-pptx`, `requests`, `Pillow`
+
 ## Google Drive (`drive`)
 
 - Skill: `skills/drive/` en este workspace.
@@ -61,3 +67,9 @@ Things like:
 - Estados: `/app/logs_shared/LOGS_COMMS.md` (repo: `workspace-empleado/LOGS_COMMS.md`).
 - Envío correo: confirmación explícita + `email-gmail` + logs compartidos.
 - **Calendar + Meet (solo admin):** `skills/admin-comms/calendar-meet.md`; `scripts/gog-calendar-meet-create.sh`; cancelar: `scripts/gog-calendar-meet-cancel.sh`.
+- **Zoom (solo admin):** `skills/admin-comms/zoom-meetings.md`; `zoom-meeting-create.sh`; cancelar: `zoom-meeting-cancel.sh`. Config: `docs/configurar-zoom-api.md`.
+
+## Documentos formales (`formal-documents`)
+
+- Skill: `skills/formal-documents/` (montada desde el monorepo).
+- Informes en chat: títulos, secciones, negritas; archivos: `~/Documentos/Reportes/` con `python-docx`.

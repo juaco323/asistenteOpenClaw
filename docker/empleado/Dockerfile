@@ -17,6 +17,7 @@ RUN apt-get update \
   && chmod +x /usr/local/bin/gog \
   && pip3 install --break-system-packages --no-cache-dir \
     python-pptx \
+    python-docx \
     requests \
     Pillow \
   && apt-get clean \

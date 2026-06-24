@@ -18,10 +18,9 @@ Abre http://127.0.0.1:3000 (usuario/contraseña en `.env`).
 
 ## Dashboard provisionado
 
-**OpenClaw — Monitoreo completo** incluye solo métricas de **recursos del sistema** (tokens/latencia LLM se consultan en el Control UI de OpenClaw, apartado «Uso»):
+**OpenClaw — Monitoreo completo** incluye métricas de **recursos del host Ubuntu** (tokens/latencia LLM se consultan en el Control UI de OpenClaw, apartado «Uso»):
 
 1. **Host Ubuntu** — CPU/RAM actual + series temporales (inactividad vs carga)
-2. **Contenedores Docker** — CPU/RAM por contenedor OpenClaw/Telegram
 
 Archivo: `dashboards/openclaw-monitoreo-completo.json`
 

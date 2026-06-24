@@ -8,8 +8,10 @@ Estos protocolos aplican **igual** en:
 
 Reglas comunes:
 - Preguntas informativas sin «archivo» ni extensión: LLM + **web**; no buscar ficheros en disco por coincidencia de nombre.
+- **Informes y documentos formales:** títulos, secciones, negritas en chat; `.docx` con `python-docx` (`skills/formal-documents/`).
 - **Comunicaciones (`admin-comms`):** recordatorios, seguimientos, confirmaciones; confirmación válida en el chat activo («envíalo», «vale», «confirma», «agéndala», «cancela la reunión», etc.).
 - **Google Calendar + Meet (crear y cancelar reuniones):** **solo este perfil Administrador**; ver § Reuniones y § Cancelar reunión + `skills/admin-comms/calendar-meet.md`.
+- **Zoom (crear y cancelar reuniones):** **solo este perfil Administrador**; ver § Reuniones Zoom + `skills/admin-comms/zoom-meetings.md`.
 - Solo localizar/entregar archivos cuando pidan explícitamente **archivo**, **get**, una ruta o un nombre con extensión.
 
 ## admin
@@ -17,6 +19,7 @@ Reglas comunes:
 - **Skills:**
   - `web`
   - `email-gmail`
+  - `formal-documents`
   - `code-audit`
   - `transcribe-audio`
   - `drive`
@@ -59,6 +62,8 @@ El administrador puede **operar Gmail** con la misma disciplina que el empleado:
 **Resolución de rutas locales (obligatorio en Telegram y en chat directo del gateway):** el usuario puede equivocarse en mayúsculas, acentos o en el nombre de carpeta. **No afirmes que no existe** sin buscar con criterio **insensible a mayúsculas** y razonablemente tolerante a **acentos** (p. ej. `find ~/Documentos -iname '*patrón*'`, listar subcarpetas). Si hay varios candidatos, lista rutas o pide precisión. Para `gog --attach` y `[[TELEGRAM_FILE:…]]`, usa la **ruta absoluta canónica** del fichero en disco.
 
 **Prohibido**: pedir contraseñas o secretos en el chat; usar `gog gmail send` como atajo sin borrador + confirmación; omitir el registro en los archivos anteriores tras crear borradores relevantes o enviar.
+
+**Consultar bandeja / mensajes respondidos (bloqueante):** si el usuario pide ver correos, mensajes recientes, **respondidos**, **enviados** o historial de Gmail, **no** limites la respuesta a `in:inbox`. **Obligatorio:** ejecutar y mostrar **recibidos** (`in:inbox`) **y** **enviados/respondidos** (`in:sent`) con `gog gmail search … -a "prueba.openclaw.fj@gmail.com" --plain`, salvo que pida explícitamente solo un tipo. Complementa con `/app/logs_shared/LOGS_EMAIL.md` y `HISTORY.md` para envíos del agente. Ver `skills/email-gmail/SKILL.md` § *Consultar bandeja*.
 
 ### Protocolo de análisis de imágenes (pizarras, minutas, diagramas)
 
@@ -134,7 +139,28 @@ Cuando el usuario pida **cancelar**, **anular** o **eliminar** una reunión ya a
 6. Tras confirmación explícita: **`gog-calendar-meet-cancel.sh --event-id … --reason … --admin-name … --attendees "…"`** en el mismo turno (`--attendees` obligatorio con los correos del resumen).
 7. Estado **`reunion_cancelada`** en `/app/logs_shared/LOGS_COMMS.md` (notas: motivo + Atte + invitados).
 
-Guía: `docs/gestion-comunicaciones.md`.
+### Reuniones Zoom (**solo administrador**)
+
+Cuando el usuario pida **agendar reunión en Zoom**, **crear Zoom** o **videollamada Zoom** con invitados por correo:
+
+1. **Leer** `skills/admin-comms/zoom-meetings.md`.
+2. **Extraer:** título, fecha/hora, duración, **correos** de invitados, nombre para firma (`Atte:`) si aplica.
+3. **Proponer** resumen; `pendiente_confirmacion`, tipo `reunion_zoom`; **no** llamar a Zoom API aún.
+4. Tras confirmación: **`zoom-meeting-create.sh --summary … --from … --attendees … --admin-name …`** (envía invitación por Gmail automáticamente si hay invitados).
+5. Estado **`reunion_zoom_creada`** + enlace Zoom y `MEETING_ID` en `/app/logs_shared/LOGS_COMMS.md`.
+
+### Cancelar reunión Zoom (**solo administrador**)
+
+Cuando el usuario pida **cancelar** una reunión **Zoom** ya creada:
+
+1. **Leer** `skills/admin-comms/zoom-meetings.md` (sección **Cancelar**).
+2. **Identificar** reunión (`LOGS_COMMS.md` con `MEETING_ID` Zoom, o ID indicado por el usuario).
+3. **Motivo obligatorio** (asunto del correo) y **nombre para Atte** (preguntar si faltan).
+4. **Resumen** con título, **correos**, motivo y Atte → `pendiente_confirmacion` (tipo `reunion_zoom_cancelacion`).
+5. Tras confirmación: **`zoom-meeting-cancel.sh --meeting-id … --reason … --admin-name … --attendees "…"`** en el mismo turno.
+6. Estado **`reunion_zoom_cancelada`** en `LOGS_COMMS.md`.
+
+Guía Zoom: `docs/configurar-zoom-api.md`. Guía comunicaciones: `docs/gestion-comunicaciones.md`.
 
 ### Protocolo de Auditoría de código (`code-audit`)
 
@@ -212,6 +238,16 @@ Cuando el usuario solicite crear un archivo `.docx`, `.pptx` o `.xlsx` (incluyen
 4. **Avisar cuando esté listo** con mensaje explícito de finalización y ruta del archivo.
 
 No comiences la generación final del archivo si falta la confirmación del directorio de destino.
+
+### Documentos e informes formales (chat y `.docx`)
+
+Si el usuario pide un **informe**, **documento formal**, **acta**, **memorándum** o un `.docx` «de manera formal» (incluye Telegram y Control UI):
+
+1. **Leer** `skills/formal-documents/SKILL.md` y aplicarlo en el mismo turno.
+2. **En el chat:** título, secciones numeradas, **negritas** en conceptos clave, listas y cierre (Conclusiones/Recomendaciones). **Prohibido** responder con un bloque plano sin estructura.
+3. **En `.docx`:** generar con **`python-docx`** (títulos, encabezados, negritas, tipografía Calibri/Arial según la skill). **Prohibido** `.txt` renombrado o solo Markdown cuando pidieron Word.
+4. **Telegram:** tras crear el archivo, incluir `[[TELEGRAM_FILE:/ruta/absoluta/archivo.docx]]` para adjuntarlo en el chat.
+5. Preferencia: **solo `.docx`** para informes formales (sin `.md` paralelo) salvo petición explícita en ese turno.
 
 Checklist mínimo obligatorio:
 - español profesional

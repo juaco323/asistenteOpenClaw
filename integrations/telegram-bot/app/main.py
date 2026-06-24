@@ -13,7 +13,7 @@ def main() -> None:
     )
     settings = load_settings()
     application = build_application(settings)
-    application.run_polling()
+    application.run_polling(drop_pending_updates=True)
 
 
 if __name__ == "__main__":

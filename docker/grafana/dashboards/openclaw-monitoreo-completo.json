@@ -84,39 +84,6 @@
         { "expr": "node_memory_MemAvailable_bytes", "legendFormat": "RAM disponible", "refId": "B" },
         { "expr": "node_memory_Cached_bytes + node_memory_Buffers_bytes", "legendFormat": "Cache+buffers", "refId": "C" }
       ]
-    },
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
-      "id": 101,
-      "title": "Contenedores Docker OpenClaw (cAdvisor)",
-      "type": "row"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "percent", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
-      "id": 7,
-      "title": "CPU por contenedor (%)",
-      "type": "timeseries",
-      "targets": [{
-        "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{image!=\"\", name=~\".*(openclaw|telegram).*\"}[2m])) * 100",
-        "legendFormat": "{{name}}",
-        "refId": "A"
-      }]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
-      "id": 8,
-      "title": "RAM por contenedor (working set)",
-      "type": "timeseries",
-      "targets": [{
-        "expr": "container_memory_working_set_bytes{image!=\"\", name=~\".*(openclaw|telegram).*\"}",
-        "legendFormat": "{{name}}",
-        "refId": "A"
-      }]
     }
   ],
   "refresh": "30s",
@@ -128,5 +95,5 @@
   "timezone": "browser",
   "title": "OpenClaw — Monitoreo completo",
   "uid": "openclaw-monitoreo-completo",
-  "version": 2
+  "version": 3
 }

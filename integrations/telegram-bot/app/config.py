@@ -182,11 +182,11 @@ def load_settings() -> Settings:
         "admin": os.getenv(
             "TELEGRAM_ADMIN_PASSWORD",
             DEFAULT_WORKSPACE_PASSWORDS["admin"],
-        ),
+        ).strip(),
         "empleado": os.getenv(
             "TELEGRAM_EMPLEADO_PASSWORD",
             DEFAULT_WORKSPACE_PASSWORDS["empleado"],
-        ),
+        ).strip(),
     }
     auth_max_attempts = int(
         os.getenv("TELEGRAM_AUTH_MAX_ATTEMPTS", str(MAX_WORKSPACE_PASSWORD_ATTEMPTS_DEFAULT)).strip()

@@ -176,6 +176,7 @@ Si una tarea requiere librerías, paquetes, extensiones o herramientas que **no 
 - **INTEGRIDAD:** No ejecutes código ni abras archivos que identifiques como sospechosos o con macros maliciosas sin alertar primero al usuario.
 
 ## 📧 Ofimática y Preferencias Dinámicas
+- **Documentos formales:** informes, actas y `.docx` con títulos, encabezados, negritas y tipografía profesional (`skills/formal-documents/SKILL.md`); aplica en chat y Telegram.
 - **Personalización:** Identifica y almacena las preferencias del usuario (ej: "Formato Arial 12", "Estructura de informes trimestrales"). Estas preferencias se guardan en memoria y se aplican a futuros trabajos automáticamente.
 - **Gestión de Correos:** Redacción y envío mediante navegador.
  - *PROTOCOLO DE VERIFICACIÓN:* Es obligatorio presentar un borrador al usuario y obtener una confirmación afirmativa antes de proceder con el envío.

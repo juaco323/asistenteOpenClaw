@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Final
 
 from telegram import BotCommand, InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.error import Conflict
 from telegram.ext import (
     Application,
     ApplicationBuilder,
@@ -276,6 +277,84 @@ def _resolve_workspace_from_context(context: ContextTypes.DEFAULT_TYPE) -> str |
     return None
 
 
+def _clear_stale_pending_if_authenticated(context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Sesión válida anula un pending_workspace obsoleto (p. ej. callback antiguo)."""
+    if _resolve_workspace_from_context(context) is not None:
+        context.user_data.pop(PENDING_WORKSPACE_KEY, None)
+        context.user_data.pop(WORKSPACE_AUTH_ATTEMPTS_KEY, None)
+
+
+def _get_pending_workspace_switch(
+    context: ContextTypes.DEFAULT_TYPE,
+    settings: Settings,
+) -> str | None:
+    _clear_stale_pending_if_authenticated(context)
+    pending = context.user_data.get(PENDING_WORKSPACE_KEY)
+    if isinstance(pending, str) and pending in settings.workspaces:
+        return pending
+    return None
+
+
+async def _reply_pending_password_required(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    *,
+    settings: Settings,
+    pending: str,
+    extra_hint: str = "",
+) -> None:
+    workspace = settings.get_workspace(pending)
+    hint = (
+        f"Aún falta la contraseña del perfil {workspace.label}.\n"
+        "Escríbela en un mensaje de texto (no uses /chat ni /correo hasta ver «Contraseña correcta»).\n"
+        "Usa /salir para cancelar el cambio de perfil."
+    )
+    if extra_hint:
+        hint = f"{hint}\n{extra_hint}"
+    if update.message is not None:
+        await update.message.reply_text(hint)
+
+
+async def _require_authenticated_workspace(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+) -> str | None:
+    """Devuelve el workspace activo o envía el mensaje de error correspondiente."""
+    if update.message is None:
+        return None
+
+    settings = _get_settings(context)
+    _clear_stale_pending_if_authenticated(context)
+
+    workspace_name = _resolve_workspace_from_context(context)
+    if workspace_name is not None:
+        return workspace_name
+
+    pending = _get_pending_workspace_switch(context, settings)
+    if pending is not None:
+        await _reply_pending_password_required(update, context, settings=settings, pending=pending)
+        return None
+
+    if not context.user_data.get(WORKSPACE_AUTH_KEY):
+        await update.message.reply_text(
+            "No hay un perfil autenticado.\n"
+            f"Usa /workspace para elegir entre {_workspace_prompt(settings)} e ingresar la contraseña.",
+            reply_markup=_workspace_keyboard(settings)
+            if _available_workspace_names(settings)
+            else None,
+        )
+        return None
+
+    await update.message.reply_text(
+        "No hay un workspace activo.\n"
+        f"Usa /workspace para elegir entre {_workspace_prompt(settings)}.",
+        reply_markup=_workspace_keyboard(settings)
+        if _available_workspace_names(settings)
+        else None,
+    )
+    return None
+
+
 def _is_admin_validated(context: ContextTypes.DEFAULT_TYPE) -> bool:
     return (
         context.user_data.get(WORKSPACE_AUTH_KEY, False)
@@ -313,6 +392,13 @@ async def _secure_delete_message(update: Update) -> None:
         )
 
 
+async def _reply_workspace_message(update: Update, text: str) -> None:
+    if update.message is not None:
+        await update.message.reply_text(text)
+    elif update.callback_query is not None and update.callback_query.message is not None:
+        await update.callback_query.message.reply_text(text)
+
+
 async def _begin_workspace_switch(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
@@ -323,15 +409,53 @@ async def _begin_workspace_switch(
     user = update.effective_user
     if user is not None:
         lockout_store = _get_lockout_store(context)
-        lockout_store.reset_attempts(user.id)
         lockout = lockout_store.ensure_can_attempt(user.id)
         if lockout.locked:
             message = _lockout_reply(lockout)
-            if update.message is not None:
-                await update.message.reply_text(message)
-            elif update.callback_query is not None and update.callback_query.message is not None:
-                await update.callback_query.message.reply_text(message)
+            await _reply_workspace_message(update, message)
             return
+
+    if (
+        context.user_data.get(WORKSPACE_AUTH_KEY)
+        and context.user_data.get(SELECTED_WORKSPACE_KEY) == workspace_name
+        and not context.user_data.get(PENDING_WORKSPACE_KEY)
+    ):
+        await _reply_workspace_message(
+            update,
+            f"Ya tienes sesión activa como {workspace.label}.\n"
+            "Escribe tu consulta o usa /chat, /correo o /comunicaciones.\n"
+            "Para cambiar de perfil: /workspace <otro> (pedirá la contraseña del nuevo perfil).",
+        )
+        return
+
+    if context.user_data.get(PENDING_WORKSPACE_KEY) == workspace_name:
+        if (
+            context.user_data.get(WORKSPACE_AUTH_KEY)
+            and context.user_data.get(SELECTED_WORKSPACE_KEY) == workspace_name
+        ):
+            context.user_data.pop(PENDING_WORKSPACE_KEY, None)
+            context.user_data.pop(WORKSPACE_AUTH_ATTEMPTS_KEY, None)
+            await _reply_workspace_message(
+                update,
+                f"Ya tienes sesión activa como {workspace.label}.",
+            )
+            return
+        await _reply_workspace_message(
+            update,
+            f"Pendiente la contraseña de {workspace.label}.\n"
+            "Escríbela en un mensaje de texto normal (se borrará al enviarlo). "
+            "No pulses el botón otra vez.\n"
+            "Usa /salir para cancelar.",
+        )
+        return
+
+    if user is not None:
+        _get_lockout_store(context).reset_attempts(user.id)
+
+    # Cambio de perfil: invalidar sesión anterior hasta confirmar contraseña.
+    context.user_data.pop(WORKSPACE_AUTH_KEY, None)
+    context.user_data.pop(SELECTED_WORKSPACE_KEY, None)
+    context.user_data.pop("chat_active", None)
     context.user_data[PENDING_WORKSPACE_KEY] = workspace_name
     context.user_data[WORKSPACE_AUTH_ATTEMPTS_KEY] = 0
     prompt = (
@@ -342,10 +466,7 @@ async def _begin_workspace_switch(
         "Cuando veas «Contraseña correcta», podrás usar /chat.\n"
         "Usa /salir para cancelar."
     )
-    if update.message is not None:
-        await update.message.reply_text(prompt)
-    elif update.callback_query is not None and update.callback_query.message is not None:
-        await update.callback_query.message.reply_text(prompt)
+    await _reply_workspace_message(update, prompt)
 
 
 async def _complete_workspace_switch(
@@ -445,6 +566,14 @@ async def prueba_llm_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await update.message.reply_text("No hay gateway admin configurado (OPENCLAW_ADMIN_*).")
         return
 
+    _clear_stale_pending_if_authenticated(context)
+    pending = _get_pending_workspace_switch(context, settings)
+    if pending is not None:
+        await update.message.reply_text(
+            "Hay un cambio de perfil pendiente de contraseña. Completa /workspace o usa /salir."
+        )
+        return
+
     if not context.user_data.get(WORKSPACE_AUTH_KEY):
         await update.message.reply_text(
             "Autentica el perfil Administrador con /workspace admin y la contraseña, luego reintenta."
@@ -455,13 +584,6 @@ async def prueba_llm_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await update.message.reply_text(
             "Este comando solo se ejecuta con el perfil Administrador activo. "
             "Usa /workspace admin, introduce la contraseña y vuelve a enviar /prueba_llm."
-        )
-        return
-
-    pending = context.user_data.get(PENDING_WORKSPACE_KEY)
-    if isinstance(pending, str) and pending in settings.workspaces:
-        await update.message.reply_text(
-            "Hay un cambio de perfil pendiente de contraseña. Completa /workspace o usa /salir."
         )
         return
 
@@ -541,38 +663,11 @@ async def enter_chat_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if update.message is None or not await _ensure_authorized(update, context):
         return ConversationHandler.END
 
-    settings = _get_settings(context)
-    pending = context.user_data.get(PENDING_WORKSPACE_KEY)
-    if isinstance(pending, str) and pending in settings.workspaces:
-        workspace = settings.get_workspace(pending)
-        await update.message.reply_text(
-            f"Aún falta la contraseña del perfil {workspace.label}.\n"
-            "Escríbela en un mensaje de texto (no uses /chat ni /correo hasta ver «Contraseña correcta»).\n"
-            "Usa /salir para cancelar el cambio de perfil."
-        )
-        return ConversationHandler.END
-
-    if not context.user_data.get(WORKSPACE_AUTH_KEY):
-        await update.message.reply_text(
-            "No hay un perfil autenticado.\n"
-            f"Usa /workspace para elegir entre {_workspace_prompt(settings)} e ingresar la contraseña.",
-            reply_markup=_workspace_keyboard(settings)
-            if _available_workspace_names(settings)
-            else None,
-        )
-        return ConversationHandler.END
-
-    workspace_name = _resolve_workspace_from_context(context)
+    workspace_name = await _require_authenticated_workspace(update, context)
     if workspace_name is None:
-        await update.message.reply_text(
-            "No hay un workspace activo.\n"
-            f"Usa /workspace para elegir entre {_workspace_prompt(settings)}.",
-            reply_markup=_workspace_keyboard(settings)
-            if _available_workspace_names(settings)
-            else None,
-        )
         return ConversationHandler.END
 
+    settings = _get_settings(context)
     workspace = settings.get_workspace(workspace_name)
     incoming_hint = resolve_incoming_dir(settings.host_home)
     await update.message.reply_text(
@@ -595,37 +690,11 @@ async def enter_correo_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     if update.message is None or not await _ensure_authorized(update, context):
         return ConversationHandler.END
 
-    settings = _get_settings(context)
-    pending = context.user_data.get(PENDING_WORKSPACE_KEY)
-    if isinstance(pending, str) and pending in settings.workspaces:
-        await update.message.reply_text(
-            f"Aún falta la contraseña del perfil {settings.get_workspace(pending).label}.\n"
-            "Escríbela en un mensaje de texto (no uses /chat ni /correo hasta ver «Contraseña correcta»).\n"
-            "Usa /salir para cancelar el cambio de perfil."
-        )
-        return ConversationHandler.END
-
-    if not context.user_data.get(WORKSPACE_AUTH_KEY):
-        await update.message.reply_text(
-            "No hay un perfil autenticado.\n"
-            f"Usa /workspace para elegir entre {_workspace_prompt(settings)} e ingresar la contraseña.",
-            reply_markup=_workspace_keyboard(settings)
-            if _available_workspace_names(settings)
-            else None,
-        )
-        return ConversationHandler.END
-
-    workspace_name = _resolve_workspace_from_context(context)
+    workspace_name = await _require_authenticated_workspace(update, context)
     if workspace_name is None:
-        await update.message.reply_text(
-            "No hay un workspace activo.\n"
-            f"Usa /workspace para elegir entre {_workspace_prompt(settings)}.",
-            reply_markup=_workspace_keyboard(settings)
-            if _available_workspace_names(settings)
-            else None,
-        )
         return ConversationHandler.END
 
+    settings = _get_settings(context)
     workspace = settings.get_workspace(workspace_name)
     incoming_hint = resolve_incoming_dir(settings.host_home)
     await update.message.reply_text(
@@ -648,45 +717,20 @@ async def enter_comunicaciones_mode(update: Update, context: ContextTypes.DEFAUL
     if update.message is None or not await _ensure_authorized(update, context):
         return ConversationHandler.END
 
-    settings = _get_settings(context)
-    pending = context.user_data.get(PENDING_WORKSPACE_KEY)
-    if isinstance(pending, str) and pending in settings.workspaces:
-        await update.message.reply_text(
-            f"Aún falta la contraseña del perfil {settings.get_workspace(pending).label}.\n"
-            "Escríbela en un mensaje de texto antes de usar /comunicaciones.\n"
-            "Usa /salir para cancelar."
-        )
-        return ConversationHandler.END
-
-    if not context.user_data.get(WORKSPACE_AUTH_KEY):
-        await update.message.reply_text(
-            "No hay un perfil autenticado.\n"
-            f"Usa /workspace para elegir entre {_workspace_prompt(settings)} e ingresar la contraseña.",
-            reply_markup=_workspace_keyboard(settings)
-            if _available_workspace_names(settings)
-            else None,
-        )
-        return ConversationHandler.END
-
-    workspace_name = _resolve_workspace_from_context(context)
+    workspace_name = await _require_authenticated_workspace(update, context)
     if workspace_name is None:
-        await update.message.reply_text(
-            "No hay un workspace activo.\n"
-            f"Usa /workspace para elegir entre {_workspace_prompt(settings)}.",
-            reply_markup=_workspace_keyboard(settings)
-            if _available_workspace_names(settings)
-            else None,
-        )
         return ConversationHandler.END
 
+    settings = _get_settings(context)
     workspace = settings.get_workspace(workspace_name)
     meet_hint = (
         "En perfil **Administrador** también puedes **crear** reuniones con **Google Meet** "
-        "(confirmación en este chat antes de `gog calendar create`) y **cancelarlas** "
-        "(motivo → asunto; **preguntaré tu nombre para Atte** si no lo indicas; resumen con invitados; "
-        "confirmación → `gog-calendar-meet-cancel.sh` con `--attendees`).\n"
+        "(confirmación en este chat antes de `gog calendar create`) o **Zoom** "
+        "(`zoom-meeting-create.sh` tras confirmación; invitación por correo a los invitados). "
+        "Puedes **cancelar** Meet o Zoom (motivo → asunto; **preguntaré tu nombre para Atte** si no lo indicas; "
+        "resumen con invitados; confirmación → script con `--attendees`).\n"
         if workspace_name == "admin"
-        else "Para **crear o cancelar** reuniones en Google Meet/Calendar, usa perfil Administrador: /workspace admin.\n"
+        else "Para **crear o cancelar** reuniones en Google Meet/Calendar o **Zoom**, usa perfil Administrador: /workspace admin.\n"
     )
     await update.message.reply_text(
         f"Modo comunicaciones con {workspace.label}.\n\n"
@@ -894,7 +938,8 @@ async def forward_chat_message(update: Update, context: ContextTypes.DEFAULT_TYP
     if update.effective_user is None:
         return CHAT_ACTIVE
 
-    if context.user_data.get(PENDING_WORKSPACE_KEY):
+    _clear_stale_pending_if_authenticated(context)
+    if _get_pending_workspace_switch(context, _get_settings(context)):
         await workspace_password_message(update, context)
         return CHAT_ACTIVE
 
@@ -1254,7 +1299,11 @@ async def workspace_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         return
 
     current = _resolve_workspace_from_context(context)
-    if context.user_data.get(WORKSPACE_AUTH_KEY) and current:
+    pending = context.user_data.get(PENDING_WORKSPACE_KEY)
+    if isinstance(pending, str) and pending in settings.workspaces:
+        pending_label = settings.get_workspace(pending).label
+        estado = f"Pendiente contraseña de {pending_label}. Escríbela en texto (no pulses el botón otra vez)."
+    elif context.user_data.get(WORKSPACE_AUTH_KEY) and current:
         estado = f"Perfil autenticado: {settings.get_workspace(current).label}."
     else:
         estado = "Sin perfil autenticado (después de elegir con el botón debes escribir la contraseña)."
@@ -1274,14 +1323,33 @@ async def workspace_select_callback(update: Update, context: ContextTypes.DEFAUL
     if query is None:
         return
 
-    await query.answer(
-        "Siguiente paso: escribe la contraseña del perfil en el chat.",
-        show_alert=True,
-    )
     settings = _get_settings(context)
     workspace_name = query.data.split(":")[-1]
     if workspace_name not in settings.workspaces:
         return
+
+    pending = context.user_data.get(PENDING_WORKSPACE_KEY)
+    if pending == workspace_name:
+        await query.answer(
+            "Escribe la contraseña en el chat (texto normal). No hace falta pulsar el botón otra vez.",
+            show_alert=True,
+        )
+        return
+    if (
+        context.user_data.get(WORKSPACE_AUTH_KEY)
+        and context.user_data.get(SELECTED_WORKSPACE_KEY) == workspace_name
+        and not pending
+    ):
+        await query.answer(
+            f"Ya tienes sesión en {settings.get_workspace(workspace_name).label}.",
+            show_alert=True,
+        )
+        return
+
+    await query.answer(
+        "Siguiente paso: escribe la contraseña del perfil en el chat.",
+        show_alert=True,
+    )
     await _begin_workspace_switch(update, context, workspace_name)
 
 
@@ -1356,8 +1424,11 @@ async def workspace_password_cancel(update: Update, context: ContextTypes.DEFAUL
 
 async def routed_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if context.user_data.get(PENDING_WORKSPACE_KEY):
-        await workspace_password_message(update, context)
-        return
+        settings = _get_settings(context)
+        _clear_stale_pending_if_authenticated(context)
+        if _get_pending_workspace_switch(context, settings):
+            await workspace_password_message(update, context)
+            return
     await default_text_message(update, context)
 
 
@@ -1414,4 +1485,10 @@ async def default_text_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if isinstance(context.error, Conflict):
+        LOGGER.error(
+            "Conflicto de polling: hay otra instancia del bot con el mismo token. "
+            "Debe correr solo un telegram-openclaw-bot."
+        )
+        return
     LOGGER.exception("Unhandled Telegram error", exc_info=context.error)

@@ -25,6 +25,9 @@ services:
       GOG_KEYRING_PASSWORD: ${GOG_KEYRING_PASSWORD:-}
       GOG_ACCOUNT: ${GOG_ACCOUNT:-}
       OPENCLAW_WORKSPACE_PROFILE: admin
+      ZOOM_ACCOUNT_ID: ${ZOOM_ACCOUNT_ID:-}
+      ZOOM_CLIENT_ID: ${ZOOM_CLIENT_ID:-}
+      ZOOM_CLIENT_SECRET: ${ZOOM_CLIENT_SECRET:-}
     volumes:
       - ${OPENCLAW_STATE_DIR}:/home/node/.openclaw
       # Workspace versionado en el repo (no copia a ~/.openclaw-admin/workspace).
@@ -32,6 +35,7 @@ services:
       # Skills compartidas del monorepo (web, email-gmail); code-audit vive en workspace-admin/skills/
       - ../../skills/web:/home/node/.openclaw/workspace/skills/web:ro
       - ../../skills/email-gmail:/home/node/.openclaw/workspace/skills/email-gmail:ro
+      - ../../skills/formal-documents:/home/node/.openclaw/workspace/skills/formal-documents:ro
       - ./openclaw.json:/etc/openclaw/openclaw.json
       # Mismo criterio que empleado: el agente admin debe ver Documentos/Descargas del host.
       - ${OPENCLAW_HOST_HOME}:${OPENCLAW_HOST_HOME}:rw

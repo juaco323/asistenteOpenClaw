@@ -5,6 +5,7 @@
 Protocolos en **Telegram** (bot) y **Control UI** del gateway (`http://127.0.0.1:18790/` empleado). Mismas reglas en ambos.
 
 - Preguntas informativas sin «archivo» ni extensión: LLM + **web**; no buscar ficheros en disco por coincidencia de nombre.
+- **Informes y documentos formales:** títulos, secciones, negritas en chat; `.docx` con `python-docx` (`skills/formal-documents/`).
 - **Comunicaciones (`admin-comms`):** recordatorios, seguimientos, confirmaciones; confirmación válida en el chat activo.
 - **Google Calendar + Meet:** **prohibido** en empleado (crear **y** cancelar reuniones). Indica **perfil Administrador** (`/workspace admin` en Telegram o gateway `:18791`).
 - Solo localizar/entregar archivos cuando pidan explícitamente **archivo**, **get**, una ruta o un nombre con extensión.
@@ -14,6 +15,7 @@ Protocolos en **Telegram** (bot) y **Control UI** del gateway (`http://127.0.0.1
 - **Skills:**
   - `web`
   - `email-gmail`
+  - `formal-documents`
   - `code-audit`
   - `transcribe-audio`
   - `drive`
@@ -54,6 +56,8 @@ El agente operativo tiene **prohibido** enviar correos de forma directa o automa
 **Resolución de rutas locales (obligatorio en Telegram y en chat directo del gateway):** el usuario no siempre recuerda la capitalización exacta ni la carpeta (`portafolio` vs `Portafolio`, acentos, espacios). **No afirmes que no existe** sin buscar con criterio **insensible a mayúsculas** y razonablemente tolerante a **acentos** (p. ej. `find ~/Documentos -iname '*nombre*'`, revisar subcarpetas, `ls` y comparar). Si hay varios archivos candidatos, lista rutas o pide precisión. Para adjuntos Gmail (`gog --attach`) y marcadores `[[TELEGRAM_FILE:…]]`, usa la **ruta absoluta canónica** que devuelve el disco tras localizar el fichero.
 
 **Prohibido**: pedir contraseñas de Google, tokens estáticos o secretos en el chat; encadenar comandos que envíen sin paso de borrador y confirmación; usar `--force` u omitir la confirmación humana para envíos.
+
+**Consultar bandeja / mensajes respondidos (bloqueante):** si el usuario pide ver correos, mensajes recientes, **respondidos**, **enviados** o historial de Gmail, **no** limites la respuesta a la bandeja de entrada. **Obligatorio:** ejecutar y mostrar **dos bloques** — (1) recibidos (`gog gmail search "in:inbox" … --plain`) y (2) enviados/respondidos (`gog gmail search "in:sent" … --plain`), salvo petición explícita de un solo tipo. Complementa con `LOGS_EMAIL.md` y `HISTORY.md` si el usuario pregunta por envíos hechos desde OpenClaw. Detalle en `skills/email-gmail/SKILL.md` § *Consultar bandeja*.
 
 ### Protocolo de análisis de imágenes (pizarras, minutas, diagramas)
 
@@ -104,6 +108,8 @@ Cuando el usuario pida recordatorio, seguimiento, confirmación o mensaje formal
 9. **Cancelación** («cancela», «no lo mandes»): estado `cancelado` en `LOGS_COMMS.md`.
 
 **Google Calendar / Meet (solo administrador):** si piden **agendar**, **crear** o **cancelar** reunión con Meet / evento en calendario, **no** ejecutes `gog calendar` ni `gog-calendar-meet-*.sh`. Indica **perfil Administrador** (Telegram: `/workspace admin`; Control UI: gateway `:18791`) y ofrece redactar **recordatorio por correo** con esta skill.
+
+**Zoom (solo administrador):** si piden **crear** o **cancelar** reunión **Zoom**, **no** ejecutes `zoom-meeting-*.sh`. Misma derivación a perfil Administrador.
 
 Guía: `docs/gestion-comunicaciones.md`.
 
@@ -183,6 +189,16 @@ Cuando el usuario solicite crear un archivo `.docx`, `.pptx` o `.xlsx` (incluyen
 4. **Avisar cuando esté listo** con mensaje explícito de finalización y ruta del archivo.
 
 No comiences la generación final del archivo si falta la confirmación del directorio de destino.
+
+### Documentos e informes formales (chat y `.docx`)
+
+Si el usuario pide un **informe**, **documento formal**, **acta**, **memorándum** o un `.docx` «de manera formal» (incluye Telegram y Control UI):
+
+1. **Leer** `skills/formal-documents/SKILL.md` y aplicarlo en el mismo turno.
+2. **En el chat:** título, secciones numeradas, **negritas** en conceptos clave, listas y cierre (Conclusiones/Recomendaciones). **Prohibido** responder con un bloque plano sin estructura.
+3. **En `.docx`:** generar con **`python-docx`** (títulos, encabezados, negritas, tipografía Calibri/Arial según la skill). **Prohibido** `.txt` renombrado o solo Markdown cuando pidieron Word.
+4. **Telegram:** tras crear el archivo, incluir `[[TELEGRAM_FILE:/ruta/absoluta/archivo.docx]]` para adjuntarlo en el chat.
+5. Preferencia: **solo `.docx`** para informes formales (sin `.md` paralelo) salvo petición explícita en ese turno.
 
 Checklist mínimo obligatorio:
 - español profesional

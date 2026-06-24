@@ -45,10 +45,14 @@ def _admin_comms_protocol_telegram(*, workspace: str) -> str:
             "--attendees \"correo1,correo2\"` "
             "(correo automático: asunto=motivo, cuerpo «La reunión ha sido cancelada.» + Atte: nombre). "
             "**Prohibido** `gog calendar create` o `delete` sin confirmación del usuario en este chat. "
+            "Zoom — **solo perfil Administrador**: leer `skills/admin-comms/zoom-meetings.md`. "
+            "**Crear Zoom:** propuesta → confirmación → `zoom-meeting-create.sh` (invitación Gmail automática con `--attendees`). "
+            "**Cancelar Zoom:** motivo + Atte + confirmación → `zoom-meeting-cancel.sh --meeting-id … --reason … --admin-name … --attendees \"…\"`. "
+            "Estados LOGS_COMMS: `reunion_zoom_creada` / `reunion_zoom_cancelada`. "
         )
     else:
         meet_block = (
-            "Google Calendar + Meet — **prohibido** en perfil empleado (crear **y** cancelar reuniones). "
+            "Google Calendar + Meet y **Zoom** — **prohibido** en perfil empleado (crear **y** cancelar). "
             "Si lo piden, indica perfil **Administrador** (`/workspace admin`; Control UI gateway `:18791`) "
             "y ofrece recordatorio por correo con `admin-comms`. "
         )
@@ -62,6 +66,8 @@ def _admin_comms_protocol_telegram(*, workspace: str) -> str:
         f"Registra estado en `{logs_path}` como `pendiente_confirmacion` (columna Agente: "
         f"{'Administrador' if workspace == 'admin' else 'Empleado'}). "
         "Presenta borrador **una vez** y detente. "
+        "**Consultar comunicaciones:** si preguntan por estado, respondidos o enviados, lee LOGS_COMMS y muestra "
+        "pendientes **y** enviados/respondidos (`enviado`, `reunion_creada`, etc.); no solo pendientes. "
         "**Telegram es canal válido de confirmación** («envíalo», «vale», «confirma», «agéndala», «cancela la reunión», etc.). "
         "Sin confirmación explícita: **prohibido** despacho externo (correo, calendar). "
         "Tras confirmar envío por correo, encadena `email-gmail` (borrador gog → confirmación → send) "
@@ -82,8 +88,9 @@ def _gmail_protocol_telegram() -> str:
         "**prohibido** `\n` literal, prefijo `$` o escapes de programación en `--body`). "
         "**solo** `gog gmail drafts create` primero; en esa **primera** respuesta muestra asunto, cuerpo e **ID de borrador** y espera confirmación. "
         "**Tras confirmación** («envíalo», «mándalo», «vale», …): "
-        "**Excepción cancelación reunión (solo admin):** si confirmó cancelar con motivo, ejecuta `scripts/gog-calendar-meet-cancel.sh` "
+        "**Excepción cancelación reunión (solo admin):** si confirmó cancelar Calendar con motivo, ejecuta `scripts/gog-calendar-meet-cancel.sh` "
         "en el mismo turno — correo con motivo **automático**, sin segundo «envíalo». "
+        "Si confirmó cancelar **Zoom**, ejecuta `zoom-meeting-cancel.sh` en el mismo turno (mismo criterio). "
         "En el resto de casos: "
         "**prohibido** volver a mostrar asunto o cuerpo completos; ejecuta en el mismo turno `gog gmail drafts send \"<DRAFT_ID>\"` con `-a \"prueba.openclaw.fj@gmail.com\"` "
         "y responde **muy breve** (resultado del comando + ID; sin rearmar el borrador). "
@@ -96,6 +103,10 @@ def _gmail_protocol_telegram() -> str:
         "No pidas otro medio de confirmación: Telegram es el canal válido. "
         "Tras crear borradores relevantes o enviar, actualiza trazas del workspace: `LOGS_EMAIL.md` y `HISTORY.md` "
         "(en admin vía `/app/logs_shared/` si aplica). "
+        "**Consultar correos:** si el usuario pide bandeja, mensajes recientes, respondidos o enviados, "
+        "ejecuta **siempre** `gog gmail search \"in:inbox\"` **y** `gog gmail search \"in:sent\"` "
+        '(ambos con `-a "prueba.openclaw.fj@gmail.com" --plain`) y presenta dos secciones; '
+        "**prohibido** mostrar solo recibidos cuando pregunte por respondidos/enviados. "
         "No solicites contraseñas de Google ni tokens en el chat."
     )
 
@@ -110,6 +121,18 @@ def _admin_validation_text(admin_validated: bool) -> str:
         "no pidas contraseña ni credenciales adicionales para acceder a métricas, "
         "historial de correos enviados, logs operativos ni cualquier dato de trazabilidad. "
         "Muestra la información solicitada directamente.] "
+    )
+
+
+def _formal_documents_protocol_telegram() -> str:
+    return (
+        "Documentos e informes formales (`formal-documents`): "
+        "si el usuario pide informe, acta, memorándum, documento formal o `.docx` "
+        "(o «de manera formal»), aplica `skills/formal-documents/SKILL.md`. "
+        "En el chat: título, secciones numeradas, negritas en conceptos clave, listas y conclusiones; "
+        "prohibido bloque de texto plano. "
+        "En `.docx`: generar con python-docx (títulos, encabezados, negritas, Calibri/Arial). "
+        "Tras crear el archivo, incluir `[[TELEGRAM_FILE:/ruta/absoluta/archivo.docx]]`."
     )
 
 
@@ -140,6 +163,7 @@ def build_telegram_system_message(
         f"chat_id de Telegram: {chat_id}. user_id: {user_id}. username: {handle}. "
         f"{_gmail_protocol_telegram()} "
         f"{_admin_comms_protocol_telegram(workspace=workspace)} "
+        f"{_formal_documents_protocol_telegram()} "
         "Política de archivos del perfil activo: "
         f"lectura/entrega (get) permitida en: {_format_paths(policy.read_roots)}. "
         f"escritura/creación permitida en: {_format_paths(policy.write_roots)}. "

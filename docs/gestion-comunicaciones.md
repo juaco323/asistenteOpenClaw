@@ -4,6 +4,7 @@
 |-----------|----------|---------------|
 | Recordatorios / seguimientos / confirmaciones (`admin-comms`) | sí | sí |
 | Google Calendar + Meet | **no** | **sí** (`calendar-meet.md`) |
+| Zoom (crear / cancelar + correo a invitados) | **no** | **sí** (`zoom-meetings.md`) |
 | Envío correo (`email-gmail`) | sí (con confirmación) | sí |
 
 Borradores: `~/Documentos/Comunicaciones/borradores/`  

@@ -25,7 +25,7 @@ Activa esta skill cuando el usuario pida, de forma explícita o implícita:
 | `seguimiento` | Retomar tema pendiente, solicitar actualización |
 | `confirmación` | Confirmar asistencia, recepción o acuerdos |
 
-**No aplica en empleado:** tipos `reunion_meet` y `reunion_cancelacion` (solo administrador; crear y cancelar en Calendar).
+**No aplica en empleado:** tipos `reunion_meet`, `reunion_cancelacion`, `reunion_zoom` y `reunion_zoom_cancelacion` (solo administrador; Calendar/Meet o Zoom).
 
 ## Extracción de entidades (obligatorio)
 
@@ -80,6 +80,17 @@ Frases válidas: «envíalo», «mándalo», «vale», «confirmo», «procede»
 | `enviado` | Despachado (p. ej. correo enviado) |
 | `error` | Fallo o datos insuficientes tras intento |
 | `cancelado` | Usuario rechazó o pospuso |
+
+## Consultar comunicaciones (pendientes **y** enviadas/respondidas)
+
+Cuando el usuario pida estado de comunicaciones, recordatorios enviados, mensajes respondidos o historial de `admin-comms`:
+
+1. **Leer** `LOGS_COMMS.md` completo (admin: `/app/logs_shared/LOGS_COMMS.md`).
+2. **Presentar al menos dos bloques** (salvo petición explícita de uno solo):
+   - **Pendientes / en curso:** `pendiente_confirmacion`, `confirmado`.
+   - **Enviadas / respondidas / cerradas:** `enviado`, `reunion_creada`, `reunion_cancelada` (admin).
+3. **Prohibido** listar solo pendientes o solo «recibidos» si pregunta por respondidos, enviados o historial general.
+4. Si el canal fue Gmail, **complementar** con `gog gmail search "in:sent"` y filas `enviado` / `EMAIL_SENT` en `LOGS_EMAIL.md` y `HISTORY.md`.
 
 ## Personalización de tono
 
