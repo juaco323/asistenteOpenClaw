@@ -1,104 +1,101 @@
 # Skill: Documentos e informes formales (`formal-documents`)
 
-Aplica **presentación profesional** cuando el usuario pida un **informe**, **memorándum**, **acta**, **documento formal** o un archivo **`.docx`**, o use formulaciones como «de manera formal», «documento oficial», «informe ejecutivo», etc.
+Actúa como **Ingeniero de Software Sénior y Redactor Técnico Experto**. Aplica este estándar **fijo y obligatorio** cuando el usuario pida un **informe**, **informe técnico**, **documento formal**, **`.docx`**, o use «de manera formal», «informe ejecutivo», «redacta un informe», etc.
 
-**Canales:** Control UI (OpenClaw) y **Telegram** (mismo protocolo).
+**Canales:** Control UI (OpenClaw) y **Telegram** (mismo protocolo, sin excepciones).
 
-## Cuándo activarla
+**No sustituye** `AGENTS.md` § *Entregables Office* (tiempo estimado, destino del archivo, aviso de finalización).
 
-- Crear o redactar **`.docx`** (informes, actas, memorandos).
-- Redactar en el **chat** un informe o síntesis que deba leerse como documento formal (aunque no pida archivo todavía).
-- Tras **transcribe-audio** si piden acta o informe formal a partir del audio.
+---
 
-**No sustituye** el flujo de `AGENTS.md` § *Entregables Office* (tiempo estimado, destino, aviso de finalización).
+## 1. Tono y lenguaje (obligatorio)
 
-## Respuesta en chat (OpenClaw y Telegram)
+- Lenguaje **técnico, formal, objetivo** y en **tercera persona** (p. ej. «se analizó», «se implementó», «se observó»).
+- **Prohibido:** adjetivos informales, primera persona del agente («yo creo»), explicaciones vagas.
+- Sé **preciso** con métricas, tecnologías, versiones y metodologías.
 
-Cuando el contenido se entrega **en el mensaje** (sin archivo o además del archivo):
+---
 
-1. **Título principal** en línea propia (en Telegram: texto en mayúsculas o primera línea destacada; en webchat: `## Título del informe`).
-2. **Metadatos breves** bajo el título: fecha, destinatario o ámbito si aplica (una línea cada uno).
-3. **Secciones numeradas** con encabezados claros (`### 1. Introducción`, `### 2. Hallazgos`, etc.).
-4. **Negritas** en conceptos clave, cifras importantes y conclusiones (`**texto**`).
-5. **Listas con viñetas** para hallazgos, recomendaciones o pasos.
-6. **Cierre formal** (Conclusiones / Recomendaciones) antes de referencias, si hubo investigación web.
-7. **Prohibido** muro de texto sin estructura cuando la petición es formal.
+## 2. Formato y estilo (obligatorio)
 
-Si el usuario pide **solo** el archivo `.docx`, el chat puede limitarse a un resumen breve + ruta + `[[TELEGRAM_FILE:…]]` en Telegram.
+- **Todos** los títulos y subtítulos en **negrita** sin excepción.
+- **Numeración multinivel** clara:
+  - `**1. Resumen Ejecutivo**`
+  - `**2.1. Objetivos del Informe**`
+  - `**4.1.1. Detalle**` (si aplica)
+- Listas con viñeta **•** para requisitos, hallazgos o pasos complejos.
+- **Bloques de código** cuando muestres scripts, comandos, Docker, Nginx, SQL o configuraciones.
+- Si usaste `web` / datos externos: sección **7. Referencias Bibliográficas** en **APA 7** con URL completa por fuente.
 
-## Archivos `.docx` (obligatorio: formato real en Word)
+---
 
-Genera el documento con **`python-docx`** (disponible en el contenedor). **Prohibido** entregar un `.txt` renombrado o Markdown sin formato cuando pidieron Word.
+## 3. Estructura fija del informe (obligatoria)
 
-### Estilo por defecto (ajústalo al contenido, mantén criterio formal)
+Adapta el **contenido** al tema solicitado por el usuario; **no omitas** secciones. Si un apartado no aplica, inclúyelo con una frase explícita de no aplicabilidad (p. ej. «No se ejecutaron pruebas de carga en este entregable»).
+
+| # | Sección | Contenido esperado |
+|---|---------|-------------------|
+| **1** | **Resumen Ejecutivo** | Síntesis breve: problema, solución aplicada, resultado principal. |
+| **2** | **Introducción** | Contexto general del proyecto o tema. |
+| **2.1** | **Objetivos del Informe** | Objetivo general y objetivos específicos detallados. |
+| **2.2** | **Alcance y Limitaciones** | Qué cubre y qué excluye el entregable. |
+| **3** | **Marco Conceptual** | Tecnologías base, patrones (microservicios, JWT, Outbox, etc.) o metodologías (Agile/Scrum). |
+| **4** | **Desarrollo del Proyecto / Metodología** | Núcleo técnico del informe. |
+| **4.1** | **Arquitectura y Componentes** | Diseño lógico, base de datos, red o módulos. |
+| **4.2** | **Implementación Técnica** | Código relevante, configuraciones, simulaciones o despliegue. |
+| **5** | **Análisis de Resultados y Discusión** | Datos, pruebas ejecutadas, evaluación de rendimiento o hallazgos. |
+| **6** | **Conclusiones y Recomendaciones** | |
+| **6.1** | **Conclusiones** | Estrictamente basadas en resultados demostrados en §5. |
+| **6.2** | **Recomendaciones y Trabajo Futuro** | Escalabilidad, mejoras pendientes, riesgos residuales. |
+| **7** | **Referencias Bibliográficas** | Fuentes técnicas oficiales, documentación y bibliografía usada. |
+
+El **tema** del informe es el que indique el usuario en su mensaje (sustituye mentalmente `[INSERTAR TEMA AQUÍ]` por ese tema).
+
+---
+
+## 4. Entrega en chat (Telegram y Control UI)
+
+Cuando el informe se muestre **en el mensaje**:
+
+1. Aplica la **estructura §3** completa con títulos en **negrita** y numeración multinivel.
+2. **Prohibido** muro de texto plano, secciones genéricas fuera de la plantilla o omitir apartados 1–7.
+3. Si el usuario pide **solo** el `.docx`, el chat puede resumir en 2–3 líneas + ruta + `[[TELEGRAM_FILE:…]]`.
+
+---
+
+## 5. Archivos `.docx` (obligatorio: Word con formato real)
+
+Genera con **`python-docx`**. **Prohibido** `.txt` renombrado o Markdown pegado como Word.
+
+### Tipografía en Word
 
 | Elemento | Fuente | Tamaño | Estilo |
 |----------|--------|--------|--------|
 | Título del documento | Calibri o Arial | 16–18 pt | Negrita, centrado |
-| Subtítulo / fecha | Calibri o Arial | 11–12 pt | Normal, centrado o alineado derecha |
-| Encabezado de sección (1., 2., …) | Calibri o Arial | 14 pt | Negrita |
-| Subsección | Calibri o Arial | 12 pt | Negrita |
+| Encabezados §1–§7 y subsecciones | Calibri o Arial | 12–14 pt | **Negrita obligatoria** |
 | Cuerpo | Calibri o Arial | 11–12 pt | Normal, interlineado 1,15–1,5 |
-| Pie de página (opcional) | Calibri o Arial | 9 pt | Gris, número de página si aplica |
+| Código / comandos | Consolas o Courier | 10 pt | Bloque monoespaciado |
 
-### Estructura mínima de un informe
+Cada encabezado de la estructura §3 debe crearse con `run.bold = True` o estilo `Heading` + negrita explícita.
 
-1. **Portada / título** (título + subtítulo opcional + fecha).
-2. **Introducción** o **Objetivo**.
-3. **Desarrollo** (secciones según el tema).
-4. **Conclusiones** y/o **Recomendaciones**.
-5. **Referencias** (APA 7 si hubo fuentes web), solo si corresponde.
+### Ruta por defecto
 
-Usa **negrita** en párrafos para términos clave (`run.bold = True`). Usa estilos de párrafo `Heading 1` / `Heading 2` cuando encajen.
+`~/Documentos/Reportes/` (crear con `mkdir -p` si no existe). Respeta el directorio confirmado en § *Entregables Office*.
 
-### Ejemplo mínimo (Python)
+### Telegram
 
-```python
-from docx import Document
-from docx.shared import Pt, Cm
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-
-doc = Document()
-section = doc.sections[0]
-section.top_margin = Cm(2.5)
-section.bottom_margin = Cm(2.5)
-section.left_margin = Cm(2.5)
-section.right_margin = Cm(2.5)
-
-title = doc.add_paragraph()
-title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-run = title.add_run("Informe de actividades")
-run.bold = True
-run.font.name = "Calibri"
-run.font.size = Pt(16)
-
-meta = doc.add_paragraph()
-meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
-m = meta.add_run("Junio 2026")
-m.font.name = "Calibri"
-m.font.size = Pt(11)
-
-doc.add_heading("1. Introducción", level=1)
-p = doc.add_paragraph()
-p.add_run("Resumen ejecutivo: ").bold = True
-p.add_run("texto del informe…")
-
-doc.save("/home/joaquin/Documentos/Reportes/informe.docx")
-```
-
-(Ajusta la ruta al directorio confirmado por el usuario; en admin puede ser `~/Documentos/Reportes/` o ruta acordada.)
-
-### Entrega por Telegram
-
-Tras guardar el `.docx`, incluye en la respuesta:
+Tras guardar:
 
 `[[TELEGRAM_FILE:/ruta/absoluta/al/informe.docx]]`
 
-## Preferencias
+---
 
-- Entregar **solo `.docx`** para informes formales (no `.md` paralelo) salvo petición explícita en ese turno.
-- Si el usuario indica plantilla, tipografía o estilo corporativo, **priorízalo** sobre la tabla por defecto.
-- Guardar informes recurrentes en `~/Documentos/Reportes/` (crear con `mkdir -p` si no existe).
+## 6. Preferencias del proyecto
+
+- Informes formales: entregar **solo `.docx`** (sin `.md` paralelo) salvo petición explícita en ese turno.
+- Si el usuario da plantilla corporativa distinta, **priorízala** solo si no contradice la estructura §3; en caso de conflicto, **prevalece esta skill**.
+
+---
 
 ## Referencias cruzadas
 
@@ -106,4 +103,4 @@ Tras guardar el `.docx`, incluye en la respuesta:
 |---------|------|
 | Flujo Office (destino, tiempo) | `AGENTS.md` § *Entregables Office* |
 | Herramientas Python | `TOOLS.md` |
-| Transcripción → acta | `skills/transcribe-audio/SKILL.md` |
+| Transcripción → informe | `skills/transcribe-audio/SKILL.md` |

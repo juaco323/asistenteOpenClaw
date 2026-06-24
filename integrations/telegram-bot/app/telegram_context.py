@@ -127,11 +127,14 @@ def _admin_validation_text(admin_validated: bool) -> str:
 def _formal_documents_protocol_telegram() -> str:
     return (
         "Documentos e informes formales (`formal-documents`): "
-        "si el usuario pide informe, acta, memorándum, documento formal o `.docx` "
+        "si el usuario pide informe, informe técnico, acta, memorándum, documento formal o `.docx` "
         "(o «de manera formal»), aplica `skills/formal-documents/SKILL.md`. "
-        "En el chat: título, secciones numeradas, negritas en conceptos clave, listas y conclusiones; "
-        "prohibido bloque de texto plano. "
-        "En `.docx`: generar con python-docx (títulos, encabezados, negritas, Calibri/Arial). "
+        "Estructura fija obligatoria §1–§7: Resumen Ejecutivo; Introducción (2.1 Objetivos, 2.2 Alcance); "
+        "Marco Conceptual; Desarrollo (4.1 Arquitectura, 4.2 Implementación); Análisis de Resultados; "
+        "Conclusiones (6.1) y Recomendaciones (6.2); Referencias Bibliográficas. "
+        "Tono técnico formal en tercera persona; títulos en negrita con numeración multinivel; viñetas •; "
+        "código en bloques cuando aplique. Prohibido texto plano sin estructura. "
+        "En `.docx`: python-docx con la misma estructura y negritas. "
         "Tras crear el archivo, incluir `[[TELEGRAM_FILE:/ruta/absoluta/archivo.docx]]`."
     )
 

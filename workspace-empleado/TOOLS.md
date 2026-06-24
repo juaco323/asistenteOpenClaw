@@ -58,4 +58,4 @@ No hace falta pedir autorización para instalar estos paquetes base; si falta ot
 ## Documentos formales (`formal-documents`)
 
 - Skill: `skills/formal-documents/` (montada desde el monorepo).
-- Informes en chat: títulos, secciones, negritas; archivos: `~/Documentos/Reportes/` con `python-docx`.
+- Estructura fija §1–§7 (informe técnico); tercera persona; títulos en negrita; archivos en `~/Documentos/Reportes/` con `python-docx`.

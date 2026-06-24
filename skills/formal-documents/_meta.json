@@ -1,5 +1,5 @@
 {
   "slug": "formal-documents",
-  "version": "1.0.0",
-  "description": "Formato formal para informes en chat y archivos .docx (títulos, negritas, encabezados, tipografía profesional)."
+  "version": "1.1.0",
+  "description": "Informe técnico formal con estructura fija §1–§7, tercera persona, negritas y .docx vía python-docx (chat, Telegram, Control UI)."
 }

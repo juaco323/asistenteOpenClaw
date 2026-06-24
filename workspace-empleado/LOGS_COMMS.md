@@ -37,3 +37,6 @@ Si el canal es Gmail, tras envío exitoso añadir también fila en `LOGS_EMAIL.m
 2026-06-24	Administrador	reunion_zoom	pendiente_confirmacion	Reunion | 2026-06-24 17:00-18:00 America/Santiago | invitados: fernycalderonsolis@gmail.com
 2026-06-24	Administrador	reunion_zoom	reunion_zoom_creada	Reunion | 2026-06-24 17:00-18:00 America/Santiago | Zoom ID: 85487911844 | Link: https://us05web.zoom.us/j/85487911844?pwd=ofOSOw77bQk3cCnCooEAPgDaEc0KOb.1 | invitados: fernycalderonsolis@gmail.com
 2026-06-24	Administrador	reunion_zoom	reunion_zoom_cancelada	Reunion | 2026-06-24 17:00-18:00 America/Santiago | motivo: fuerza mayor | Atte: joaquin
+2026-06-24	Administrador	reunion_meet	pendiente_confirmacion	Reunión Importante | 2026-06-24 19:00-20:00 America/Santiago | invitados: carla.taramasco@unab.cl, david.araya@unab.cl, joaquin.fuenzalida51@gmail.com
+2026-06-24	Administrador	reunion_meet	reunion_creada	Reunión Importante | 2026-06-24 19:00-20:00 America/Santiago | Meet: https://meet.google.com/xqt-yokq-kse | invitados: carla.taramasco@unab.cl, david.araya@unab.cl, joaquin.fuenzalida51@gmail.com
+2026-06-24	Administrador	reunion_meet	reunion_cancelada	Reunión Importante | 2026-06-24 19:00-20:00 America/Santiago | motivo: Fuerza mayor | Atte: joaquin

@@ -8,7 +8,7 @@ Estos protocolos aplican **igual** en:
 
 Reglas comunes:
 - Preguntas informativas sin «archivo» ni extensión: LLM + **web**; no buscar ficheros en disco por coincidencia de nombre.
-- **Informes y documentos formales:** títulos, secciones, negritas en chat; `.docx` con `python-docx` (`skills/formal-documents/`).
+- **Informes y documentos formales:** estructura técnica fija §1–§7, tercera persona, títulos en negrita; `.docx` con `python-docx` (`skills/formal-documents/`).
 - **Comunicaciones (`admin-comms`):** recordatorios, seguimientos, confirmaciones; confirmación válida en el chat activo («envíalo», «vale», «confirma», «agéndala», «cancela la reunión», etc.).
 - **Google Calendar + Meet (crear y cancelar reuniones):** **solo este perfil Administrador**; ver § Reuniones y § Cancelar reunión + `skills/admin-comms/calendar-meet.md`.
 - **Zoom (crear y cancelar reuniones):** **solo este perfil Administrador**; ver § Reuniones Zoom + `skills/admin-comms/zoom-meetings.md`.
@@ -241,13 +241,14 @@ No comiences la generación final del archivo si falta la confirmación del dire
 
 ### Documentos e informes formales (chat y `.docx`)
 
-Si el usuario pide un **informe**, **documento formal**, **acta**, **memorándum** o un `.docx` «de manera formal» (incluye Telegram y Control UI):
+Si el usuario pide un **informe**, **informe técnico**, **documento formal**, **acta**, **memorándum** o un `.docx` «de manera formal» (incluye **Telegram** y **Control UI**):
 
 1. **Leer** `skills/formal-documents/SKILL.md` y aplicarlo en el mismo turno.
-2. **En el chat:** título, secciones numeradas, **negritas** en conceptos clave, listas y cierre (Conclusiones/Recomendaciones). **Prohibido** responder con un bloque plano sin estructura.
-3. **En `.docx`:** generar con **`python-docx`** (títulos, encabezados, negritas, tipografía Calibri/Arial según la skill). **Prohibido** `.txt` renombrado o solo Markdown cuando pidieron Word.
-4. **Telegram:** tras crear el archivo, incluir `[[TELEGRAM_FILE:/ruta/absoluta/archivo.docx]]` para adjuntarlo en el chat.
-5. Preferencia: **solo `.docx`** para informes formales (sin `.md` paralelo) salvo petición explícita en ese turno.
+2. **Estructura fija obligatoria** (§1–§7 de la skill): Resumen Ejecutivo → Introducción (2.1 Objetivos, 2.2 Alcance) → Marco Conceptual → Desarrollo (4.1 Arquitectura, 4.2 Implementación) → Análisis de Resultados → Conclusiones (6.1) y Recomendaciones (6.2) → Referencias Bibliográficas.
+3. **Tono:** técnico, formal, objetivo, **tercera persona** («se analizó», «se implementó»). Títulos y subtítulos **siempre en negrita** con numeración multinivel (`**1.`**, `**2.1.**`, etc.). Viñetas `•`; bloques de código para scripts/Docker/SQL.
+4. **En `.docx`:** generar con **`python-docx`** replicando la misma estructura y negritas. **Prohibido** `.txt` renombrado o Markdown sin formato cuando pidieron Word.
+5. **Telegram:** tras crear el archivo, incluir `[[TELEGRAM_FILE:/ruta/absoluta/archivo.docx]]`.
+6. Preferencia: **solo `.docx`** para informes formales (sin `.md` paralelo) salvo petición explícita en ese turno.
 
 Checklist mínimo obligatorio:
 - español profesional
