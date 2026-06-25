@@ -7,6 +7,8 @@ services:
         OPENCLAW_BASE_IMAGE: ${OPENCLAW_IMAGE}
     image: ${OPENCLAW_CONTAINER_NAME}:local
     container_name: ${OPENCLAW_CONTAINER_NAME}
+    env_file:
+      - .env
     init: true
     restart: unless-stopped
     stop_grace_period: 30s
@@ -37,6 +39,8 @@ services:
       - ../../skills/email-gmail:/home/node/.openclaw/workspace/skills/email-gmail:ro
       - ../../skills/formal-documents:/home/node/.openclaw/workspace/skills/formal-documents:ro
       - ./openclaw.json:/etc/openclaw/openclaw.json
+      # Scripts Zoom/Calendar leen credenciales si faltan en el entorno del subproceso.
+      - ./.env:/etc/openclaw/admin.env:ro
       # Mismo criterio que empleado: el agente admin debe ver Documentos/Descargas del host.
       - ${OPENCLAW_HOST_HOME}:${OPENCLAW_HOST_HOME}:rw
       - ${OPENCLAW_HOST_HOME}/Documentos:/home/node/Documentos:rw

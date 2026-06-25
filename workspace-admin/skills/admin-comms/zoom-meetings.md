@@ -104,7 +104,7 @@ Columna **Agente:** `Administrador`.
 
 | Error | Acción |
 |-------|--------|
-| Faltan `ZOOM_*` en `.env` | `docs/configurar-zoom-api.md` |
+| Faltan `ZOOM_*` en `.env` | Completar `docker/admin/.env` y **recrear** contenedor: `docker compose --env-file docker/admin/.env -f docker/admin/docker-compose.yml up -d --build` (`restart` no recarga variables). Ver `docs/configurar-zoom-api.md` |
 | `Invalid access token` | Revisar Client ID/Secret y scopes S2S |
 | Sin destinatarios al cancelar | Pasar `--attendees` del resumen |
 | Invitación no enviada al crear | Incluir `--attendees`; revisar OAuth Gmail (`gog auth list`) |

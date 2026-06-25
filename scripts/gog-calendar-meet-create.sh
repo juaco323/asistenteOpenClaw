@@ -8,8 +8,8 @@
 #     --attendees "uno@ejemplo.com,dos@ejemplo.com"
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ENV_FILE="${REPO_ROOT}/docker/empleado/.env"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ACCOUNT="prueba.openclaw.fj@gmail.com"
 CALENDAR_ID="primary"
 
@@ -45,12 +45,25 @@ done
   exit 1
 }
 
-if [[ -f "${ENV_FILE}" ]]; then
+ENV_FILE=""
+for ENV_CANDIDATE in \
+  "/etc/openclaw/admin.env" \
+  "${REPO_ROOT}/docker/admin/.env" \
+  "${REPO_ROOT}/docker/empleado/.env" \
+  "${HOME}/asistenteOpenClaw/docker/admin/.env" \
+  "${HOME}/asistenteOpenClaw/docker/empleado/.env"; do
+  if [[ -f "${ENV_CANDIDATE}" ]]; then
+    ENV_FILE="${ENV_CANDIDATE}"
+    break
+  fi
+done
+if [[ -z "${GOG_KEYRING_PASSWORD:-}" && -n "${ENV_FILE}" ]]; then
   # shellcheck disable=SC1090
   source <(grep -E '^GOG_KEYRING_PASSWORD=' "${ENV_FILE}" | sed 's/^/export /')
 fi
 export GOG_KEYRING_BACKEND=file
 export XDG_CONFIG_HOME="${HOME}/.config"
+export GOG_KEYRING_PASSWORD="${GOG_KEYRING_PASSWORD:-}"
 
 CMD=(gog)
 [[ -n "${DRY_RUN}" ]] && CMD+=(-n)

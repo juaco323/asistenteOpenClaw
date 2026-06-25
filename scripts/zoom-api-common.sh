@@ -3,26 +3,33 @@
 # No ejecutar directamente; source desde zoom-meeting-*.sh
 
 zoom_load_env() {
-  local script_dir caller
+  local script_dir caller repo_root
   caller="${BASH_SOURCE[1]:-${BASH_SOURCE[0]}}"
   script_dir="$(cd "$(dirname "${caller}")" && pwd)"
+  repo_root="$(cd "${script_dir}/.." && pwd)"
   ENV_FILE=""
   for ENV_CANDIDATE in \
+    "/etc/openclaw/admin.env" \
+    "${repo_root}/docker/admin/.env" \
     "${script_dir}/../docker/admin/.env" \
-    "${script_dir}/../docker/empleado/.env" \
     "${HOME}/asistenteOpenClaw/docker/admin/.env" \
+    "${repo_root}/docker/empleado/.env" \
     "${HOME}/asistenteOpenClaw/docker/empleado/.env"; do
     if [[ -f "${ENV_CANDIDATE}" ]]; then
       ENV_FILE="${ENV_CANDIDATE}"
       break
     fi
   done
+  # Preferir variables ya inyectadas por Docker Compose; completar desde .env si faltan.
   if [[ -n "${ENV_FILE}" && -f "${ENV_FILE}" ]]; then
-    # shellcheck disable=SC1090
-    source <(grep -E '^(GOG_KEYRING_PASSWORD|ZOOM_ACCOUNT_ID|ZOOM_CLIENT_ID|ZOOM_CLIENT_SECRET)=' "${ENV_FILE}" | sed 's/^/export /')
+    if [[ -z "${GOG_KEYRING_PASSWORD:-}" || -z "${ZOOM_ACCOUNT_ID:-}" || -z "${ZOOM_CLIENT_ID:-}" || -z "${ZOOM_CLIENT_SECRET:-}" ]]; then
+      # shellcheck disable=SC1090
+      source <(grep -E '^(GOG_KEYRING_PASSWORD|ZOOM_ACCOUNT_ID|ZOOM_CLIENT_ID|ZOOM_CLIENT_SECRET)=' "${ENV_FILE}" | sed 's/^/export /')
+    fi
   fi
   export GOG_KEYRING_BACKEND=file
   export XDG_CONFIG_HOME="${HOME}/.config"
+  export GOG_KEYRING_PASSWORD="${GOG_KEYRING_PASSWORD:-}"
   export ZOOM_ACCOUNT_ID="${ZOOM_ACCOUNT_ID:-}"
   export ZOOM_CLIENT_ID="${ZOOM_CLIENT_ID:-}"
   export ZOOM_CLIENT_SECRET="${ZOOM_CLIENT_SECRET:-}"

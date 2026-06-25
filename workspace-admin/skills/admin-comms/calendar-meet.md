@@ -131,7 +131,7 @@ Columna **Agente:** `Administrador`. Puede `gog calendar update` / `delete` tras
 
 | Error | Acción |
 |-------|--------|
-| `No auth for calendar` | OAuth con scope `calendar` |
+| `403 insufficientPermissions` | OAuth sin scope `calendar`: `gog auth add prueba.openclaw.fj@gmail.com --services gmail,drive,calendar` (ver `scripts/gog-auth-setup.sh`). Habilitar Calendar API: `docs/habilitar-google-calendar-api.md`. Tras cambios, recrear admin si actualizaste `.env`. |
 | `No tokens stored` | `./scripts/gog-auth-setup.sh` |
 | `403 accessNotConfigured` / API disabled | Habilitar **Google Calendar API** en Google Cloud: ver `docs/habilitar-google-calendar-api.md` (proyecto `august-victor-496423-e8`) |
 | Invitados no reciben correo al crear | Falta `--send-updates all` (default de `gog` es `none`). Reenviar: `gog calendar update primary <eventId> -a "…" --send-updates all` |

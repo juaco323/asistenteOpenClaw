@@ -26,7 +26,7 @@ RUN apt-get update \
   && chown -R node:node /home/node/.config
 
 COPY docker/common/gog-policy-check.sh docker/admin/gog-wrapper.sh docker/admin/gog-gmail-draft-wrap.py docker/admin/entrypoint-gateway.sh /tmp/oc-bin/
-COPY scripts/gog-calendar-meet-cancel.sh /tmp/oc-bin/gog-calendar-meet-cancel.sh
+COPY scripts/gog-calendar-meet-create.sh scripts/gog-calendar-meet-cancel.sh /tmp/oc-bin/
 COPY scripts/zoom-api-common.sh scripts/zoom-meeting-create.sh scripts/zoom-meeting-cancel.sh /tmp/oc-bin/
 RUN set -eu \
   && mv /usr/local/bin/gog /usr/local/bin/gog.real \
@@ -34,6 +34,7 @@ RUN set -eu \
   && install -m 0755 /tmp/oc-bin/gog-wrapper.sh /usr/local/bin/gog \
   && install -m 0755 /tmp/oc-bin/gog-gmail-draft-wrap.py /usr/local/bin/gog-gmail-draft-wrap.py \
   && install -m 0755 /tmp/oc-bin/entrypoint-gateway.sh /usr/local/bin/entrypoint-gateway.sh \
+  && install -m 0755 /tmp/oc-bin/gog-calendar-meet-create.sh /usr/local/bin/gog-calendar-meet-create.sh \
   && install -m 0755 /tmp/oc-bin/gog-calendar-meet-cancel.sh /usr/local/bin/gog-calendar-meet-cancel.sh \
   && install -m 0755 /tmp/oc-bin/zoom-api-common.sh /usr/local/bin/zoom-api-common.sh \
   && install -m 0755 /tmp/oc-bin/zoom-meeting-create.sh /usr/local/bin/zoom-meeting-create.sh \
