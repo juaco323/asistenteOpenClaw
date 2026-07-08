@@ -43,3 +43,25 @@ _Cada fila nueva se añade al final de la tabla, manteniendo el encabezado._
 2026-06-24	Administrador	email_enviado	Buenas noches -> f.calderonsolis@uandresbello.edu | draft_id: r-5371035708263308204
 2026-06-24	Administrador	email_enviado	Hola -> fernycalderonsolis@gmail.com | draft_id: r572148225652539337
 2026-06-24	Administrador	email_enviado	Hola -> f.calderonsolis@uandresbello.edu | draft_id: r-2243685304970419567
+| 2026-07-07 21:31 UTC | Administrador | BORRADOR | r-9012243869463104014 | prueba.openclaw.fj@gmail.com | Reunión de proyecto | 11 destinatarios |
+| 2026-07-07 21:32 UTC | Administrador | BORRADOR_ACTUALIZADO | r-5383792107160604727 | prueba.openclaw.fj@gmail.com | Reunión de proyecto | Se eliminó la frase solicitada |
+| 2026-07-07 21:32 UTC | Administrador | ENVIADO | r-5383792107160604727 | prueba.openclaw.fj@gmail.com | Reunión de proyecto | Enviado a 11 destinatarios |
+| 2026-07-07 21:47 UTC | Administrador | BORRADOR | r1406016027663772295 | prueba.openclaw.fj@gmail.com | Notificación formal de término de relación laboral | 11 destinatarios |
+| 2026-07-07 21:50 UTC | Administrador | ENVIADO | r1406016027663772295 | prueba.openclaw.fj@gmail.com | Notificación formal de término de relación laboral | Enviado a 11 destinatarios |
+| 2026-07-07 22:01 UTC | Administrador | ENVIADO | r7691786344413449212 | prueba.openclaw.fj@gmail.com | URGENTE: hotfix crítico de login — deadline lunes 08:00 | Enviado a frontend |
+| 2026-07-07 22:01 UTC | Administrador | ENVIADO | r3578114410091408335 | prueba.openclaw.fj@gmail.com | Confirmación de autorización — 3 licencias de desarrollo | Enviado a papelería |
+| 2026-07-07 22:01 UTC | Administrador | ENVIADO | r8694997719982013376 | prueba.openclaw.fj@gmail.com | URGENTE: backup de staging obligatorio antes de deploys de esta semana | Enviado a Bak |
+| 2026-07-07 22:01 UTC | Administrador | ENVIADO | r-4675467863972188212 | prueba.openclaw.fj@gmail.com | Actualización de proyecto: ajuste de 3 días en entrega de MVP | Enviado a Pablo |
+| 2026-07-07 22:12 UTC | Administrador | BORRADOR | r-7328647213700831645 | prueba.openclaw.fj@gmail.com | Proyecto Semana del Deporte - Desglose Operativo | 11 destinatarios |
+| 2026-07-07 22:13 UTC | Administrador | ENVIADO | r-7328647213700831645 | prueba.openclaw.fj@gmail.com | Proyecto Semana del Deporte - Desglose Operativo | Enviado a 11 destinatarios |
+| 2026-07-07 22:44 UTC | Administrador | ENVIADO | r-1319900459358766300 | prueba.openclaw.fj@gmail.com | 🔥 10 - La cuenta regresiva comienza | Countdown masivo a 11 destinatarios |
+| 2026-07-07 22:45 UTC | Administrador | ENVIADO | r4222400666438345218 | prueba.openclaw.fj@gmail.com | ⏰ 9 - Nos acercamos | Countdown masivo a 11 destinatarios |
+| 2026-07-07 22:46 UTC | Administrador | ENVIADO | r-2247797157907043078 | prueba.openclaw.fj@gmail.com | ⏳ 8 - Energía sube | Countdown masivo a 11 destinatarios |
+| 2026-07-07 22:47 UTC | Administrador | ENVIADO | r-4468134208318550501 | prueba.openclaw.fj@gmail.com | 🚀 7 - Casi aquí | Countdown masivo a 11 destinatarios |
+| 2026-07-07 22:48 UTC | Administrador | ENVIADO | r-6339058179599186528 | prueba.openclaw.fj@gmail.com | 💪 6 - La tensión aumenta | Countdown masivo a 11 destinatarios |
+| 2026-07-07 22:49 UTC | Administrador | ENVIADO | r2257416488717711954 | prueba.openclaw.fj@gmail.com | 🎯 5 - Punto medio | Countdown masivo a 11 destinatarios |
+| 2026-07-07 22:50 UTC | Administrador | ENVIADO | r-1539237796140815273 | prueba.openclaw.fj@gmail.com | ⚡ 4 - Ya casi | Countdown masivo a 11 destinatarios |
+| 2026-07-07 22:51 UTC | Administrador | ENVIADO | r-6886680962303149482 | prueba.openclaw.fj@gmail.com | 🏁 3 - En posición de salida | Countdown masivo a 11 destinatarios |
+| 2026-07-07 22:52 UTC | Administrador | ENVIADO | r-1700652037512594764 | prueba.openclaw.fj@gmail.com | 🔥 2 - No hay vuelta atrás | Countdown masivo a 11 destinatarios |
+| 2026-07-07 22:53 UTC | Administrador | ENVIADO | r-777129434531743141 | prueba.openclaw.fj@gmail.com | ⚠️ 1 - AQUÍ VAMOS | Countdown masivo a 11 destinatarios |
+| 2026-07-07 22:54 UTC | Administrador | ENVIADO | r-4724670271138797009 | prueba.openclaw.fj@gmail.com | ✅ ¡Bienvenido al equipo! Semana del Deporte 2026 | Countdown masivo a 11 destinatarios |
