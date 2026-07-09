@@ -66,7 +66,7 @@ En contenedor admin: `/usr/local/bin/zoom-meeting-create.sh`.
 
 ### Cancelar reunión Zoom
 
-1. **Identificar** reunión: `LOGS_COMMS.md` (tipo `reunion_zoom`, columna Meet/Event ID = `MEETING_ID` Zoom), o ID que indique el usuario.
+1. **Identificar** reunión: `LOGS_COMMS.md` → tabla de reuniones (tipo `reunion_zoom`, columna «Enlace / ID» = `MEETING_ID` Zoom), o ID que indique el usuario.
 2. **Motivo obligatorio** (asunto del correo). Si falta, **preguntar**.
 3. **Nombre para firma obligatorio** (`Atte:`). Si falta, **preguntar explícitamente**.
 4. **Resumen** con título, **correos**, motivo y Atte → `pendiente_confirmacion` (tipo `reunion_zoom_cancelacion`).

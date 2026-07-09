@@ -65,18 +65,26 @@ Cuando el informe se muestre **en el mensaje**:
 
 ## 5. Archivos `.docx` (obligatorio: Word con formato real)
 
-Genera con **`python-docx`**. **Prohibido** `.txt` renombrado o Markdown pegado como Word.
+**Genera siempre con el script `skills/formal-documents/build_report.py`** (no escribas `python-docx` a mano turno a turno: ese script aplica de forma **mecánica** la tipografía, la negrita de encabezados y la validación de las 13 claves de la estructura §3, evitando informes con secciones vacías o formato inconsistente entre generaciones). **Prohibido** `.txt` renombrado o Markdown pegado como Word.
 
-### Tipografía en Word
+### Flujo obligatorio
+
+1. Redacta el contenido de **cada** apartado de la tabla §3 (incluida una frase explícita de no aplicabilidad si un apartado no aplica).
+2. Vuelca ese contenido a un JSON temporal con `title` y `sections` (una clave por cada fila de §3: `1`, `2`, `2.1`, `2.2`, `3`, `4`, `4.1`, `4.2`, `5`, `6`, `6.1`, `6.2`, `7`). Cada sección lleva `body` (párrafos separados por línea en blanco; líneas que empiecen con `• ` se convierten en viñeta) y, si aplica, `code` (lista de bloques monoespaciados) o, solo en `7`, `references` (lista de referencias APA 7).
+3. Ejecuta:
+   ```bash
+   python3 skills/formal-documents/build_report.py --input /tmp/informe.json --output ~/Documentos/Reportes/<nombre>.docx
+   ```
+4. Si el script falla, **lee el error**: indica exactamente qué sección falta o quedó vacía. Corrige el JSON y vuelve a ejecutar — **no** generes el `.docx` por otra vía para saltarte la validación.
+
+### Tipografía en Word (aplicada automáticamente por `build_report.py`)
 
 | Elemento | Fuente | Tamaño | Estilo |
 |----------|--------|--------|--------|
-| Título del documento | Calibri o Arial | 16–18 pt | Negrita, centrado |
-| Encabezados §1–§7 y subsecciones | Calibri o Arial | 12–14 pt | **Negrita obligatoria** |
-| Cuerpo | Calibri o Arial | 11–12 pt | Normal, interlineado 1,15–1,5 |
-| Código / comandos | Consolas o Courier | 10 pt | Bloque monoespaciado |
-
-Cada encabezado de la estructura §3 debe crearse con `run.bold = True` o estilo `Heading` + negrita explícita.
+| Título del documento | Calibri | 17 pt | Negrita, centrado |
+| Encabezados §1–§7 y subsecciones | Calibri | 12–14 pt | **Negrita** (aplicada por el script) |
+| Cuerpo | Calibri | 11 pt | Normal, interlineado 1,15 |
+| Código / comandos | Consolas | 10 pt | Bloque monoespaciado |
 
 ### Ruta por defecto
 
@@ -101,6 +109,7 @@ Tras guardar:
 
 | Recurso | Ruta |
 |---------|------|
+| Generador estable del `.docx` | `skills/formal-documents/build_report.py` |
 | Flujo Office (destino, tiempo) | `AGENTS.md` § *Entregables Office* |
 | Herramientas Python | `TOOLS.md` |
 | Transcripción → informe | `skills/transcribe-audio/SKILL.md` |

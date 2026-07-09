@@ -22,7 +22,9 @@
       "timeoutSeconds": 600,
       "heartbeat": {
         "every": "0m"
-      }
+      },
+      "bootstrapMaxChars": 35000,
+      "bootstrapTotalMaxChars": 65000
     }
   },
   "gateway": {

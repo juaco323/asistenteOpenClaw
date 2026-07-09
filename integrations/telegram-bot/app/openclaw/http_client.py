@@ -202,6 +202,11 @@ class GatewayOpenClawClient:
                     f"{workspace_settings.label}: falta habilitar /v1/chat/completions "
                     "en la configuracion del gateway."
                 )
+            if response.status_code >= 500:
+                raise RuntimeError(
+                    f"{workspace_settings.label}: el gateway devolvio HTTP "
+                    f"{response.status_code}. {self._upstream_error_message(response)}"
+                )
             response.raise_for_status()
             payload = response.json()
             usage = extract_usage_from_payload(payload)
@@ -225,6 +230,19 @@ class GatewayOpenClawClient:
                     input_preview=user_preview,
                     exporter_url=self._metrics_exporter_url,
                 )
+
+    @staticmethod
+    def _upstream_error_message(response: httpx.Response) -> str:
+        try:
+            body = response.json()
+        except ValueError:
+            text = response.text.strip()
+            return f"Detalle: {text[:300]}" if text else "Sin detalle en el cuerpo de la respuesta."
+        error = body.get("error") if isinstance(body, dict) else None
+        message = error.get("message") if isinstance(error, dict) else None
+        if isinstance(message, str) and message.strip():
+            return f"Mensaje del proveedor del modelo: {message.strip()}"
+        return f"Cuerpo de la respuesta: {str(body)[:300]}"
 
     def _get_policy(self, workspace: str) -> WorkspaceFilePolicy:
         try:

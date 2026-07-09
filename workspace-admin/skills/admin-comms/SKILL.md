@@ -39,6 +39,15 @@ Columna **Agente** en tablas: `Administrador`.
 
 El perfil empleado **no** ejecuta `gog calendar`; solo redacta recordatorios por correo.
 
+### Reunión en ambas plataformas (`reunion_dual`)
+
+Si el usuario pide agendar en **Meet y Zoom a la vez** para el mismo evento:
+
+1. **Propuesta única** → `pendiente_confirmacion` con tipo **`reunion_dual`** en `LOGS_COMMS.md` (una sola fila; notas: «plataformas: Meet y Zoom»).
+2. Tras confirmación, ejecuta **ambos** flujos en el mismo turno: `calendar-meet.md` (crear evento con Meet) y `zoom-meetings.md` (crear reunión Zoom).
+3. **Registra dos filas separadas** al confirmar — una `reunion_meet` → `reunion_creada` y otra `reunion_zoom` → `reunion_zoom_creada` — cada una con su propio enlace/ID; **no** intentes meter ambos enlaces en una sola fila.
+4. Cancelación: si el usuario pide cancelar la reunión dual, identifica y cancela **cada plataforma por separado** (motivo + Atte se preguntan **una vez** y se reutilizan en ambos scripts).
+
 ## Referencias
 
 | Recurso | Ruta |

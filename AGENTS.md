@@ -147,6 +147,7 @@ Skills provide your tools. When you need one, check its `SKILL.md`. Keep local n
 - **Discord/WhatsApp:** No markdown tables! Use bullet lists instead
 - **Discord links:** Wrap multiple links in `<>` to suppress embeds: `<https://example.com>`
 - **WhatsApp:** No headers — use **bold** or CAPS for emphasis
+- **Telegram (bot):** el bot entrega en texto plano; `**negrita**`, `## títulos` y `` `código` `` se ven como asteriscos/almohadillas literales, no como formato. Escribe encabezados y énfasis con texto simple (líneas en mayúsculas o directamente el rótulo seguido de `:`), sin `**`/`##`/backticks. Sé conciso y directo: no repitas contenido ya mostrado en el mismo turno (p. ej. un borrador o resumen que el usuario ya confirmó), evita relleno y ve al punto.
 
 ## 💓 Heartbeats - Be Proactive!
 

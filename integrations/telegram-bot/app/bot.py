@@ -40,6 +40,7 @@ from app.telegram_incoming import (
     save_telegram_upload,
 )
 from app.openclaw.client import OpenClawClient, build_openclaw_client
+from app.text_format import sanitize_markdown_for_telegram
 
 
 LOGGER = logging.getLogger(__name__)
@@ -539,9 +540,9 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         "Usa /correo para redactar o enviar correo Gmail (borrador y confirmación en este chat; "
         "mismas credenciales que el asistente en el gateway).\n"
         "Usa /comunicaciones para recordatorios, seguimientos y confirmaciones (admin-comms); "
-        "en perfil Administrador también **crear y cancelar** reuniones Google Meet/Calendar.\n"
+        "en perfil Administrador también crear y cancelar reuniones Google Meet/Calendar.\n"
         "En modo /chat puedes pedir archivos del equipo en lenguaje natural "
-        "(entrégame el archivo informe.pptx, …) o **enviar un documento o foto** para correo con adjunto.\n"
+        "(entrégame el archivo informe.pptx, …) o enviar un documento o foto para correo con adjunto.\n"
         "Usa /get nombre_archivo para recibir un adjunto directo desde el equipo.\n"
         "Usa /recordatorios para revisar o crear tareas.\n"
         "Usa /estado para revisar conectividad.\n"
@@ -651,11 +652,12 @@ async def prueba_llm_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         source="telegram",
         extra={"ok": True},
     )
+    reply_clean = sanitize_markdown_for_telegram(reply)
     await update.message.reply_text(
         "[Administrador] Prueba completada.\n"
         "Registro completado. Revisa el panel de OpenClaw.\n\n"
-        f"(latencia ~{latency:.2f}s)\n\n{reply[:3500]}"
-        + ("…" if len(reply) > 3500 else "")
+        f"(latencia ~{latency:.2f}s)\n\n{reply_clean[:3500]}"
+        + ("…" if len(reply_clean) > 3500 else "")
     )
 
 
@@ -675,9 +677,9 @@ async def enter_chat_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         "Escribe cualquier mensaje y lo enviaremos a OpenClaw por Telegram.\n"
         "Puedes pedir correo Gmail (borrador y envío tras confirmación); también /correo resume el protocolo.\n"
         "Puedes pedir recordatorios y comunicaciones formales con /comunicaciones (admin-comms). "
-        "En perfil **Administrador**: crear y cancelar reuniones Meet/Calendar (solo admin).\n"
-        "Puedes **enviar un documento o foto**; el bot lo guarda y el asistente puede usarlo en Gmail con "
-        f"`gog ... --attach` y la ruta que te indique (carpeta típica: `{incoming_hint}`).\n"
+        "En perfil Administrador: crear y cancelar reuniones Meet/Calendar (solo admin).\n"
+        "Puedes enviar un documento o foto; el bot lo guarda y el asistente puede usarlo en Gmail con "
+        f"gog ... --attach y la ruta que te indique (carpeta típica: {incoming_hint}).\n"
         "Para recibir archivos del equipo usa lenguaje natural: entrégame el archivo X, envíame X, etc.\n"
         "Usa /salir para terminar el chat y cerrar la sesión del perfil."
     )
@@ -700,8 +702,8 @@ async def enter_correo_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     await update.message.reply_text(
         f"Modo correo con {workspace.label} (mismo gateway y credenciales GOG que el asistente).\n\n"
         "Indica destinatario, asunto y texto del mensaje en tus siguientes mensajes.\n"
-        "También puedes **enviar un documento o foto**: se guarda en el equipo y el borrador puede incluir "
-        f"`--attach` con esa ruta (típico: `{incoming_hint}`).\n"
+        "También puedes enviar un documento o foto: se guarda en el equipo y el borrador puede incluir "
+        f"--attach con esa ruta (típico: {incoming_hint}).\n"
         "El agente creará primero un borrador en Gmail y te mostrará su ID.\n"
         "Para enviar, una sola aclaración al estilo borrador siguiente basta si ya mostraste el ID: "
         "«envíalo», «mándalo», «hazlo», «dale», «sí», «vale», «ok», «confirmo», «procede», "
@@ -724,22 +726,22 @@ async def enter_comunicaciones_mode(update: Update, context: ContextTypes.DEFAUL
     settings = _get_settings(context)
     workspace = settings.get_workspace(workspace_name)
     meet_hint = (
-        "En perfil **Administrador** también puedes **crear** reuniones con **Google Meet** "
-        "(confirmación en este chat antes de `gog calendar create`) o **Zoom** "
-        "(`zoom-meeting-create.sh` tras confirmación; invitación por correo a los invitados). "
-        "Puedes **cancelar** Meet o Zoom (motivo → asunto; **preguntaré tu nombre para Atte** si no lo indicas; "
-        "resumen con invitados; confirmación → script con `--attendees`).\n"
+        "En perfil Administrador también puedes crear reuniones con Google Meet "
+        "(confirmación en este chat antes de gog calendar create) o Zoom "
+        "(zoom-meeting-create.sh tras confirmación; invitación por correo a los invitados). "
+        "Puedes cancelar Meet o Zoom (motivo → asunto; preguntaré tu nombre para Atte si no lo indicas; "
+        "resumen con invitados; confirmación → script con --attendees).\n"
         if workspace_name == "admin"
-        else "Para **crear o cancelar** reuniones en Google Meet/Calendar o **Zoom**, usa perfil Administrador: /workspace admin.\n"
+        else "Para crear o cancelar reuniones en Google Meet/Calendar o Zoom, usa perfil Administrador: /workspace admin.\n"
     )
     await update.message.reply_text(
         f"Modo comunicaciones con {workspace.label}.\n\n"
         "Puedes pedir:\n"
-        "• **Recordatorio**, seguimiento o confirmación (redacto borrador formal)\n"
-        "• Guardado en `~/Documentos/Comunicaciones/` y estado en LOGS_COMMS\n"
+        "• Recordatorio, seguimiento o confirmación (redacto borrador formal)\n"
+        "• Guardado en ~/Documentos/Comunicaciones/ y estado en LOGS_COMMS\n"
         f"{meet_hint}"
         "Confirmaciones válidas en Telegram: «envíalo», «vale», «confirma», «agéndala», «cancela la reunión», etc.\n"
-        "El correo Gmail sigue el mismo flujo borrador → confirmación (`/correo` si solo quieres email).\n\n"
+        "El correo Gmail sigue el mismo flujo borrador → confirmación (/correo si solo quieres email).\n\n"
         "Usa /salir para cerrar sesión del perfil."
     )
     context.user_data["chat_active"] = True
@@ -846,11 +848,15 @@ async def _reply_with_optional_files(
     read_roots, deny_roots = _file_access_for(settings, workspace_name)
     clean_text, paths = extract_file_markers(reply)
     if clean_text:
-        await update.message.reply_text(f"[{workspace.label}]\n{clean_text}")
+        await update.message.reply_text(
+            f"[{workspace.label}]\n{sanitize_markdown_for_telegram(clean_text)}"
+        )
     elif paths:
         await update.message.reply_text(f"[{workspace.label}] Enviando archivo(s)...")
     elif (reply or "").strip():
-        await update.message.reply_text(f"[{workspace.label}]\n{reply.strip()}")
+        await update.message.reply_text(
+            f"[{workspace.label}]\n{sanitize_markdown_for_telegram(reply.strip())}"
+        )
     else:
         await update.message.reply_text(
             f"[{workspace.label}] La acción se procesó en el gateway, pero no hubo texto en la respuesta. "
@@ -976,7 +982,7 @@ async def forward_chat_media(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     if context.user_data.get(PENDING_WORKSPACE_KEY):
         await update.message.reply_text(
-            "Para iniciar sesión en un perfil envía la **contraseña en texto**, no un archivo ni foto."
+            "Para iniciar sesión en un perfil envía la contraseña en texto, no un archivo ni foto."
         )
         return CHAT_ACTIVE
 
@@ -1092,7 +1098,7 @@ async def routed_orphan_media(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
     if context.user_data.get(PENDING_WORKSPACE_KEY):
         await update.message.reply_text(
-            "Para iniciar sesión en un perfil envía la **contraseña en texto**, no un archivo, foto ni audio."
+            "Para iniciar sesión en un perfil envía la contraseña en texto, no un archivo, foto ni audio."
         )
         return
     await update.message.reply_text(
@@ -1171,7 +1177,7 @@ async def reminder_list_callback(update: Update, context: ContextTypes.DEFAULT_T
 
     workspace = settings.get_workspace(workspace_name)
     await query.edit_message_text(
-        f"[{workspace.label}]\n{reminders}",
+        f"[{workspace.label}]\n{sanitize_markdown_for_telegram(reminders)}",
         reply_markup=query.message.reply_markup if query.message else None,
     )
     return REMINDER_MENU
@@ -1241,7 +1247,9 @@ async def reminder_create_message(update: Update, context: ContextTypes.DEFAULT_
         return REMINDER_CREATE
 
     workspace = settings.get_workspace(workspace_name)
-    await update.message.reply_text(f"[{workspace.label}]\n{result}")
+    await update.message.reply_text(
+        f"[{workspace.label}]\n{sanitize_markdown_for_telegram(result)}"
+    )
     return REMINDER_MENU
 
 

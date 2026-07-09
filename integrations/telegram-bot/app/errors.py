@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import re
+
 import httpx
 
 from app.config import Settings
+
+_STATUS_CODE_RE = re.compile(r"'(\d{3})[ ']|HTTP (\d{3})")
 
 
 def _technical_detail(exc: Exception) -> str:
@@ -10,6 +14,13 @@ def _technical_detail(exc: Exception) -> str:
     if detail:
         return detail
     return exc.__class__.__name__
+
+
+def _status_code(detail: str) -> int | None:
+    match = _STATUS_CODE_RE.search(detail)
+    if not match:
+        return None
+    return int(match.group(1) or match.group(2))
 
 
 def _is_timeout(exc: Exception) -> bool:
@@ -64,17 +75,39 @@ def format_gateway_error(
             f"Detalle: {detail}"
         )
 
-    if "token invalido" in detail.lower() or "401" in detail or "403" in detail:
+    status = _status_code(detail)
+
+    if status in (401, 403) or "token invalido" in detail.lower():
         return (
             f"[{label}] El gateway rechazó la autenticación (token inválido o sin permisos).\n"
             "Revisa OPENCLAW_*_GATEWAY_TOKEN en docker/telegram/.env.\n"
             f"Detalle: {detail}"
         )
 
-    if "chat/completions" in detail.lower() or "404" in detail:
+    if status == 404:
         return (
             f"[{label}] El gateway respondió, pero falta habilitar el endpoint "
             "/v1/chat/completions en su configuración.\n"
+            f"Detalle: {detail}"
+        )
+
+    if status is not None and status >= 500:
+        lowered = detail.lower()
+        if any(token in lowered for token in ("quota", "billing", "rate_limit", "rate limit")):
+            return (
+                f"[{label}] El proveedor del modelo (OpenAI) rechazó la petición por cuota/facturación "
+                f"(HTTP {status}) al {action}.\n"
+                "No es un problema de `gog` ni de Gmail: revisa el plan y el saldo de la cuenta en "
+                "https://platform.openai.com/account/billing y la variable OPENAI_API_KEY.\n"
+                f"Detalle: {detail}"
+            )
+        return (
+            f"[{label}] El gateway respondió con un error interno (HTTP {status}) al {action}.\n"
+            "El endpoint sí está habilitado: el fallo suele venir de una herramienta que invocó el "
+            "agente (p. ej. OAuth de Gmail/Calendar vencido o revocado en `gog`, o un comando fallido) "
+            "o del proveedor del modelo — revisa el detalle abajo antes de asumir la causa.\n"
+            "Si menciona `gog`/OAuth: `gog auth list` en el contenedor y, si expiró, "
+            "./scripts/gog-auth-setup.sh en el host.\n"
             f"Detalle: {detail}"
         )
 

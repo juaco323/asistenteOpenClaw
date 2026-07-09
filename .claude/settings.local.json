@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n '\\\\*\\\\*\\\\|`[^`]*`' integrations/telegram-bot/app/bot.py)",
+      "Bash(python3 -)",
+      "Bash(grep -rn '\\\\*\\\\*\\\\|`[^`]*`' integrations/telegram-bot/app/telegram_context.py integrations/telegram-bot/app/errors.py integrations/telegram-bot/app/gateway_progress.py integrations/telegram-bot/app/file_delivery.py integrations/telegram-bot/app/telegram_incoming.py)",
+      "Bash(docker compose *)",
+      "Bash(docker exec *)",
+      "Bash(grep -n \"generar con \\\\*\\\\*\\\\`python-docx\\\\*\\\\*\\\\|En \\\\`.docx\\\\`\" workspace-empleado/AGENTS.md workspace-admin/AGENTS.md)",
+      "Bash(curl -s http://127.0.0.1:18791/ -o /tmp/control-ui.html -w \"%{http_code}\\\\n\")",
+      "Read(//tmp/**)",
+      "Bash(curl -s http://127.0.0.1:18791/assets/index-NYVkUQrq.js -o /tmp/index.js -w \"%{http_code} size=%{size_download}\\\\n\")",
+      "Bash(python3 -c ' *)",
+      "Bash(curl -s 'http://127.0.0.1:9090/api/v1/query?query=container_last_seen')",
+      "Bash(curl -s 'http://127.0.0.1:9090/api/v1/targets')",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s 'http://127.0.0.1:9090/api/v1/query?query=up{job=\"cadvisor\"}')",
+      "Bash(curl -s 'http://127.0.0.1:9090/api/v1/label/__name__/values')",
+      "Bash(curl -s 'http://127.0.0.1:9090/api/v1/query' --data-urlencode 'query=container_cpu_usage_seconds_total{name=~\".*openclaw.*\"}')",
+      "Bash(curl -s 'http://127.0.0.1:9090/api/v1/query' --data-urlencode 'query=container_last_seen')",
+      "Bash(curl -s 'http://127.0.0.1:9090/api/v1/query' --data-urlencode 'query=node_load1')"
+    ]
+  }
+}
