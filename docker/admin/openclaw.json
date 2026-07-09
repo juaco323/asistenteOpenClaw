@@ -20,6 +20,8 @@
       "thinkingDefault": "off",
       "reasoningDefault": "off",
       "timeoutSeconds": 600,
+      "pdfMaxPages": 200,
+      "pdfMaxBytesMb": 45,
       "heartbeat": {
         "every": "0m"
       }
