@@ -54,5 +54,11 @@ _Cada fila nueva se añade al final, manteniendo el encabezado. Si el canal es G
 | 2026-06-25 | Administrador | reunion_dual | pendiente_confirmacion | Daily 25 de junio | 2026-06-25 20:00–21:00 America/Santiago | joaquin.fuenzalida51@gmail.com, fernycalderonsolis@gmail.com | — | — | plataformas: Meet y Zoom; tema: entrega de landing page de esta semana |
 | 2026-06-25 | Administrador | reunion_meet | reunion_creada | Daily 25 de junio | 2026-06-25 20:00–21:00 America/Santiago | joaquin.fuenzalida51@gmail.com, fernycalderonsolis@gmail.com | Meet: https://meet.google.com/bgq-uxfa-xuj | — | tema: entrega de landing page de esta semana |
 | 2026-06-25 | Administrador | reunion_zoom | reunion_zoom_creada | Daily 25 de junio | 2026-06-25 20:00–21:00 America/Santiago | joaquin.fuenzalida51@gmail.com, fernycalderonsolis@gmail.com | Zoom ID: 82801204172 — https://us05web.zoom.us/j/82801204172?pwd=3jBbaz2W5i53R3ZvszY034CG0d5Zt3.1 | — | tema: entrega de landing page de esta semana |
+| 2026-07-08 | Administrador | reunion_meet | reunion_creada | Reunión de proyecto — Planificación de Proyecto 002 | 2026-07-08 20:00–21:00 UTC | — | Meet: https://meet.google.com/gnu-vroz-rey — Event ID: 1obelcn0a8p98scv26kpsp8nso | — | Migrado desde log crudo (dos entradas 2026-07-07 21:43/21:44 UTC, consolidadas en esta fila); cuenta prueba.openclaw.fj@gmail.com |
+| 2026-07-08 | Administrador | reunion_meet | reunion_creada | Stand-up de emergencia — Replanificación timeline MVP | 2026-07-08 10:00–11:00 UTC-3 | — | Meet: https://meet.google.com/gyt-tqqt-mne — Event ID: 04lt0qlnovdi9altshmtgev2is | — | Migrado desde log crudo (2026-07-07 22:02 UTC); cuenta prueba.openclaw.fj@gmail.com |
 
 _Cada fila nueva se añade al final de la tabla que corresponda, manteniendo el encabezado. No agregar filas sueltas fuera de una tabla: rompe la trazabilidad y el renderizado Markdown._
+
+## Relación con correo
+
+Si el canal es Gmail, tras envío exitoso añadir también fila en `LOGS_EMAIL.md` y entrada en `HISTORY.md` según protocolo `email-gmail`.
