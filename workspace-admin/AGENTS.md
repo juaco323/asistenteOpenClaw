@@ -7,6 +7,7 @@ Estos protocolos aplican **igual** en:
 - **Control UI / webchat** del gateway (`http://127.0.0.1:18791/` admin, `18790` empleado).
 
 Reglas comunes:
+- **Formato de respuesta (obligatorio, en especial Telegram):** el bot de Telegram entrega en texto plano y quita `**`/`##`/backticks antes de enviar, pero **no inserta saltos de línea por ti**. Redacta ya en bloques cortos y con salto de línea real entre ideas — **prohibido** un párrafo denso de varias frases seguidas sin separación. Usa una línea por dato clave (`Destinatario: …`, `Estado: …`) y viñetas `- ` o `• ` (una por línea) para listas de 2 o más ítems. Dos líneas en blanco entre bloques temáticos distintos (p. ej. entre el resumen y las instrucciones siguientes).
 - Preguntas informativas sin «archivo» ni extensión: LLM + **web**; no buscar ficheros en disco por coincidencia de nombre.
 - **Informes y documentos formales:** estructura técnica fija §1–§7, tercera persona, títulos en negrita; `.docx` con `python-docx` (`skills/formal-documents/`).
 - **Comunicaciones (`admin-comms`):** recordatorios, seguimientos, confirmaciones; confirmación válida en el chat activo («envíalo», «vale», «confirma», «agéndala», «cancela la reunión», etc.).
@@ -246,7 +247,7 @@ Si el usuario pide un **informe**, **informe técnico**, **documento formal**, *
 1. **Leer** `skills/formal-documents/SKILL.md` y aplicarlo en el mismo turno.
 2. **Estructura fija obligatoria** (§1–§7 de la skill): Resumen Ejecutivo → Introducción (2.1 Objetivos, 2.2 Alcance) → Marco Conceptual → Desarrollo (4.1 Arquitectura, 4.2 Implementación) → Análisis de Resultados → Conclusiones (6.1) y Recomendaciones (6.2) → Referencias Bibliográficas.
 3. **Tono:** técnico, formal, objetivo, **tercera persona** («se analizó», «se implementó»). Títulos y subtítulos **siempre en negrita** con numeración multinivel (`**1.`**, `**2.1.**`, etc.). Viñetas `•`; bloques de código para scripts/Docker/SQL.
-4. **En `.docx`:** generar con **`python-docx`** replicando la misma estructura y negritas. **Prohibido** `.txt` renombrado o Markdown sin formato cuando pidieron Word.
+4. **En `.docx`:** generar con `skills/formal-documents/build_report.py` (no escribir `python-docx` a mano cada vez: el script valida las 13 secciones y aplica negritas/tipografía de forma mecánica). **Prohibido** `.txt` renombrado o Markdown sin formato cuando pidieron Word.
 5. **Telegram:** tras crear el archivo, incluir `[[TELEGRAM_FILE:/ruta/absoluta/archivo.docx]]`.
 6. Preferencia: **solo `.docx`** para informes formales (sin `.md` paralelo) salvo petición explícita en ese turno.
 
@@ -367,6 +368,7 @@ Skills provide your tools. When you need one, check its `SKILL.md`. Keep local n
 - **Discord/WhatsApp:** No markdown tables! Use bullet lists instead
 - **Discord links:** Wrap multiple links in `<>` to suppress embeds: `<https://example.com>`
 - **WhatsApp:** No headers — use **bold** o CAPS para énfasis
+- **Telegram (bot):** el bot entrega en texto plano; `**negrita**`, `## títulos` y `` `código` `` se ven como asteriscos/almohadillas literales, no como formato. Escribe encabezados y énfasis con texto simple (rótulo seguido de `:` o mayúsculas puntuales), sin `**`/`##`/backticks. Sé conciso: no repitas contenido ya mostrado en el mismo turno (borrador, resumen, confirmación previa); evita relleno.
 
 ## 💓 Heartbeats - Be Proactive!
 

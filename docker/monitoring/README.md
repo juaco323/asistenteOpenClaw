@@ -25,13 +25,11 @@ docker/grafana/install.sh      # después
 
 Tras iniciar sesión en http://127.0.0.1:3000, abre la carpeta **OpenClaw** → **OpenClaw — Monitoreo completo**.
 
-Cubre todos los criterios de la HU de monitoreo:
+**Alcance actual (estrategia definitiva, ver `docs/monitoreo-metricas-rendimiento.md`):**
 
-- CPU y RAM del host Ubuntu (inactividad y bajo carga)
-- CPU y RAM de contenedores OpenClaw/Telegram
-- Latencia de respuesta GPT-5.4 (p50, p95, media)
-- Consumo de tokens (prompt / completion)
-- Peticiones LLM OK vs error
+- CPU y RAM del host Ubuntu (inactividad y bajo carga) — único contenido del dashboard.
+- CPU/RAM **por contenedor** requiere Docker Engine nativo (cAdvisor no resuelve nombres de contenedor en Docker Desktop); mientras tanto usa `docker stats`.
+- **Tokens, costo y latencia de GPT-5.4 se consultan en el Control UI de OpenClaw** (`:18790`/`:18791`), pestaña **«Uso»** — no en Grafana.
 
 ## Documentación
 

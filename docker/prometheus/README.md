@@ -6,7 +6,7 @@ Stack **independiente** de Grafana. Levanta:
 |------------|-----|
 | `openclaw-prometheus` | Servidor Prometheus `:9090` |
 | `openclaw-node-exporter` | CPU/RAM del host Ubuntu |
-| `openclaw-cadvisor` | CPU/RAM por contenedor Docker |
+| `openclaw-cadvisor` | CPU/RAM por contenedor Docker (requiere Docker Engine nativo; en Docker Desktop no resuelve nombres de contenedor — ver `docs/monitoreo-metricas-rendimiento.md` § *Limitación conocida*) |
 | `openclaw-llm-metrics-exporter` | Latencia y tokens GPT `:9092/metrics` |
 
 ## Instalación

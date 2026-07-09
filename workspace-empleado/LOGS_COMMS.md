@@ -1,6 +1,6 @@
 # Registro de comunicaciones administrativas
 
-Trazabilidad de recordatorios, seguimientos y confirmaciones gestionados con la skill **`admin-comms`**.
+Trazabilidad de recordatorios, seguimientos, confirmaciones y reuniones gestionados con la skill **`admin-comms`**.
 
 Pueden escribir aquí **empleado** y **administrador** (en Docker admin: `/app/logs_shared/LOGS_COMMS.md`).
 
@@ -8,7 +8,7 @@ Pueden escribir aquí **empleado** y **administrador** (en Docker admin: `/app/l
 
 | Estado | Descripción |
 |--------|-------------|
-| `pendiente_confirmacion` | Borrador listo; sin despacho externo |
+| `pendiente_confirmacion` | Borrador o propuesta lista; sin despacho externo |
 | `confirmado` | Usuario autorizó envío o acción |
 | `reunion_creada` | Evento Calendar + Meet creado (**solo Administrador**) |
 | `reunion_cancelada` | Reunión eliminada en Calendar; invitados notificados (**solo Administrador**) |
@@ -18,31 +18,47 @@ Pueden escribir aquí **empleado** y **administrador** (en Docker admin: `/app/l
 | `error` | Fallo o datos insuficientes |
 | `cancelado` | Usuario canceló o pospuso |
 
-## Tabla operativa
+## Tipos
 
-| Fecha / hora | ID | Agente | Tipo | Destinatario | Fecha ref. | Estado | Meet / Event ID | Archivo borrador | Notas |
+| Tipo | Uso |
+|------|-----|
+| `recordatorio` / `seguimiento` / `confirmación` | Comunicación por correo (empleado y administrador) |
+| `reunion_meet` | Reunión con Google Calendar + Meet (**solo administrador**; ver `calendar-meet.md`) |
+| `reunion_zoom` | Reunión Zoom (**solo administrador**; ver `zoom-meetings.md`) |
+| `reunion_dual` | Propuesta única para agendar en **Meet y Zoom a la vez**; al confirmar se registran dos filas (`reunion_meet` + `reunion_zoom`), ver `SKILL.md` § *Reunión en ambas plataformas* |
+| `reunion_cancelacion` / `reunion_zoom_cancelacion` | Propuesta de cancelación pendiente de confirmar |
+
+## Tabla de comunicaciones (recordatorio / seguimiento / confirmación)
+
+| Fecha / hora | ID | Agente | Tipo | Destinatario | Fecha ref. | Estado | Archivo borrador | Notas |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| _ejemplo_ | COMMS-2026-06-20-001 | Empleado | recordatorio | ana@… | 2026-06-27 10:00 | pendiente_confirmacion | ~/Documentos/Comunicaciones/borradores/COMMS_2026-06-20_informe-ventas.md | — |
+
+_Cada fila nueva se añade al final, manteniendo el encabezado. Si el canal es Gmail, tras envío exitoso añadir también fila en `LOGS_EMAIL.md` y entrada en `HISTORY.md` según protocolo `email-gmail`._
+
+## Tabla de reuniones (Meet / Zoom / dual — solo Administrador)
+
+| Fecha | Agente | Tipo | Estado | Título / Tema | Horario | Invitados | Enlace / ID | Motivo cancelación | Notas |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| _ejemplo admin_ | COMMS-2026-06-20-001 | Administrador | reunion_meet | a@… | 2026-06-27 10:00 | reunion_creada | meet.google.com/… | ~/Documentos/Comunicaciones/… | Solo perfil admin crea Meet |
+| 2026-06-24 | Administrador | reunion_meet | reunion_creada | Reunión con Ferny | 2026-06-24 16:00–17:00 America/Santiago | fernycalderonsolis@gmail.com | Meet: https://meet.google.com/odv-wioj-fow | — | — |
+| 2026-06-24 | Administrador | reunion_meet | reunion_cancelada | Reunión con Ferny | 2026-06-24 16:00–17:00 America/Santiago | fernycalderonsolis@gmail.com | Meet: https://meet.google.com/odv-wioj-fow | Por fuerza mayor se cancela la reunión | Atte: Joaquín |
+| 2026-06-24 | Administrador | reunion_meet | pendiente_confirmacion | Presentación | 2026-06-24 17:00–18:00 America/Santiago | fernycalderonsolis@gmail.com | — | — | — |
+| 2026-06-24 | Administrador | reunion_meet | reunion_creada | Presentación | 2026-06-24 17:00–18:00 America/Santiago | fernycalderonsolis@gmail.com | Meet: https://meet.google.com/erz-pzzc-tmn | — | — |
+| 2026-06-24 | Administrador | reunion_meet | reunion_cancelada | Presentación | 2026-06-24 17:00–18:00 America/Santiago | fernycalderonsolis@gmail.com | Meet: https://meet.google.com/erz-pzzc-tmn | Fuerza mayor | Atte: Joaquín F. |
+| 2026-06-24 | Administrador | reunion_zoom | pendiente_confirmacion | Reunión | 2026-06-24 17:00–18:00 America/Santiago | fernycalderonsolis@gmail.com | — | — | — |
+| 2026-06-24 | Administrador | reunion_zoom | reunion_zoom_creada | Reunión | 2026-06-24 17:00–18:00 America/Santiago | fernycalderonsolis@gmail.com | Zoom ID: 85487911844 — https://us05web.zoom.us/j/85487911844?pwd=ofOSOw77bQk3cCnCooEAPgDaEc0KOb.1 | — | — |
+| 2026-06-24 | Administrador | reunion_zoom | reunion_zoom_cancelada | Reunión | 2026-06-24 17:00–18:00 America/Santiago | fernycalderonsolis@gmail.com | Zoom ID: 85487911844 | Fuerza mayor | Atte: Joaquín |
+| 2026-06-24 | Administrador | reunion_meet | pendiente_confirmacion | Reunión Importante | 2026-06-24 19:00–20:00 America/Santiago | carla.taramasco@unab.cl, david.araya@unab.cl, joaquin.fuenzalida51@gmail.com | — | — | — |
+| 2026-06-24 | Administrador | reunion_meet | reunion_creada | Reunión Importante | 2026-06-24 19:00–20:00 America/Santiago | carla.taramasco@unab.cl, david.araya@unab.cl, joaquin.fuenzalida51@gmail.com | Meet: https://meet.google.com/xqt-yokq-kse | — | — |
+| 2026-06-24 | Administrador | reunion_meet | reunion_cancelada | Reunión Importante | 2026-06-24 19:00–20:00 America/Santiago | carla.taramasco@unab.cl, david.araya@unab.cl, joaquin.fuenzalida51@gmail.com | Meet: https://meet.google.com/xqt-yokq-kse | Fuerza mayor | Atte: Joaquín |
+| 2026-06-25 | Administrador | reunion_dual | pendiente_confirmacion | Daily 25 de junio | 2026-06-25 20:00–21:00 America/Santiago | joaquin.fuenzalida51@gmail.com, fernycalderonsolis@gmail.com | — | — | plataformas: Meet y Zoom; tema: entrega de landing page de esta semana |
+| 2026-06-25 | Administrador | reunion_meet | reunion_creada | Daily 25 de junio | 2026-06-25 20:00–21:00 America/Santiago | joaquin.fuenzalida51@gmail.com, fernycalderonsolis@gmail.com | Meet: https://meet.google.com/bgq-uxfa-xuj | — | tema: entrega de landing page de esta semana |
+| 2026-06-25 | Administrador | reunion_zoom | reunion_zoom_creada | Daily 25 de junio | 2026-06-25 20:00–21:00 America/Santiago | joaquin.fuenzalida51@gmail.com, fernycalderonsolis@gmail.com | Zoom ID: 82801204172 — https://us05web.zoom.us/j/82801204172?pwd=3jBbaz2W5i53R3ZvszY034CG0d5Zt3.1 | — | tema: entrega de landing page de esta semana |
+| 2026-07-08 | Administrador | reunion_meet | reunion_creada | Reunión de proyecto — Planificación de Proyecto 002 | 2026-07-08 20:00–21:00 UTC | — | Meet: https://meet.google.com/gnu-vroz-rey — Event ID: 1obelcn0a8p98scv26kpsp8nso | — | Migrado desde log crudo (dos entradas 2026-07-07 21:43/21:44 UTC, consolidadas en esta fila); cuenta prueba.openclaw.fj@gmail.com |
+| 2026-07-08 | Administrador | reunion_meet | reunion_creada | Stand-up de emergencia — Replanificación timeline MVP | 2026-07-08 10:00–11:00 UTC-3 | — | Meet: https://meet.google.com/gyt-tqqt-mne — Event ID: 04lt0qlnovdi9altshmtgev2is | — | Migrado desde log crudo (2026-07-07 22:02 UTC); cuenta prueba.openclaw.fj@gmail.com |
 
-_Cada fila nueva se añade al final, manteniendo el encabezado._
+_Cada fila nueva se añade al final de la tabla que corresponda, manteniendo el encabezado. No agregar filas sueltas fuera de una tabla: rompe la trazabilidad y el renderizado Markdown._
 
 ## Relación con correo
 
 Si el canal es Gmail, tras envío exitoso añadir también fila en `LOGS_EMAIL.md` y entrada en `HISTORY.md` según protocolo `email-gmail`.
-2026-06-24	Administrador	reunion_meet	reunion_creada	Reunión con Ferny | 2026-06-24 16:00-17:00 America/Santiago | Meet: https://meet.google.com/odv-wioj-fow | invitados: fernycalderonsolis@gmail.com
-2026-06-24	Administrador	reunion_meet	reunion_cancelada	Reunión con Ferny | 2026-06-24 16:00-17:00 America/Santiago | motivo: Por fuerza mayor se cancela la reunion, gracias | Atte: Joaquin
-2026-06-24	Administrador	reunion_meet	pendiente_confirmacion	Presentacion | 2026-06-24 17:00-18:00 America/Santiago | invitados: fernycalderonsolis@gmail.com
-2026-06-24	Administrador	reunion_meet	reunion_creada	Presentacion | 2026-06-24 17:00-18:00 America/Santiago | Meet: https://meet.google.com/erz-pzzc-tmn | invitados: fernycalderonsolis@gmail.com
-2026-06-24	Administrador	reunion_meet	reunion_cancelada	Presentacion | 2026-06-24 17:00-18:00 America/Santiago | motivo: Fuerza mayor | Atte: Joaquin f
-2026-06-24	Administrador	reunion_zoom	pendiente_confirmacion	Reunion | 2026-06-24 17:00-18:00 America/Santiago | invitados: fernycalderonsolis@gmail.com
-2026-06-24	Administrador	reunion_zoom	reunion_zoom_creada	Reunion | 2026-06-24 17:00-18:00 America/Santiago | Zoom ID: 85487911844 | Link: https://us05web.zoom.us/j/85487911844?pwd=ofOSOw77bQk3cCnCooEAPgDaEc0KOb.1 | invitados: fernycalderonsolis@gmail.com
-2026-06-24	Administrador	reunion_zoom	reunion_zoom_cancelada	Reunion | 2026-06-24 17:00-18:00 America/Santiago | motivo: fuerza mayor | Atte: joaquin
-2026-06-24	Administrador	reunion_meet	pendiente_confirmacion	Reunión Importante | 2026-06-24 19:00-20:00 America/Santiago | invitados: carla.taramasco@unab.cl, david.araya@unab.cl, joaquin.fuenzalida51@gmail.com
-2026-06-24	Administrador	reunion_meet	reunion_creada	Reunión Importante | 2026-06-24 19:00-20:00 America/Santiago | Meet: https://meet.google.com/xqt-yokq-kse | invitados: carla.taramasco@unab.cl, david.araya@unab.cl, joaquin.fuenzalida51@gmail.com
-2026-06-24	Administrador	reunion_meet	reunion_cancelada	Reunión Importante | 2026-06-24 19:00-20:00 America/Santiago | motivo: Fuerza mayor | Atte: joaquin
-2026-06-25	Administrador	reunion_dual	pendiente_confirmacion	Daily 25 de junio | 2026-06-25 20:00-21:00 America/Santiago | plataformas: Meet y Zoom | invitados: joaquin.fuenzalida51@gmail.com, fernycalderonsolis@gmail.com | tema: entrega de landing page de esta semana
-2026-06-25	Administrador	reunion_meet	reunion_creada	Daily 25 de junio | 2026-06-25 20:00-21:00 America/Santiago | Meet: https://meet.google.com/bgq-uxfa-xuj | invitados: joaquin.fuenzalida51@gmail.com, fernycalderonsolis@gmail.com | tema: entrega de landing page de esta semana
-2026-06-25	Administrador	reunion_zoom	reunion_zoom_creada	Daily 25 de junio | 2026-06-25 20:00-21:00 America/Santiago | Zoom ID: 82801204172 | Link: https://us05web.zoom.us/j/82801204172?pwd=3jBbaz2W5i53R3ZvszY034CG0d5Zt3.1 | invitados: joaquin.fuenzalida51@gmail.com, fernycalderonsolis@gmail.com | tema: entrega de landing page de esta semana
-| 2026-07-07 21:43 UTC | Administrador | REUNION_CREADA |  | prueba.openclaw.fj@gmail.com | Reunión de proyecto — Planificación de Proyecto 002 | 2026-07-08 20:00-21:00 UTC |  |
-| 2026-07-07 21:44 UTC | Administrador | REUNION_CREADA | 1obelcn0a8p98scv26kpsp8nso | prueba.openclaw.fj@gmail.com | Reunión de proyecto — Planificación de Proyecto 002 | 2026-07-08 20:00-21:00 UTC | https://meet.google.com/gnu-vroz-rey |
-| 2026-07-07 22:02 UTC | Administrador | REUNION_CREADA | 04lt0qlnovdi9altshmtgev2is | prueba.openclaw.fj@gmail.com | Stand-up de emergencia — Replanificación timeline MVP | 2026-07-08 10:00-11:00 UTC-3 | https://meet.google.com/gyt-tqqt-mne |
