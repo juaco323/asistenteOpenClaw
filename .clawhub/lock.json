@@ -4,6 +4,11 @@
     "web": {
       "version": "1.0.0",
       "installedAt": 1775100933110
+    },
+    "@dietrichgebert/ponytail": {
+      "version": "4.9.0",
+      "installedAt": 1788357790097,
+      "ownerHandle": "dietrichgebert"
     }
   }
 }
